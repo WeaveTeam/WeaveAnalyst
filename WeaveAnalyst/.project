@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>AWS</name>
+	<name>WeaveAnalyst</name>
 	<comment></comment>
 	<projects>
 		<project>WeaveServices</project>
