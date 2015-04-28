@@ -1,3 +1,3 @@
 [submodule "Weave"]
 	path = Weave
-	url = git@github.com:IVPR/Weave.git
+	url = https://github.com/IVPR/Weave.git
