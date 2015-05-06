@@ -14,20 +14,20 @@ Whenever you build WeaveServices, this will automatically export the WAR file.
 	<target name="dist">
 		<echo message="Deploying WeaveAnalystServices..." />
 		<copy todir="bin/lib">
-			<fileset dir="../WeaveServices/lib" />
-			<fileset dir="../WeaveServletUtils/lib" />
+			<fileset dir="../Weave/WeaveServices/lib" />
+			<fileset dir="../Weave/WeaveServletUtils/lib" />
 		</copy>
 		<copy todir="bin/classes">
-			<fileset dir="../WeaveServices/bin/classes" />
-			<fileset dir="../WeaveServletUtils/bin/classes" />
+			<fileset dir="../Weave/WeaveServices/bin/classes" />
+			<fileset dir="../Weave/WeaveServletUtils/bin/classes" />
 		</copy>
 		<war destfile="${TOMCAT_HOME}/webapps/WeaveAnalystServices.war" webxml="WebContent/WEB-INF/web.xml" duplicate="preserve">
 			<lib dir="lib/" />
-			<lib dir="../WeaveServices/lib" />
-			<lib dir="../WeaveServletUtils/lib" />
+			<lib dir="../Weave/WeaveServices/lib" />
+			<lib dir="../Weave/WeaveServletUtils/lib" />
 			<classes dir="bin/classes" />
-			<classes dir="../WeaveServices/bin/classes" />
-			<classes dir="../WeaveServletUtils/bin/classes" />
+			<classes dir="../Weave/WeaveServices/bin/classes" />
+			<classes dir="../Weave/WeaveServletUtils/bin/classes" />
 			<webinf dir="WebContent/WEB-INF" />
 			<metainf dir="WebContent/META-INF" />
 		</war>
