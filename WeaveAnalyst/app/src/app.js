@@ -27,6 +27,7 @@
 
 
 var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
+                                                   'ngAnimate',
                                                    'weaveAnalyst.configure',
                                                    'weaveAnalyst.dataStatistics',
 	                                               'weaveAnalyst.directives',
