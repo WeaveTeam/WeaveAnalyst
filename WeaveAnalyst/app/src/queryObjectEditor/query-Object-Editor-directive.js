@@ -1,7 +1,7 @@
 /**
  * 
  */
-angular.module('aws.queryObjectEditor')//name of module
+angular.module('weaveAnalyst.queryObjectEditor')//name of module
 .directive('queryObjectEditor', function($compile) {//name of directive (part used in HTML)
   return {
 	  restrict: 'E',//

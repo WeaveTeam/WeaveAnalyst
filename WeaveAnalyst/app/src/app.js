@@ -27,25 +27,25 @@
 
 
 var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
-                                                   'weaveAnalyst.configure']);
-                                                   	//'weaveAnalyst.dataStatistics']);
-	                                                //'weaveAnalyst.directives',
-	                                                // 'weaveAnalyst.queryObject',                              
-	                                                // 'weaveAnalyst.queryObjectEditor',
-	                                                // 'weaveAnalyst.project',
-	                                                // 'weaveAnalyst.errorLog',
-	                                                // 'weaveAnalyst.AnalysisModule',
-	                                                // 'weaveAnalyst.WeaveModule',
-	                                                // 'weaveAnalyst.QueryHandlerModule']);
+                                                   'weaveAnalyst.configure',
+                                                   'weaveAnalyst.dataStatistics',
+	                                               'weaveAnalyst.directives',
+	                                               'weaveAnalyst.queryObject',                             
+	                                               'weaveAnalyst.queryObjectEditor', 
+	                                               'weaveAnalyst.project',
+	                                               'weaveAnalyst.errorLog',
+	                                               'weaveAnalyst.AnalysisModule',
+	                                               'weaveAnalyst.WeaveModule',
+	                                               'weaveAnalyst.QueryHandlerModule']);
 
 angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
                                           'weaveAnalyst.configure.metadata',
                                           'weaveAnalyst.configure.script']);
 
 
-//angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
-//                                'weaveAnalyst.directives.fileUpload',
-//                                'weaveAnalyst.directives.popover-with-tpl']);
+angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
+                                'weaveAnalyst.directives.fileUpload',
+                                'weaveAnalyst.directives.popover-with-tpl']);
 
 
 
@@ -85,7 +85,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 		.state('metadata', {
 			url:'/metadata',
 			templateUrl : 'src/configure/metadata/metadataManager.html',
-			//controller: 'MetadataManagerCtrl',
+			controller: 'MetadataManagerCtrl',
 			data : {
 				activetab : 'metadata'
 			}
@@ -93,7 +93,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('script_management', {
 	    	url:'/scripts',
 	    	templateUrl : 'src/configure/script/scriptManager.html',
-	    	//controller : 'ScriptManagerCtrl',
+	    	controller : 'ScriptManagerCtrl',
 	    	data:{
 	    		activetab : 'script_management'
 	    	}
