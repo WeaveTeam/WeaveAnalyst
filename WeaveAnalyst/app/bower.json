@@ -23,6 +23,7 @@
     "angular-spinner": "~0.6.1",
     "angular-strap": "~2.2.1",
     "jquery.ui": "~1.11.4",
-    "angular-ui-grid": "~3.0.0-rc.21"
+    "angular-ui-grid": "~3.0.0-rc.21",
+    "angular-bootstrap": "~0.13.0"
   }
 }
