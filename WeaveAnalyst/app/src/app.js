@@ -1,18 +1,16 @@
 'use strict';
 
-//                                 'ngSanitize',
-//                                 'angularSpinner',
 //                                 'mgcrea.ngStrap',
 //                                 'ui.select',
 //                                 'ui.bootstrap',
 //                                 'ui.sortable', // Shweta Needs, comes from angular-strap???
 //                                 'ngGrid', // Angular UI library
-//                                 'ui.router',
 //                                 'mk.editablespan', // Directive for editing values. 
 
 
 var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
                                                    'ngAnimate',
+                                                   'mgcrea.ngStrap',
                                                    'angularSpinner',
                                                    'ngSanitize',
                                                    'weaveAnalyst.configure',
