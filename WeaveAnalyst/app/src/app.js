@@ -1,6 +1,6 @@
 'use strict';
 
-//                                 'mgcrea.ngStrap',
+//                              
 //                                 'ui.select',
 //                                 'ui.bootstrap',
 //                                 'ui.sortable', // Shweta Needs, comes from angular-strap???
