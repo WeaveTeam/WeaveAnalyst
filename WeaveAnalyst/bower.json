@@ -1,0 +1,17 @@
+{
+  "name": "WeaveAnalyst",
+  "version": "0.9",
+  "homepage": "https://github.com/IVPR/WeaveAnalyst",
+  "authors": [
+    "shwetapurushe <shwetapurushe@gmail.com>"
+  ],
+  "description": "Analytic Engine to Weave",
+  "keywords": [
+    "Analysis",
+    "Weave"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "angular": "~1.3.15"
+  }
+}
