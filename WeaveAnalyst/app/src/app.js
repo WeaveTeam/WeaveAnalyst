@@ -1,33 +1,20 @@
 'use strict';
 
-//var app = angular.module('aws', [//'aws.router', // for app structure (can be cleaned)
-//                                 //'aws.analysis', 
-//                                 'ngAnimate', // Angular Library
 //                                 'ngSanitize',
 //                                 'angularSpinner',
 //                                 'mgcrea.ngStrap',
 //                                 'ui.select',
 //                                 'ui.bootstrap',
 //                                 'ui.sortable', // Shweta Needs, comes from angular-strap???
-//                                 //'ngRoute',
 //                                 'ngGrid', // Angular UI library
 //                                 'ui.router',
-//                                 'mk.editablespan', // Directive for editing values.
-//                                 'aws.configure', //Both script and metadata managers
-//                                 'aws.dataStatistics',
-//                                 'aws.directives', // high level directives don't agree with current location
-//                                 'aws.queryObject', // queryService.. this needs to be reconciled                               
-//                                 'aws.queryObjectEditor', // Shweta's module
-//                                 'aws.project',  // shweta's module
-//                                 'aws.errorLog',
-//                                 'aws.AnalysisModule',
-//                                 'aws.WeaveModule',
-//                                 'aws.QueryHandlerModule'
-//                               ]); 
+//                                 'mk.editablespan', // Directive for editing values. 
 
 
 var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
                                                    'ngAnimate',
+                                                   'angularSpinner',
+                                                   'ngSanitize',
                                                    'weaveAnalyst.configure',
                                                    'weaveAnalyst.dataStatistics',
 	                                               'weaveAnalyst.directives',
@@ -102,7 +89,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('analysis', {
 	    	url:'/analysis',
 	    	templateUrl : 'src/analysis/analysis.tpl.html',
-	    	//controller: 'AnalysisCtrl',
+	    	controller: 'AnalysisCtrl',
 	    	data : {
 	    		activetab : 'analysis'
 	    	}
@@ -110,7 +97,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('project', {
 	    	url:'/projects',
 	    	templateUrl : 'src/project/projectManagementPanel.html',
-	    	//controller : 'ProjectManagementCtrl',
+	    	controller : 'ProjectManagementCtrl',
 	    	data: {
 	    		activetab : 'project'
 	    	}
@@ -125,7 +112,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('data_stats',{
 	    	url:'/dataStatistics',
 	    	templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-    		//controller : 'dataStatsCtrl',
+    		controller : 'dataStatsCtrl',
     		data :{
     			activetab : 'data_stats'
     		}
