@@ -25,7 +25,38 @@
 //                                 'aws.QueryHandlerModule'
 //                               ]); 
 
-var weave_Analyst = angular.module('weaveAnalyst',['ui.router']);
+
+var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
+                                                   'weaveAnalyst.configure']);
+                                                   	//'weaveAnalyst.dataStatistics']);
+	                                                //'weaveAnalyst.directives',
+	                                                // 'weaveAnalyst.queryObject',                              
+	                                                // 'weaveAnalyst.queryObjectEditor',
+	                                                // 'weaveAnalyst.project',
+	                                                // 'weaveAnalyst.errorLog',
+	                                                // 'weaveAnalyst.AnalysisModule',
+	                                                // 'weaveAnalyst.WeaveModule',
+	                                                // 'weaveAnalyst.QueryHandlerModule']);
+
+angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
+                                          'weaveAnalyst.configure.metadata',
+                                          'weaveAnalyst.configure.script']);
+
+
+//angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
+//                                'weaveAnalyst.directives.fileUpload',
+//                                'weaveAnalyst.directives.popover-with-tpl']);
+
+
+
+//using the value provider recipe 
+weave_Analyst.value("dataServiceURL", '/WeaveServices/DataService');
+weave_Analyst.value('adminServiceURL', '/WeaveServices/AdminService');
+weave_Analyst.value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
+weave_Analyst.value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
+weave_Analyst.value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
+weave_Analyst.value('WeaveDataSource', 'WeaveDataSource');
+
 
 weave_Analyst.run(['$rootScope', function($rootScope){
 	$rootScope.$safeApply = function(fn, $scope) {
@@ -123,101 +154,8 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    
 });
 
-///**********************Using ng-route***************************************/
-////.config(function($parseProvider, $routeProvider){
-////	$parseProvider.unwrapPromises(true);
-////	
-////	$routeProvider.when('/analysis', {
-////		templateUrl : 'src/analysis/analysis.tpl.html',
-////		controller : 'AnalysisCtrl',
-////		activetab : 'analysis'
-////	}).when('/metadata', {
-////		templateUrl : 'src/configure/metadata/metadataManager.html',
-////		controller : 'MetadataManagerCtrl',
-////		activetab : 'metadata'
-////	}).when('/script_management', {
-////		templateUrl : 'src/configure/script/scriptManager.html',
-////		controller : 'ScriptManagerCtrl',
-////		activetab : 'script_management'
-////	}).when('/project_management', {
-////		templateUrl : 'src/project/projectManagementPanel.html',
-////		controller : 'ProjectManagementCtrl',
-////		activetab : 'project_management'
-////	}).when('/data_stats', {
-////		templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-////		controller : 'dataStatsCtrl',
-////		activetab : 'data_stats'
-////	}).otherwise({
-////        redirectTo: '/analysis'
-////    });
-////
-////});
-///**********************Using ng-route***************************************/
-//
-//angular.module('aws.directives', ['aws.directives.dualListBox',
-//                                  'aws.directives.fileUpload',
-//                                  'aws.directives.popover-with-tpl']);
-//angular.module('aws.configure', ['aws.configure.auth',
-//                                 'aws.configure.metadata',
-//                                 'aws.configure.script']);
-//
-////using the value provider recipe 
-//weave_Analyst.value("dataServiceURL", '/WeaveServices/DataService');
-//weave_Analyst.value('adminServiceURL', '/WeaveServices/AdminService');
-//weave_Analyst.value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
-//weave_Analyst.value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
-//weave_Analyst.value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
-//weave_Analyst.value('WeaveDataSource', 'WeaveDataSource');
-//
 weave_Analyst.controller('AWSController', function($scope, $state) {
-//
-//	 $scope.startSpin = function() {
-//    if (!$scope.spinneractive) {
-//    	console.log("starting spinner");
-//      usSpinnerService.spin('spinner-1');
-//    }
-//  };
-//
-//  $scope.stopSpin = function() {
-//    if ($scope.spinneractive) {
-//    	console.log("stoppingg spinner");
-//      usSpinnerService.stop('spinner-1');
-//    }
-//  };
-//  $scope.spinneractive = false;
-//
-//  $rootScope.$on('us-spinner:spin', function(event, key) {
-//    $scope.spinneractive = true;
-//  });
-//
-//  $rootScope.$on('us-spinner:stop', function(event, key) {
-//    $scope.spinneractive = false;
-//  });
-//
+	
 	$scope.state = $state;
-//	$scope.authenticationService = authenticationService;
-//	
-//	$scope.$on('queryObjectloaded', function(event,incoming_queryObject){
-//		queryService.queryObject = incoming_queryObject;
-//		if(WeaveService.checkWeaveReady()){
-//			if(incoming_queryObject.weaveSessionState)
-//				WeaveService.weave.path().state(incoming_queryObject.weaveSessionState);
-//		}
-//			
-//	});
-//	
-//	$scope.$watch(function() {
-//		return WeaveService.weave;
-//	}, function() {
-//		if(WeaveService.checkWeaveReady()) 
-//		{
-//			//$scope.showToolMenu = true;
-//			
-//			if(queryService.queryObject.weaveSessionState) {
-//				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
-//			}
-//		}
-	//});
-//	
-//
+
 });

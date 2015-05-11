@@ -1,4 +1,4 @@
-angular.module('aws.directives.dualListBox', [])
+angular.module('weaveAnalyst.directives.dualListBox', [])
 /*
  * Is aws.Main needed? isn't it just routing?
  */
