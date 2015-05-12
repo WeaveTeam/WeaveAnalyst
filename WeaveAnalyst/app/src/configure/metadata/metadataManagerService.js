@@ -1,5 +1,4 @@
-angular.module('weaveAnalyst.configure.metadata').service("metadataManagerService", ['$q', '$rootScope', function($q, scope) {
+metadataModule.service("metadataService", ['$q', '$rootScope', function($q, scope, queryService, authenticationService) {
 
-    
     
 }]);

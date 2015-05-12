@@ -69,7 +69,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 		.state('metadata', {
 			url:'/metadata',
 			templateUrl : 'src/configure/metadata/metadataManager.html',
-			controller: 'MetadataManagerCtrl',
+			//controller: 'MetadataManagerCtrl',
 			data : {
 				activetab : 'metadata'
 			}
@@ -77,7 +77,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('script_management', {
 	    	url:'/scripts',
 	    	templateUrl : 'src/configure/script/scriptManager.html',
-	    	controller : 'ScriptManagerCtrl',
+	    	//controller : 'ScriptManagerCtrl',
 	    	data:{
 	    		activetab : 'script_management'
 	    	}
@@ -85,7 +85,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('analysis', {
 	    	url:'/analysis',
 	    	templateUrl : 'src/analysis/analysis.tpl.html',
-	    	controller: 'AnalysisCtrl',
+	    	//controller: 'AnalysisCtrl',
 	    	data : {
 	    		activetab : 'analysis'
 	    	}
@@ -93,7 +93,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('project', {
 	    	url:'/projects',
 	    	templateUrl : 'src/project/projectManagementPanel.html',
-	    	controller : 'ProjectManagementCtrl',
+	    	//controller : 'ProjectManagementCtrl',
 	    	data: {
 	    		activetab : 'project'
 	    	}
@@ -108,7 +108,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    .state('data_stats',{
 	    	url:'/dataStatistics',
 	    	templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-    		controller : 'dataStatsCtrl',
+    		//controller : 'dataStatsCtrl',
     		data :{
     			activetab : 'data_stats'
     		}
@@ -138,8 +138,9 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    
 });
 
-weave_Analyst.controller('AWSController', function($scope, $state) {
+weave_Analyst.controller('weaveAnalystController', function($scope,$rootScope, $state, authenticationService,usSpinnerService, queryService, WeaveService) {
 	
-	$scope.state = $state;
+	this.state = $state;
+	this.authenticationService = authenticationService;
 
 });

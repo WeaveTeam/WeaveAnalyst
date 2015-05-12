@@ -4,10 +4,37 @@
 
 var authenticationModule = angular.module('weaveAnalyst.configure.auth', []);
 //experimenting with another kind of angular provider factory vs service (works!!)
-authenticationModule
-.factory('authenticationService',[function authenticationServiceFactory(){
+
+authenticationModule.factory('authenticationService',['$rootScope', 'runQueryService', 'adminServiceURL', 
+                                                      function authenticationServiceFactory(rootScope, runQueryService, adminServiceURL){
 	var authenticationService = {};
+	authenticationService.user;
+	authenticationService.password;
+	authenticationService.authenticated = false;
 	
+	//make call to server to authenticate
+	 authenticationService.authenticate = function(user, password){
+
+		 runQueryService.queryRequest(adminServiceURL, 'authenticate', [user, password], function(result){
+    		authenticationService.authenticated = result;
+          //if accepted
+            if(authenticationService.authenticated){
+            	
+            	authenticationService.user = user;
+            	authenticationService.password = password;
+            }
+            rootScope.$apply();
+        }.bind(authenticationService));
+   };
+   
+    authenticationService.logout = function(){
+    	console.log("loggin out");
+    	//resetting variables
+    	authenticationService.authenticated = false;
+    	authenticationService.user = "";
+    	authenticationService.password = "";
+    };
+   
    
    return authenticationService;
 	
