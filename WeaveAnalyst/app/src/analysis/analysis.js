@@ -22,11 +22,11 @@ AnalysisModule.controller('AnalysisCtrl', function( ) {
 });
 
 
-AnalysisModule.config(function($selectProvider) {
-	angular.extend($selectProvider.defaults, {
-		caretHTML : '&nbsp'
-	});
-});
+//AnalysisModule.config(function($selectProvider) {
+//	angular.extend($selectProvider.defaults, {
+//		caretHTML : '&nbsp'
+//	});
+//});
 
 
 //Script Options controller

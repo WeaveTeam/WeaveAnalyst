@@ -1,7 +1,7 @@
 /**
  * This controller controls the queryObject (json ) Editor
  */
-angular.module('aws.queryObjectEditor', [])
+angular.module('weaveAnalyst.queryObjectEditor', [])
 .controller("QueryObjectEditorCtrl", function($scope, queryService){
 	
 	var user= null;
