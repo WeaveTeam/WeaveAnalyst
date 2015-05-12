@@ -2,7 +2,7 @@
  * Left Panel Module LeftPanelCtrl - Manages the model for the left panel.
  */
 
-QueryObject.controller("QueryObjectCtrl",
+angular.module("weaveAnalyst.queryObject").controller("QueryObjectCtrl",
 		function() {
 			
 });

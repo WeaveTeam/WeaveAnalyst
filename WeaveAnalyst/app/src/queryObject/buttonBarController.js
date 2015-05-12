@@ -2,10 +2,10 @@
  * buttonBarController. This controller manages query import and exports.
  */
 
-QueryObject.controller("buttonBarController", function() {
+angular.module("weaveAnalyst.queryObject").controller("buttonBarController", function() {
 	
 });
 
-QueryObject.controller('DialogInstanceCtrl', function () {
+angular.module("weaveAnalyst.queryObject").controller('DialogInstanceCtrl', function () {
 	  
 });
