@@ -46,23 +46,11 @@
 		mDataCtrl.authenticationService = authenticationService;
 		mDataCtrl.metadataService = metadataService;
 		mDataCtrl.selectedDataTableId;//datatable selected by the user
-		mDataCtrl.maxTasks= 0;
-		mDataCtrl.progressValue = 0;
-		
-		//object representation of the metadata csv uploaded 
-		mDataCtrl.metadataUploaded = {
-				file : {
-					filename : "",
-					content :""
-				}
-		};
-		
 		
 		mDataCtrl.addNewRow = addNewRow;
 		mDataCtrl.removeRow = removeRow;
 		mDataCtrl.refresh = refresh;
 		
-		mDataCtrl.fileUpload;
 		$scope.selectedItems = [];
 		var treeData = [];
 
@@ -239,7 +227,6 @@
 		    			  if(columns.length) {//works only if a datatable that contains column children is selected, will not work if a column is selected
 			    				  var end = columns.length;
 			    				  mFCtrl.maxTasks = end;
-			    				  console.log("max",mFCtrl.maxTasks );
 			    				  
 		        				  for (var i = 1; i < metadataArray.length; i++) {//starting the loop from index 1 to avoid headers
 		        						var title = metadataArray[i][0];//gets the title of a single column
@@ -266,7 +253,6 @@
 			        																							}
 				        							 ).then(function() {
 				        								 mFCtrl.progressValue++;
-				        								 console.log( mFCtrl.progressValue);
 				        							 });								
 			        							}
 									 }
