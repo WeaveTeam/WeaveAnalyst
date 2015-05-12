@@ -1,4 +1,3 @@
-var scriptUploaded;
 angular.module('weaveAnalyst.configure.script', []);
 
 var tryParseJSON = function(jsonString){
