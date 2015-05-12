@@ -27,8 +27,8 @@
 				
 				<div><!-- progress bar -->
 					Progress while uploading metadata for a given table
-		      		<!-- <progressbar  ng-show = "inProgress" value="progressValue" dynamic-max = "{{maxTasks}}" animate="true">
-		     		 <span style="color:white; white-space:nowrap;"/>{{progressValue}}/ {{maxTasks}}</progressbar> --><!-- progress bar -->
+		      		<<progressbar  ng-show = "inProgress" value="progressValue" dynamic-max = "{{maxTasks}}" animate="true">
+		     		 <span style="color:white; white-space:nowrap;"/>{{progressValue}}/ {{maxTasks}}</progressbar><!-- progress bar -->
 				</div>
 	      </div>
 	    </td>
@@ -42,7 +42,7 @@
 			<b> Id : {{mDataCtrl.selectedDataTableId}} </b>
 			<div>Column Metadata</div>
 <!-- 	  		<div class="gridStyle" ng-grid="gridOptions" style="height: 300px"></div>metadata of a single column -->
-				<div class= "myGrid" ui-grid="{ data: myData }"></div>
+				<div class= "myGrid" ui-grid="{ data: mDataCtrl.metadataService.gridData }"></div>
 	        <div class="selectedItems">{{mySelections}}</div>
 	       <br>
 	       

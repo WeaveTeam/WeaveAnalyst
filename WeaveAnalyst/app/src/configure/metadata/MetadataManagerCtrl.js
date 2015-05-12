@@ -32,31 +32,25 @@ metadataModule.config(function($provide){
 	
 });
 
-metadataModule.controller("MetadataManagerController", function($scope,$rootScope, dataServiceURL, 
+metadataModule.controller("MetadataManagerController", function($scope,$rootScope, dataServiceURL,
 														queryService, authenticationService, runQueryService,
 														errorLogService, metadataService){			
 
 	this.queryService = queryService;
     this.authenticationService = authenticationService;
-//    this.metadataService = metadataService;
-//    
+    this.metadataService = metadataService;
     this.selectedDataTableId;//datatable selected by the user
-//    this.fileUpload;
-    
-
-	var treeData = [];
-	$scope.myData = [];
-//	$scope.maxTasks;
-//	$scope.progressValue = 0;
+  
 	//$scope.selectedDataTableId;//datatable selected by the user
     $scope.fileUpload;
     
-    $scope.queryService = queryService;
-    $scope.authenticationService = authenticationService;
-    
-    //generated when the dynatree directive loads
+	var treeData = [];
+	
+	//TODO try moving this to the directive controller or to the service
+	
+	 //generated when the dynatree directive loads
 	$scope.generateTree = function(element) {
-		this.queryService.getDataTableList(true).then(function(dataTableList) {
+		queryService.getDataTableList(true).then(function(dataTableList) {
 			for (var i = 0; i < dataTableList.length; i++) {
 				dataTable = dataTableList[i];
 				treeNode = { title: dataTable.title, key : dataTable.id,
@@ -66,7 +60,7 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 				if( treeData.length == dataTableList.length) {
 					$(element).dynatree({
 						minExpandLevel: 1,
-						children : treeData,
+						children :treeData,
 						keyBoard : true,
 						onPostInit: function(isReloading, isError) {
 							this.reactivate();
@@ -77,14 +71,13 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 								{
 									this.selectedDataTableId = parseInt(node.data.key);
 									//clears the grid when nodes are selected
-									$scope.myData= [];
-									$scope.$apply();//TODO check if this is the right thing to do
+									this.metadataService.setGridData([]);
 								}
 
 							//handle when node is a column
 							if(node.data.metadata){
 								this.selectedDataTableId = node.data.id;
-								getColumnMetadata(node.data);
+								metadataService.getColumnMetadata(node.data);
 							}
 						},
 						//******************************************lazy loading*****************************************************
@@ -141,45 +134,8 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 		});
 	};
 
-	var cmp = function(a, b) {
-		key1 = a.data.key;
-		key2 = b.data.key;
-		return key1 > key2 ? 1 : key1 < key2 ? -1 : 0;
-	};
-	/**
-	 * retrieves the metadata for a single column
-	 * */
-	var getColumnMetadata = function (columnObject) {
-		if(columnObject && columnObject.id) {
-			queryService.getEntitiesById([columnObject.id], true).then(function(entity) {
-					entity = entity[0];
-					if(entity.publicMetadata.hasOwnProperty('aws_metadata')) {
-						var data = [];
-						var aws_metadata = angular.fromJson(entity.publicMetadata.aws_metadata);//converts the json string into an object
-						data = convertToTableFormat(aws_metadata);//to use in the grid
-						$scope.myData = data;
-						$rootScope.$safeApply();
-					}
-			});
-		} else {
-				setMyData([]);
-		}
-	};
+	
 
-	/**
-	 * function that converts a aws-metadata json object into an array of objects that look like this { property:
-	 * 																	 								value : }
-	 * for using in the grid
-	 * */
-	var convertToTableFormat = function(aws_metadata) {
-		var data = [];
-		for (var key in aws_metadata) {
-			data.push({property : key, value : angular.toJson(aws_metadata[key]) });
-		}
-		return data;
-	};
-	
-	
 	/**
 	 * function that converts a object { property: , value : } into an aws_metadata json object
 	 * for updating to the server
@@ -192,11 +148,7 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 		return aws_metadata;
 	};
 
-	 var setMyData = function(data) {
-		  $scope.myData = data;
-		  $rootScope.$safeApply();
-	 };
-	 
+	
 	 //for populating the grid
 	 $scope.selectedItems = [];
 
@@ -212,46 +164,25 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 //	 };
 
 	 $scope.$on('ngGridEventEndCellEdit', function(){
-		 updateMetadata($scope.myData);
+		 this.metadataService.updateMetadata(this.metadataService.gridData);
 	 });
 
-	 /**
-	  * this function is called whenever the user adds or deletes a column metadata property
-	  * function converts an object into a json string to send to server
-	  */
-	 var updateMetadata = function(metadata) {
-		 var jsonaws_metadata = angular.toJson(convertToMetadataFormat(metadata));
-		 if(angular.isDefined($scope.selectedDataTableId))
-			 {
-						 queryService.updateEntity($scope.authenticationService.user, 
-				 				   $scope.authenticationService.password, 
-				 				   $scope.selectedDataTableId, 
-				 				   { 
-										publicMetadata : { aws_metadata : jsonaws_metadata }
-				 				   }).then(function() {
-				 					   	//$scope.maxTasks = 100;
-				 					   //$scope.progressValue = 100;
-				 				   });
-			 }
-		 
-		 alert("Metadata Updated for id : " + $scope.selectedDataTableId);
-	 };
-	 
+	
 	 /**
 	  * Editing
 	  * function calls for editing a column metadata property
 	  */
 	 //adding
 	 $scope.addNewRow = function () {
-		 $scope.myData.push({property: 'Property Name', value: 'Value'});
-		 updateMetadata($scope.myData);
+		 this.metadataService.gridData.push({property: 'Property Name', value: 'Value'});
+		 this.metadataService.updateMetadata(this.metadataService.gridData);
 	 };
 
 	 //deleting
 	 $scope.removeRow = function() {
-		 var index = $scope.myData.indexOf($scope.gridOptions.selectedItems[0]);
-	     $scope.myData.splice(index, 1);
-	     updateMetadata($scope.myData);
+		 var index = this.metadataService.gridData.indexOf($scope.gridOptions.selectedItems[0]);
+	     this.metadataService.gridData.splice(index, 1);
+	     this.metadataService.updateMetadata(this.metadataService.gridData);
 	 };
 	 
 	 
@@ -260,7 +191,7 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 	$scope.refresh = function(element) {
 		$("#tree").dynatree("getTree").reload();
 		var node = $("#tree").dynatree("getRoot");
-	    node.sortChildren(cmp, true);
+	    node.sortChildren(this.metadataService.cmp, true);
 	};
     
    

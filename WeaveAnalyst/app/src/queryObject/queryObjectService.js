@@ -5,7 +5,7 @@
  * Don't worry, it will be possible to manage more than one query object in the
  * future.
  */
-
+var QueryObject = angular.module("weaveAnalyst.queryObject", []);
 //using value recipes so that these tools could be used elsewhere as well TODO: make them into directives
 QueryObject.value('indicator_tool', {
 												title : 'Indicator',
