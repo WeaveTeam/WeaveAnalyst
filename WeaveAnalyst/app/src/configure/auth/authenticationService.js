@@ -2,10 +2,10 @@
  * this service deals with login credentials
  */
 
-var authenticationModule = angular.module('weaveAnalyst.configure.auth', []);
+angular.module('weaveAnalyst.configure.auth', []);
 //experimenting with another kind of angular provider factory vs service (works!!)
 
-authenticationModule.factory('authenticationService',['$rootScope', 'runQueryService', 'adminServiceURL', 
+angular.module('weaveAnalyst.configure.auth').factory('authenticationService',['$rootScope', 'runQueryService', 'adminServiceURL', 
                                                       function authenticationServiceFactory(rootScope, runQueryService, adminServiceURL){
 	var authenticationService = {};
 	authenticationService.user;

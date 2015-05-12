@@ -1,8 +1,8 @@
-var metadataModule = angular.module('weaveAnalyst.configure.metadata', []);
+angular.module('weaveAnalyst.configure.metadata', []);
 
 // SOURCE: from stack overflow : http://stackoverflow.com/questions/25531961/angularjs-bootstrap-progressbar-max-changing
 //adding a decorator that encapsulates the progressbar and bar directives provided by ui-bootstrap
-metadataModule.config(function($provide){
+angular.module('weaveAnalyst.configure.metadata').config(function($provide){
 	var progressDecorator = function($delegate){//$delegate is the original service instance which is decorated
 		var directive = $delegate[0];
 		var compile = directive.compile;
@@ -32,7 +32,7 @@ metadataModule.config(function($provide){
 	
 });
 
-metadataModule.controller("MetadataManagerController", function($scope,$rootScope, dataServiceURL,
+angular.module('weaveAnalyst.configure.metadata').controller("MetadataManagerController", function($scope,$rootScope, dataServiceURL,
 														queryService, authenticationService, runQueryService,
 														errorLogService, metadataService){			
 
@@ -205,7 +205,7 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
  *applies metadata standards defined by user in a csv to the selected datatable 
  *updates the aws-metadata property of columns in a datatable 
  */
-metadataModule.controller("MetadataFileController", function ($scope, queryService, authenticationService, errorLogService){
+angular.module('weaveAnalyst.configure.metadata').controller("MetadataFileController", function ($scope, queryService, authenticationService, errorLogService){
 	$scope.maxTasks= 0;
 	$scope.progressValue = 0;
 	
@@ -296,7 +296,7 @@ metadataModule.controller("MetadataFileController", function ($scope, queryServi
 });		
 
 
-metadataModule.directive('dynatree', function() {
+angular.module('weaveAnalyst.configure.metadata').directive('dynatree', function() {
 	return {
         link: function(scope, element, attrs) {
         	scope.generateTree(element);

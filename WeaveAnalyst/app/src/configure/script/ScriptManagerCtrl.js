@@ -1,5 +1,5 @@
 var scriptUploaded;
-var scriptModule = angular.module('weaveAnalyst.configure.script', []);
+angular.module('weaveAnalyst.configure.script', []);
 
 var tryParseJSON = function(jsonString){
     try {
@@ -18,14 +18,14 @@ var tryParseJSON = function(jsonString){
     return false;
 };
 
-scriptModule.controller("ScriptManagerCtrl", function() {
+angular.module('weaveAnalyst.configure.script').controller("ScriptManagerCtrl", function() {
 
 
     
 });
 
 //this controller deals with the script wizard
-scriptModule.controller('AddScriptDialogInstanceCtrl', function () {
+angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInstanceCtrl', function () {
 
 
 });

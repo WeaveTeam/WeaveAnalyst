@@ -1,4 +1,4 @@
-metadataModule.service("metadataService", ['$q', '$rootScope','queryService', 'authenticationService',
+angular.module('weaveAnalyst.configure.metadata').service("metadataService", ['$q', '$rootScope','queryService', 'authenticationService',
                                            function($q, rootScope, queryService, authenticationService) {
 	this.gridData = [];
 	var that = this;
