@@ -2,7 +2,7 @@
  * directive for creating a geo filter
  */
 
-AnalysisModule.directive('geoFilter', [function factory(){
+angular.module('weaveAnalyst.AnalysisModule').directive('geoFilter', [function factory(){
 	
 	var directiveDefnObject = {
 			restrict : 'E',
@@ -22,7 +22,7 @@ AnalysisModule.directive('geoFilter', [function factory(){
 	return directiveDefnObject;
 }]);
 
-AnalysisModule.service('geoService', [function(){
+angular.module('weaveAnalyst.AnalysisModule').service('geoService', [function(){
 	
 
 }]);

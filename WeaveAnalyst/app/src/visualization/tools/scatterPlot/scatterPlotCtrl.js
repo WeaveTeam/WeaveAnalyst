@@ -2,7 +2,7 @@
  * controls the scatter plot visualization tool  widget
  */
 
-AnalysisModule.controller("ScatterPlotCtrl", function() {
+angular.module('weaveAnalyst.AnalysisModule').controller("ScatterPlotCtrl", function() {
 
 
 });

@@ -2,6 +2,6 @@
  * controls the bar chart visualization tool widget
  */
 
-AnalysisModule.controller("BarChartCtrl", function(){
+angular.module('weaveAnalyst.AnalysisModule').controller("BarChartCtrl", function(){
 
 });

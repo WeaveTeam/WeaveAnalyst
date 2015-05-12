@@ -3,24 +3,24 @@
 //                                 'ui.sortable',
 
 
-var weave_Analyst = angular.module('weaveAnalyst',['ui.router',
-                                                   'ui.grid',
-                                                   'ui.bootstrap',
-                                                   'mk.editablespan',
-                                                   'ngAnimate',
-                                                   'mgcrea.ngStrap',
-                                                   'angularSpinner',
-                                                   'ngSanitize',
-                                                   'weaveAnalyst.configure',
-                                                   'weaveAnalyst.dataStatistics',
-	                                               'weaveAnalyst.directives',
-	                                               'weaveAnalyst.queryObject',                             
-	                                               'weaveAnalyst.queryObjectEditor', 
-	                                               'weaveAnalyst.project',
-	                                               'weaveAnalyst.errorLog',
-	                                               'weaveAnalyst.AnalysisModule',
-	                                               'weaveAnalyst.WeaveModule',
-	                                               'weaveAnalyst.QueryHandlerModule']);
+angular.module('weaveAnalyst',['ui.router',
+                               'ui.grid',
+                               'ui.bootstrap',
+                               'mk.editablespan',
+                               'ngAnimate',
+                               'mgcrea.ngStrap',
+                               'angularSpinner',
+                               'ngSanitize',
+                               'weaveAnalyst.configure',
+                               'weaveAnalyst.dataStatistics',
+                               'weaveAnalyst.directives',
+                               'weaveAnalyst.queryObject',                             
+                               'weaveAnalyst.queryObjectEditor', 
+                               'weaveAnalyst.project',
+                               'weaveAnalyst.errorLog',
+                               'weaveAnalyst.AnalysisModule',
+                               'weaveAnalyst.WeaveModule',
+                               'weaveAnalyst.QueryHandlerModule']);
 
 angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
                                           'weaveAnalyst.configure.metadata',
@@ -34,15 +34,15 @@ angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox'
 
 
 //using the value provider recipe 
-weave_Analyst.value("dataServiceURL", '/WeaveServices/DataService');
-weave_Analyst.value('adminServiceURL', '/WeaveServices/AdminService');
-weave_Analyst.value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
-weave_Analyst.value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
-weave_Analyst.value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
-weave_Analyst.value('WeaveDataSource', 'WeaveDataSource');
+angular.module('weaveAnalyst').value("dataServiceURL", '/WeaveServices/DataService');
+angular.module('weaveAnalyst').value('adminServiceURL', '/WeaveServices/AdminService');
+angular.module('weaveAnalyst').value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
+angular.module('weaveAnalyst').value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
+angular.module('weaveAnalyst').value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
+angular.module('weaveAnalyst').value('WeaveDataSource', 'WeaveDataSource');
 
 
-weave_Analyst.run(['$rootScope', function($rootScope){
+angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
 	$rootScope.$safeApply = function(fn, $scope) {
 			if($scope == undefined){
 				$scope = $rootScope;
@@ -138,7 +138,7 @@ weave_Analyst.run(['$rootScope', function($rootScope){
 	    
 });
 
-weave_Analyst.controller('weaveAnalystController', function($scope,$rootScope, $state, authenticationService,usSpinnerService, queryService, WeaveService) {
+angular.module('weaveAnalyst').controller('weaveAnalystController', function($scope,$rootScope, $state, authenticationService,usSpinnerService, queryService, WeaveService) {
 	
 	this.state = $state;
 	this.authenticationService = authenticationService;

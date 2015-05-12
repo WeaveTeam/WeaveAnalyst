@@ -2,6 +2,6 @@
  * controls the map visualization tool widget
  */
 
-AnalysisModule.controller("MapCtrl", function(){
+angular.module('weaveAnalyst.AnalysisModule').controller("MapCtrl", function(){
 
 });

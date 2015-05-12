@@ -1,3 +1,3 @@
-AnalysisModule.controller('byVariableCtrl', function(){
+angular.module('weaveAnalyst.AnalysisModule').controller('byVariableCtrl', function(){
 
 }); 

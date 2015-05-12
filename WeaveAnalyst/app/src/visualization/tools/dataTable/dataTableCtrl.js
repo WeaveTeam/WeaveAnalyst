@@ -2,6 +2,6 @@
  * controls the datatable visualization tool  widget
  */
 
-AnalysisModule.controller("DataTableCtrl", function() {
+angular.module('weaveAnalyst.AnalysisModule').controller("DataTableCtrl", function() {
 
 }); 

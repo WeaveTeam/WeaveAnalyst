@@ -1,4 +1,4 @@
-AnalysisModule.controller('GeographyCtrl', function(){
+angular.module('weaveAnalyst.AnalysisModule').controller('GeographyCtrl', function(){
 	
 	
 });

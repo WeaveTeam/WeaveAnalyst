@@ -1,4 +1,4 @@
-AnalysisModule.directive('tree', function(queryService) {
+angular.module('weaveAnalyst.AnalysisModule').directive('tree', function(queryService) {
 	
 	
 	

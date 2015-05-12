@@ -1,3 +1,3 @@
-AnalysisModule.controller('CrossTabCtrl', function() {
+angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
 
 });

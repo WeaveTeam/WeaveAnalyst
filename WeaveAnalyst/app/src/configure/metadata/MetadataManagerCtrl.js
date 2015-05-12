@@ -235,8 +235,6 @@ metadataModule.controller("MetadataFileController", function ($scope, queryServi
 	        						
 	        						var metadata = metadataArray[i][1];//gets the metadata to be updated per column
 	        						
-	        						//$scope.progressValue = 0;
-	        						//console.log("scope", $scope);
 	        						var id;
 	        						for(var j = 0; j < columns.length; j++) {
 	        							if(columns[j].title == title) {

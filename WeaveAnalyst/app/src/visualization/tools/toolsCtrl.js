@@ -1,3 +1,3 @@
-AnalysisModule.controller("toolsCtrl", function(){
+angular.module('weaveAnalyst.AnalysisModule').controller("toolsCtrl", function(){
 
 });

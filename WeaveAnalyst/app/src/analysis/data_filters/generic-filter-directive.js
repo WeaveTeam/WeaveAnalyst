@@ -1,4 +1,4 @@
-AnalysisModule.directive('filter', function() {
+angular.module('weaveAnalyst.AnalysisModule').directive('filter', function() {
 	
 	function link($scope, element, attrs, ngModelCtrl) {
 //		element.draggable({ containment: "parent" }).resizable({

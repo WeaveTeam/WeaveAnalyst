@@ -1,4 +1,4 @@
-AnalysisModule.directive('treeFilter', function() {
+angular.module('weaveAnalyst.AnalysisModule').directive('treeFilter', function() {
 	
 	function link($scope, element, attrs, ngModel, ngModelCtrl) {
 

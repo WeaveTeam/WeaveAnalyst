@@ -2,10 +2,10 @@
  * Handle all Analysis Tab related work - Controllers to handle Analysis Tab
  */
 'use strict';
-var AnalysisModule = angular.module('weaveAnalyst.AnalysisModule', []);
+angular.module('weaveAnalyst.AnalysisModule', []);
 
 //analysis service
-AnalysisModule.service('AnalysisService', [function() {
+angular.module('weaveAnalyst.AnalysisModule').service('AnalysisService', [function() {
 	
 	var AnalysisService = {
 			
@@ -16,7 +16,7 @@ AnalysisModule.service('AnalysisService', [function() {
 }]);
 
 //main analysis controller
-AnalysisModule.controller('AnalysisCtrl', function( ) {
+angular.module('weaveAnalyst.AnalysisModule').controller('AnalysisCtrl', function( ) {
 
 	
 });
@@ -30,7 +30,7 @@ AnalysisModule.controller('AnalysisCtrl', function( ) {
 
 
 //Script Options controller
-AnalysisModule.controller("ScriptsSettingsCtrl", function() {
+angular.module('weaveAnalyst.AnalysisModule').controller("ScriptsSettingsCtrl", function() {
 
 	
 });
