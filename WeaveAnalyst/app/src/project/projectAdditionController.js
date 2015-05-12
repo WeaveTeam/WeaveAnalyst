@@ -1,9 +1,9 @@
 
-projectModule.controller("projectAdditionController", function(){
+angular.module('weaveAnalyst.project').controller("projectAdditionController", function(){
 
 });
 
 //Modal instance controller
-projectModule.controller('pjtAddtionInstanceCtrl', function() {
+angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceCtrl', function() {
 
 });

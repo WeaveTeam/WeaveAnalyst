@@ -2,7 +2,7 @@
  * this directive contains the UI and logic for the sparklines drawn for each numerical column
  */
 
-dataStatsModule.directive('sparkLines',[ function factory(){
+angular.module('weaveAnalyst.dataStatistics').directive('sparkLines',[ function factory(){
 	var directiveDefnObj= {
 			restrict: 'EA',
 			scope : {

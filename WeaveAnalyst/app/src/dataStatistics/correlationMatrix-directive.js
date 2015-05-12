@@ -2,7 +2,7 @@
  * this directive contains the UI and logic for the correlation Matrix
  */
 
-dataStatsModule.directive('correlationMatrix',[function factory(){
+angular.module('weaveAnalyst.dataStatistics').directive('correlationMatrix',[function factory(){
 	var directiveDefnObj= {
 			restrict : 'E', //restricts the directive to a specific directive declaration style.in this case as element
 			scope : {//isolated scope, its parent is the scope of the correlation matrix tab in dataStatsMain.tpl.html

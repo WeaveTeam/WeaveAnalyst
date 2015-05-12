@@ -3,17 +3,17 @@
  * Also includes the service for logging errors
  */
 
-var errorLogModule = angular.module('weaveAnalyst.errorLog', []);
+angular.module('weaveAnalyst.errorLog', []);
 
-errorLogModule.controller('analystErrorLogCtrl', function(){
+angular.module('weaveAnalyst.errorLog').controller('analystErrorLogCtrl', function(){
 	
 });
 
-errorLogModule.controller('errorLogInstanceCtrl', function(){
+angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceCtrl', function(){
 	
 });
 
-errorLogModule.service('errorLogService',['$modal',function($modal){
+angular.module('weaveAnalyst.errorLog').service('errorLogService',['$modal',function($modal){
 
 	
 }]);
