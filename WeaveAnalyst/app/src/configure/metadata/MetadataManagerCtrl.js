@@ -313,7 +313,7 @@
 })();//end of IIFE
 
 
-
+//TODO include diretives in IIFE
 angular.module('weaveAnalyst.configure.metadata').directive('dynatree', function() {
 	return {
         link: function(scope, element, attrs) {
