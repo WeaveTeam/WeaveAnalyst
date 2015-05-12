@@ -48,8 +48,10 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 	
 	//TODO try moving this to the directive controller or to the service
 	
+	
 	 //generated when the dynatree directive loads
 	$scope.generateTree = function(element) {
+		
 		queryService.getDataTableList(true).then(function(dataTableList) {
 			for (var i = 0; i < dataTableList.length; i++) {
 				dataTable = dataTableList[i];
@@ -69,6 +71,7 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 							//handling nodes when tables TODO check if handling is done correctly
 							if(!node.data.metadata)
 								{
+									
 									this.selectedDataTableId = parseInt(node.data.key);
 									//clears the grid when nodes are selected
 									this.metadataService.setGridData([]);
@@ -76,10 +79,11 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 
 							//handle when node is a column
 							if(node.data.metadata){
+								console.log("this inside", this);
 								this.selectedDataTableId = node.data.id;
-								metadataService.getColumnMetadata(node.data);
+								this.metadataService.getColumnMetadata(node.data);
 							}
-						},
+						}.bind(this),
 						//******************************************lazy loading*****************************************************
 						onLazyRead : function(node){
 							 var request = {
@@ -131,8 +135,8 @@ metadataModule.controller("MetadataManagerController", function($scope,$rootScop
 					});
 				}
 			}
-		});
-	};
+		}.bind(this));
+	}.bind(this);//controller;
 
 	
 
