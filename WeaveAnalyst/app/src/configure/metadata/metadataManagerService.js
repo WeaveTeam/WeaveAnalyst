@@ -23,8 +23,6 @@
 					 				   { 
 											publicMetadata : { aws_metadata : jsonaws_metadata }
 					 				   }).then(function() {
-					 					   	//$scope.maxTasks = 100;
-					 					   //$scope.progressValue = 100;
 					 				   });
 				 }
 			 
