@@ -18,9 +18,9 @@
 		<link rel="stylesheet" href="css/app.css">
 		<link rel="stylesheet" href="css/font-awesome.css">
 		<link rel="stylesheet" href="css/cutdown.css">
-		<link rel="stylesheet" href="lib/ui-select/select.css"/>
+		<link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css"/>
 		<link rel="stylesheet" href="lib/ui-select2/select2.css"/>
-		<link rel="stylesheet" href="lib/dynatree/ui.dynatree.css"/>
+<!-- 		<link rel="stylesheet" href="lib/dynatree/ui.dynatree.css"/> -->
 		<link rel="stylesheet" href="lib/jquery-ui/ui-lightness/jquery-ui-1.10.3.custom.css" />
 		<link rel="stylesheet" href="css/projects.css"/>
 		<link rel="stylesheet" href="css/metadata.css"/>
@@ -67,9 +67,9 @@
 <!-- 							<a href="javascript:void(0);" class="btn btn-default" style="display : table-cell;font-size: 17px; padding: 2px 5px; width : 33.3%; margin-top: 10px;"> <span style="vertical-align: middle" ng-click = "clearSessionState()">Clear</span></a> -->
 <!-- 						</div> -->
 						
-						<!-- <div ng-if="authenticationService.authenticated">
+					<div ng-if="authenticationService.authenticated">
 							<font color="white">Signed in as: {{authenticationService.user}}</font>
-						</div> -->
+						</div> 
 					</div><!-- /.navbar-collapse -->
 					
 				</nav>
@@ -141,11 +141,12 @@
 
 		<script src="lib/angular-masonry/masonry.js" type="text/javascript"></script>
 		<script src="lib/imagesloaded/imagesloaded.js" type="text/javascript"></script>
-		<script src="lib/angular-masonry/angular-masonry.js" type="text/javascript"></script>
 		<script src='lib/ui-slider/slider.js'></script>
 		<script src='lib/ui-sortable/ui-sortable.js'></script>
 		<script src="lib/ui-select2/select2.js"></script>
-		<script src='lib/ui-select/select.js'></script>
+<!-- 		<script src='lib/ui-select/select.js'></script>
+       <!-- UI select-->
+       <script src= "bower_components/angular-ui-select/dist/select.min.js"></script>
 
 
 		
@@ -169,7 +170,6 @@
 		<script src='src/queryObject/buttonBarController.js'></script>
 		<script src='src/project/ProjectManagementCtrl.js'></script>
 		<script src='src/project/projectAdditionController.js'></script>
-		<script src='src/project/project-query-button-directive.js'></script>
 		<script src='src/project/projectService.js'></script>
 		<script src='src/errorLog/errorLogCtrl.js'></script>
 		<script src="src/analysis/analysis.js"></script>

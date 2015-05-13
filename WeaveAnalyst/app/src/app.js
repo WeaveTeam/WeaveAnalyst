@@ -1,11 +1,12 @@
 'use strict';
-//                                 'ui.select',
+//                                 
 //                                 'ui.sortable',
 //Using IIFEs
 (function($stateProvider, $urlRouterProvider, $rootScope){
 
 	angular.module('weaveAnalyst',['ui.router',
 	                               'ui.grid',
+	                               'ui.select',
 	                               'ui.bootstrap',
 	                               'mk.editablespan',
 	                               'ngAnimate',
