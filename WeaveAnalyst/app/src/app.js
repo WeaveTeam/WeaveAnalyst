@@ -85,7 +85,8 @@
 	    .state('project', {
 	    	url:'/projects',
 	    	templateUrl : 'src/project/projectManagementPanel.html',
-	    	//controller : 'ProjectManagementCtrl',
+	    	controller : 'ProjectManagementController',
+	    	controllerAs : 'prjtCtrl',
 	    	data: {
 	    		activetab : 'project'
 	    	}

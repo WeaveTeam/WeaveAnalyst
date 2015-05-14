@@ -22,7 +22,21 @@
 				insertQueryObjectStatus : null 
 		};
 
-		
+		/**
+		 *this function checks if the table 'stored_query_objects' has already been created
+		 */
+		that.checkQOStore = function(){
+			var deferred = $q.defer();
+			
+			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
+	        
+				rootScope.$safeApply(function() {
+					deferred.resolve(result);
+				});
+				
+			});
+			return deferred.promise;
+		};
 		
 		/**
 	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
@@ -34,11 +48,13 @@
 	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
 				that.cache.listOfProjectsFromDatabase = result;
 	        
-				scope.$safeApply(function() {
+				rootScope.$safeApply(function() {
 					deferred.resolve(result);
 				});
 			
 			});
+	    	
+	    	return deferred.promise;
 	    };
 	    
 	    /**
@@ -85,7 +101,7 @@
 	    				that.cache.userName = "";
 	    			}
 	    		
-		    		scope.$safeApply(function() {
+	    			rootScope.$safeApply(function() {
 		                deferred.resolve(AWSQueryObjectCollection);
 		            });
 	        	
@@ -101,7 +117,7 @@
 	    	if(!(WeaveService.weaveWindow.closed)){
 	    		var base64SessionState = WeaveService.getBase64SessionState();
 	    		queryService.queryObject.weaveSessionState = WeaveService.getSessionStateObjects();//TODO fix this adding properties dynamically not GOOD
-	    		this.writeSessionState(base64SessionState, params);
+	    		that.writeSessionState(base64SessionState, params);
 	    	}
 	    };
 	   
@@ -158,7 +174,7 @@
 	    		
 	   		 that.cache.weaveSessionState = result;
 	   		 
-	        	scope.$safeApply(function() {
+	   		 	rootScope.$safeApply(function() {
 	                deferred.resolve(result);
 	            });
 	        	
@@ -192,7 +208,7 @@
 	      	 
 	      	 that.cache.deleteProjectStatus = 0;//reset 
 	       	
-	       	scope.$safeApply(function() {
+	      	 rootScope.$safeApply(function() {
 	               deferred.resolve(result);
 	           });
 	       	
@@ -225,7 +241,7 @@
 		       		
 		       		that.cache.project.selected = "";
 		       	}
-		       	scope.$safeApply(function() {
+		       	rootScope.$safeApply(function() {
 		               deferred.resolve(result);
 		           });
 		       	
@@ -255,7 +271,7 @@
 	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
 	       	}
 	       	
-	       	scope.$safeApply(function() {
+	       	rootScope.$safeApply(function() {
 	               deferred.resolve(result);
 	           });
 	       	
