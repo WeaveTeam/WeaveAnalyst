@@ -30,7 +30,6 @@
 		         controllerAs : 'pam',
 		         resolve :{
 		        	 projectNameEntered : function(){
-		        		 console.log(this);
 		        		 return $scope.projectNameEntered;
 		        		 },
 		        	 userNameEntered : function(){
