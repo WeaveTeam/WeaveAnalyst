@@ -9,6 +9,7 @@
 		prjtCtrl.projectService = projectService;
 		prjtCtrl.WeaveService = WeaveService;
 		prjtCtrl.queryService = queryService;
+		prjtCtrl.checkQOTableExits = checkQOTableExits;
 		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
 		prjtCtrl.nameOfQueryObjectToDelete = "";
 		prjtCtrl.deleteProject = deleteProject;
@@ -17,7 +18,7 @@
 		prjtCtrl.openInAnalysis = openInAnalysis;
 		
 		//check for table
-		//make alert
+		prjtCtrl.checkQOTableExits();
 		//create table with dummy project and queries
 		
 		
@@ -50,26 +51,31 @@
 	      });
 		
 	     //checks if a table is created for storing query objects
-	     function checkQOStore (){
-	    	 var projExists = prjtCtrl.projectService.checkExistingProjects();
-	    	 console.log("projExists",projExists );
-//	    	 if(projExists)
-//    			prjtCtrl.projectService.getListOfProjects();//retrives project list
-//	    	 else{
-//		    		var conf = confirm("There is no dedicated place to store query objects" +"\n"
-//		    		 		+ "Create a table to store query objects?");
-//		    		 if(conf == true){
-//		    			 prjtCtrl.projectService.createDummyProj().then(function(status){
-//		    				 if(status)
-//		    					 alert("Table \"stored_query_objects\" has been successfully created");
-//		    			 });
-//		    		 }
-//		    		 else
-//		    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
-//	    	 }
-	    			
-	    			
-	    		 
+	     function checkQOTableExits (){
+	    	prjtCtrl.projectService.checkQOTableExits().then(function(projExists){
+		    	 console.log("projExists",projExists );
+		    	 if(projExists){
+		    		 prjtCtrl.projectService.getListOfProjects().then(function(projectList){
+		    			 console.log("projectList", projectList);
+		    			 if(projectList.length == 0)
+		    				 alert("There are no stored query objects");
+		    		 });//retrives project list
+		    	 }
+		    	 else{
+			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
+			    		 		+ "Create a table to store query objects?");
+			    		 if(conf == true){
+			    			 prjtCtrl.projectService.createQOTable().then(function(status){
+			    				 if(status){
+			    					 console.log("status", status);
+			    				 }
+			    					 alert("Table \"stored_query_objects\" has been successfully created");
+			    			 });
+			    		 }
+			    		 else
+			    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
+		    	 }
+	    	});
 	     };
 	     
 		//deletes an entire Project along with all queryObjects within

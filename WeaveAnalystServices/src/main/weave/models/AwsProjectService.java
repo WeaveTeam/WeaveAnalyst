@@ -25,10 +25,9 @@ public class AwsProjectService
 		
 	}
 	
-	static private final String SUFFIX_STORED_QUERY_OBJECTS = "_stored_query_objects";
+	static private final String SUFFIX_STORED_QUERY_OBJECTS = "stored_query_objects";
 	public static final String QO_CONTENT = "queryObjectContent";
 	public static final String QO_TITLE = "queryObjectTitle";
-	static private final String tablePrefix = "weave";
 	
 		/**
 	 	* this function checks if the 'stored_query_objects' table has been created or not
@@ -37,7 +36,7 @@ public class AwsProjectService
 	    */
 	public boolean checkQOTableExits() throws SQLException, RemoteException{
 		boolean existStatus = false;
-		String tableName = tablePrefix + SUFFIX_STORED_QUERY_OBJECTS;
+		String tableName = SUFFIX_STORED_QUERY_OBJECTS;
 		
 		try{
 			Connection con = WeaveConfig.getConnectionConfig().getAdminConnection();
@@ -56,30 +55,34 @@ public class AwsProjectService
 	 	* this function creates the 'stored_query_objects' table to enable saving of query objects to projects
 	    * @throws Exception
 	    */
-	public void createQOTable() throws SQLException, RemoteException{
+	public boolean createQOTable() throws SQLException, RemoteException{
+		boolean creationStatus = false;
 		
 		try{
 			
 			Connection con = WeaveConfig.getConnectionConfig().getAdminConnection();
-			String schema = "weave";
-			String tableName = tablePrefix + SUFFIX_STORED_QUERY_OBJECTS;
+			String schema = WeaveConfig.getConnectionConfig().getDatabaseConfigInfo().schema;
+			String tableName = SUFFIX_STORED_QUERY_OBJECTS;
 			String[] fieldNames = {"userName", "projectName", "projectDescription", "queryObjectTitle", "queryObjectContent", "resultVisualizations"};
 			
 			
-//			SQLUtils.createTable(con, schema, tableName, 
-//								Arrays.asList(fieldNames), 
-//								Arrays.asList(
-//										SQLUtils.getVarcharTypeString(con, 50),
-//										SQLUtils.getVarcharTypeString(con, 50),
-//										SQLUtils.getVarcharTypeString(con, 5000),
-//										SQLUtils.getVarcharTypeString(con, 50),
-//										//SQLUtils.getLongBlobTypeString(con), 
-//										//SQLUtils.getLongBlobTypeString(con)), 
-//								Arrays.asList(QO_CONTENT, QO_TITLE));
+			SQLUtils.createTable(con, schema, tableName, 
+								Arrays.asList(fieldNames), 
+								Arrays.asList(
+										SQLUtils.getVarcharTypeString(con, 50),
+										SQLUtils.getVarcharTypeString(con, 50),
+										SQLUtils.getVarcharTypeString(con, 5000),
+										SQLUtils.getVarcharTypeString(con, 50),
+										SQLUtils.getLongBlobTypeString(con), 
+										SQLUtils.getLongBlobTypeString(con)), 
+								Arrays.asList(QO_TITLE));//TODO find the right key type for storing json objects
+			creationStatus = true;
 		}
 		catch(SQLException e){
 			throw new RemoteException("Unable to initiate stored query objects table.", e);
 		}
+		
+		return creationStatus;
 	}
 	
 	/**

@@ -25,7 +25,7 @@
 		/**
 		 *this function checks if the table 'stored_query_objects' has already been created
 		 */
-		that.checkQOStore = function(){
+		that.checkQOTableExits = function(){
 			var deferred = $q.defer();
 			
 			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
@@ -37,6 +37,23 @@
 			});
 			return deferred.promise;
 		};
+		
+		/**
+		 *this function creates the table 'stored_query_objects' if it has not been created before
+		 */
+		that.createQOTable = function(){
+			var deferred = $q.defer();
+			
+			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
+	        
+				rootScope.$safeApply(function() {
+					deferred.resolve(result);
+				});
+				
+			});
+			return deferred.promise;
+		};
+		
 		
 		/**
 	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
