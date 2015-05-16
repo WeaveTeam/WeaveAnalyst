@@ -11,19 +11,19 @@
 		<tr>
 			<td>Name of the Project</td>
 			<td><input style = "width:100%; padding-bottom : 5px"
-					   ng-model = "projectNameEntered" type = "text"></td>
+					   ng-model = "pam.projectNameEntered" type = "text"></td>
 		</tr>
 		
 		<tr>
 			<td>Username for the Project</td>
 			<td><input style = "width:100%; padding-bottom : 5px"
-					   ng-model = "userNameEntered" type = "text"></td>
+					   ng-model = "pam.userNameEntered" type = "text"></td>
 		</tr>
 		
 		<tr>
 			<td>Project Description</td>
 			<td><textarea style = "width:100%; overflow-y : scroll; resize : none" type = "text"
-					  ng-model = "projectDescriptionEntered" >
+					  ng-model = "pam.projectDescriptionEntered" >
 			</textarea></td>
 		</tr>
 		
@@ -32,7 +32,7 @@
 <!-- 			<td ng-if= "!uploadStatus"><font color="red" >No file uploaded</font></td> -->
 <!-- 			<td>{{uploadStatus}}</td>  -->
 			
-			<td> <label class='btn btn-primary' style = "width: 80px; height: 30px; float:left">Upload<input fileread="uploaded.QueryObject" class='file-upload' type='file'/></label></td>
+			<td> <label class='btn btn-primary' style = "width: 80px; height: 30px; float:left">Upload<input fileread="pam.uploaded.QueryObject" class='file-upload' type='file'/></label></td>
 		</tr>
 		
 	
@@ -40,10 +40,10 @@
 		
 		<tr>
 		<td>
-			<ul ng-repeat="file in uploadedObjects.queryObjectTitles">
+			<ul ng-repeat="file in pm.uploadedObjects.queryObjectTitles">
 				<li>
 					<span class="prj-txt-lbl"> {{file}}</span> 
-					<button type="button" class="close" ng-click ="remove(file)"><i class="fa fa-times"></i></button>
+					<button type="button" class="close" ng-click ="pam.remove(file)"><i class="fa fa-times"></i></button>
 				</li>
 			</ul>
 		</td>
@@ -55,58 +55,8 @@
 
 <div class="modal-footer">
 			{{uploadStatus}}
-			<button type="button" class= "btn btn-primary" ng-click = "saveQueryObjects(projectNameEntered, projectDescriptionEntered, userNameEntered)">
+			<button type="button" class= "btn btn-primary" ng-click = "pam.saveQueryObjects(pam.projectNameEntered, pam.projectDescriptionEntered, pam.userNameEntered)">
 			Save
 			</button>
-		<div ng-if= "!uploadStatus"><font color="red" >No file uploaded</font></div>
+		<div ng-if= "!pam.uploadStatus"><font color="red" >No file uploaded</font></div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- <div class="aside" tabindex="1" role="dialog" style= "width: 500px; height: 100%;" ng-controller = "projectAdditionController" > -->
-<!-- 	<div class="aside-dialog"> -->
-<!-- 		<div class="aside-content"> -->
-<!-- 			<div class="aside-header" ng-show="title"> -->
-<!-- 				<button type="button" class="close" ng-click="$hide()"> -->
-
-<!-- 					&times; -->
-<!-- 				</button> -->
-<!-- 				<span class="aside-title" ng-bind-html="title">{{title}}</span> -->
-<!-- 			</div> -->
-<!-- 			<div class="aside-body"> -->
-<!-- 				Name of the Project -->
-<!-- 				<input ng-model = "projectService.projectBundle.projectName" type = "text"> -->
-<!-- 				</input> -->
-<!-- 				<br> -->
-<!-- 				</br> -->
-<!-- 				Project Description<textarea ng-model = "projectService.projectBundle.projectDescription" style = "width:200px; overflow-y : scroll;" type = "text"></textarea> -->
-<!-- 				<br> -->
-<!-- 				</br> -->
-<!-- 				Query Objects (.json) files to include in the project -->
-<!-- 				<br> -->
-<!-- 				</br> -->
-<!--                     <b>{{projectService.projectBundle.uploadStatus}}</b> -->
-
-<!--                     <file-upload label="Browse"></file-upload> -->
-<!-- 			</div> -->
-<!-- 		</div> -->
-<!-- 	</div> -->
-
-
-<!-- 	<div style="padding-top:40px"> -->
-<!-- 		<button type="button" class= "btn btn-primary" style = "margin-left : 380px" ng-click = "saveNewProjectToDatabase()"> -->
-<!-- 			Save -->
-<!-- 		</button> -->
-
-<!-- 	</div> -->
-<!-- </div> -->
-

@@ -1,9 +1,9 @@
 (function(){
 	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
 	
-	ProjectManagementController.$inject = ['$scope', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
+	ProjectManagementController.$inject = ['$scope', '$modal', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
 	
-	function ProjectManagementController ($scope, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
+	function ProjectManagementController ($scope,$modal, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
 		var prjtCtrl = this;
 		
 		prjtCtrl.projectService = projectService;
@@ -16,6 +16,32 @@
 		prjtCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
 		prjtCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
 		prjtCtrl.openInAnalysis = openInAnalysis;
+		prjtCtrl.openAdditionPanel = openAdditionPanel;
+		
+		//options needed for creating the modal instance window
+		 //communicating with the modal
+		prjtCtrl.pjtModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: false,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/project/projectAdditionPanel.html',
+		         controller: 'pjtAddtionInstanceController',
+		         controllerAs : 'pam',
+		         resolve :{
+		        	 projectNameEntered : function(){
+		        		 console.log(this);
+		        		 return $scope.projectNameEntered;
+		        		 },
+		        	 userNameEntered : function(){
+		        		 return $scope.userNameEntered;
+		        		 },
+		        	 projectDescriptionEntered : function(){
+		        		 return $scope.projectDescriptionEntered;
+		        		 }
+		        	 
+		         }
+			};
 		
 		//check for table
 		prjtCtrl.checkQOTableExits();
@@ -141,6 +167,128 @@
 			});
 		};
 		
+		//button click event that creates the modal
+		function openAdditionPanel(){
+			var saveNewProject = $modal.open(prjtCtrl.pjtModalOptions);
+			
+			//called when modal is being closed
+			saveNewProject.result.then(function(additionParams){//then function takes a single object
+				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
+				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
+				 console.log("userName", additionParams.userNameEntered);
+				 
+				 
+				 
+			});
+		};
+		
+	};
+	
+	
+	//Modal instance controller
+	angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceController', additionController);
+	additionController.$inject= ['$scope', '$modalInstance','projectService', 'projectNameEntered','projectDescriptionEntered', 'userNameEntered'];
+	
+	function additionController ($scope, $modalInstance,projectService, projectNameEntered,projectDescriptionEntered, userNameEntered){
+		var pam = this;
+		
+		pam.projectService = projectService;
+		pam.uploadStatus = "";
+		pam.queryObjectJsons = [];
+		pam.queryObjectTitles = [];
+		pam.saveQueryObjects = saveQueryObjects;
+		pam.remove = remove;
+		
+		//object representation of a SINGLE file uploaded, changed everytime a file is uploaded
+		pam.uploaded = {
+				QueryObject : {
+					filename : "",
+					content : ""			
+				}
+		};
+		
+		pam.uploadedObjects = {
+				
+			queryObjectJsons : [],//contains the content of all query objects uploaded (json strings)
+			queryObjectTitles : []//contains the titles of all query Objects uploaded
+		};
+		
+		
+		//whenever a file is uploaded
+		$scope.$watch(function(){
+			return pam.uploaded.QueryObject.filename;
+		}, function(){
+			
+			if(pam.uploaded.QueryObject.filename)
+				{
+					//check if the file had been uploaded before
+					if($.inArray(pam.uploaded.QueryObject.filename, pam.uploadedObjects.queryObjectTitles) == -1)
+						{
+							//managing the title of queryObject (json )uploaded
+							var title = pam.uploaded.QueryObject.filename;
+							pam.uploadedObjects.queryObjectTitles.push(title);
+							
+							//managing the content of queryObject (json )uploaded
+							var content = pam.uploaded.QueryObject.content;
+							pam.uploadedObjects.queryObjectJsons.push(content);
+							
+							
+							var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+							pam.uploadStatus = countUploaded + " file(s) uploaded";
+						}
+				}
+			
+		});
+		
+		//called when save button is hit.;
+		function saveQueryObjects (projectNameEntered,projectDescriptionEntered, userNameEntered) {
+			if(!projectNameEntered)
+				projectNameEntered = "Example Project";
+			if(!projectDescriptionEntered)
+				projectDescriptionEntered = "These query object(s) belong to " + projectNameEntered;
+			if(!userNameEntered)
+				userNameEntered = "Awesome User";
+			
+			var additionParams = {
+					projectNameEntered : projectNameEntered,
+					userNameEntered :userNameEntered,
+					projectDescriptionEntered : projectDescriptionEntered,
+					uploadedObjects : $scope.uploadedObjects
+			};
+			
+			if(additionParams.uploadedObjects.queryObjectJsons.length > 0){//only if something is uploaded, save it
+				
+				pam.projectService.createNewProject(additionParams.userNameEntered,
+						additionParams.projectNameEntered,
+						additionParams.projectDescriptionEntered,
+						additionParams.uploadedObjects.queryObjectTitles,
+						additionParams.uploadedObjects.queryObjectJsons,
+						null);
+				
+				$modalInstance.close(additionParams);
+			}
+			else{
+				alert("Please upload a query object to create a project");
+			}
+			
+		 };
+		 
+	 	function remove (file){
+		 //removes the file from the uploaded collection
+		 var index = $.inArray(file, pam.uploadedObjects.queryObjectTitles);
+		 console.log("index", index);
+		 pam.uploadedObjects.queryObjectTitles.splice(index, 1);
+		 pam.uploadedObjects.queryObjectJsons.splice(index, 1);
+		 
+		 var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+		 pam.uploadStatus = countUploaded + " file(s) uploaded";
+		 if(countUploaded == 0){
+			 pam.uploadStatus = "";
+			 pam.uploaded.QueryObject.filename = null;
+			 pam.uploaded.QueryObject.content = null;
+			 
+		 }
+	 };
 	};
 })();//end of IIFE
 
