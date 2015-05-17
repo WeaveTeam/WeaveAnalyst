@@ -11,8 +11,13 @@
 	
 	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
 
-	function analystErrorLogController(){
-		
+	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
+	function analystErrorLogController($modal, errorLogService){
+		var aEl = this;
+		aEl.errorLogService = errorLogService;
+		aEl.openErrorLog = function(){
+			$modal.open(aEl.errorLogService.errorLogModalOptions);
+		};
 	}
 	
 	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
@@ -39,7 +44,7 @@
 		         dialogFade: true,
 		         keyboard: true,
 		         templateUrl: 'src/errorLog/analystErrorLog.html',
-		         controller: 'errorLogInstanceCtrl',
+		         controller: 'errorLogInstanceController',
 		         windowClass : 'erroLog-modal'
 			};
 		
@@ -47,7 +52,7 @@
 		//function to pop open the error log when required
 		that.openErrorLog = function(error){
 			that.logInErrorLog(error);
-			//$modal.open(that.errorLogModalOptions);
+			$modal.open(that.errorLogModalOptions);
 		};
 
 		/**
