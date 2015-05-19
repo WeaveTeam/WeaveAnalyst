@@ -1,12 +1,14 @@
 <project name="WeaveAnalystServices" basedir="." default="dist">
+	<property environment="env"/>
+    <property name="TOMCAT_HOME" value="${env.TOMCAT_HOME}"/>
     <echo message="Start ant build"/>
 	<path id="classpath">
         <fileset dir="lib" includes="**/*.jar"/>
-		<fileset dir="../WeaveServices/lib/" includes="**/*.jar"/>
-        <fileset dir="../WeaveServletUtils/lib/" includes="**/*.jar"/>
-		<pathelement path="../WeaveServletUtils/bin/classes"/>
-        <pathelement path="../WeaveServices/bin/classes"/>
-        <fileset dir="lib" includes="servlet-api.jar"/>
+		<fileset dir="../Weave/WeaveServices/lib/" includes="**/*.jar"/>
+        <fileset dir="../Weave/WeaveServletUtils/lib/" includes="**/*.jar"/>
+		<pathelement path="../Weave/WeaveServletUtils/bin/classes"/>
+        <pathelement path="../Weave/WeaveServices/bin/classes"/>
+ 		<pathelement path="${TOMCAT_HOME}/lib/servlet-api.jar"/>
     </path>
 	<echo message="Done setting path"/>
     <target name="clean">
@@ -22,18 +24,18 @@
                 debug="true"
                 debuglevel="lines,vars,source"/>
     	
-        <copy file="../WeaveServices/src/weave/config/sqlconfig.dtd" tofile="build/classes/weave/config/sqlconfig.dtd"/>
+        <copy file="../Weave/WeaveServices/src/weave/config/sqlconfig.dtd" tofile="build/classes/weave/config/sqlconfig.dtd"/>
     </target>
     <target name="dist" depends="build">
     	
         <mkdir dir="bin"/>
         <war destfile="bin/WeaveAnalystServices.war" webxml="WebContent/WEB-INF/web.xml">
             <lib dir="lib/"/>
-			<lib dir="../WeaveServices/lib"/>
-            <lib dir="../WeaveServletUtils/lib"/>
+			<lib dir="../Weave/WeaveServices/lib"/>
+            <lib dir="../Weave/WeaveServletUtils/lib"/>
             <classes dir="bin/classes"/>
-            <classes dir="../WeaveServices/bin/classes"/>
-			<classes dir="../WeaveServletUtils/bin/classes"/>
+            <classes dir="../Weave/WeaveServices/bin/classes"/>
+			<classes dir="../Weave/WeaveServletUtils/bin/classes"/>
             <webinf dir="WebContent/WEB-INF"/>
             <metainf dir="WebContent/META-INF"/>
         </war>
@@ -44,8 +46,8 @@
         <javadoc destdir="${basedir}/javadoc/"
             classpathref="classpath">
             <fileset dir="${basedir}/" includes="**/*.java"/>
-			<fileset dir="${basedir}/../WeaveServices/" includes="**/*.java"/>
-            <fileset dir="${basedir}/../WeaveServletUtils/" includes="**/*.java"/>
+			<fileset dir="${basedir}/../Weave/WeaveServices/" includes="**/*.java"/>
+            <fileset dir="${basedir}/../Weave/WeaveServletUtils/" includes="**/*.java"/>
         </javadoc>
     </target>
 </project>
