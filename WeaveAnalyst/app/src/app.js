@@ -77,7 +77,8 @@
 	    .state('analysis', {
 	    	url:'/analysis',
 	    	templateUrl : 'src/analysis/analysis.tpl.html',
-	    	//controller: 'AnalysisCtrl',
+	    	controller: 'AnalysisController',
+	    	controllerAs : 'anaCtrl',
 	    	data : {
 	    		activetab : 'analysis'
 	    	}

@@ -86,11 +86,11 @@
 	//////////////////////
 	angular.module("weaveAnalyst.queryObject").service("queryService", queryService);;
 	queryService.$inject = ['$q', '$rootScope', 'runQueryService',
-                            'dataServiceURL', 'adminServiceURL','projectManagementURL', 'scriptManagementURL','computationServiceURL',
+                            'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL',
                             'BarChartTool', 'MapTool', 'DataTableTool', 'ScatterPlotTool', 'color_Column', 'key_Column','WeaveDataSource'];
 	
 	function queryService ($q, scope, runQueryService, 
-   		 				   dataServiceURL, adminServiceURL, projectManagementURL, scriptManagementURL, computationServiceURL,
+   		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationServiceURL,
    		 				   BarChartTool, MapTool, DataTableTool, ScatterPlotTool, color_Column, key_Column, WeaveDataSource)
 	{
 		
@@ -171,7 +171,6 @@
 		this.cache = {
 				columns : [],
 				dataTableList : [],
-				scriptList : [],
 				filterArray : [],
 				numericalColumns : []
 		};
@@ -373,6 +372,42 @@
 	        	});
 	        });
 	        return deferred.promise;
+	    };
+	    
+	    this.getDataMapping = function(varValues)
+	    {
+	        	var deferred = $q.defer();
+
+	        	var callback = function(result)
+	        	{
+	         		scope.$safeApply(function(){
+	                   deferred.resolve(result);
+	         		});
+	        	};
+
+	         	if (Array.isArray(varValues))
+	         	{
+	         		setTimeout(function(){ callback(varValues); }, 0);
+	         		return deferred.promise;
+	         	}
+
+	         	//if (typeof varValues == 'string')
+	         	//	varValues = {"aws_id": varValues};
+	         		
+	         	runQueryService.queryRequest(dataServiceURL, 'getColumn', [varValues, NaN, NaN, null],
+	         		function(columnData) {
+	         			var result = [];
+	         			for (var i in columnData.keys) 
+	         				result[i] = {"value": columnData.keys[i], "label": columnData.data[i]};
+	         			callback(result);
+	     			},
+	     			function(error) {
+	     				scope.$safeApply(function() {
+	     					deferred.reject(error);
+	     				});
+	     			}
+	     		);
+		        return deferred.promise;
 	    };
 	    
 	    that.CSVToArray = function(strData, strDelimiter) {
