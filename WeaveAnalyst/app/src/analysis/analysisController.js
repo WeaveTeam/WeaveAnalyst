@@ -23,7 +23,6 @@
 		anaCtrl.toggle_widget = toggle_widget;
 		anaCtrl.disable_widget = disable_widget;
 
-		anaCtrl.showToolMenu = false;
 		anaCtrl.IndicDescription = "";
 		anaCtrl.varValues = [];
 		

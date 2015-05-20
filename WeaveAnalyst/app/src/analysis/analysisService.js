@@ -16,7 +16,7 @@
 		that.scrolledPosition = 0;
 		
 		that.cache = {
-				scriptList : null,
+				scriptList : [],
 				scriptMetadata :null
 		};
 		
