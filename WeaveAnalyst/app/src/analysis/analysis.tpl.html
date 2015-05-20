@@ -110,11 +110,12 @@
 <!--Calculations -->
 				<div class="databox" style="width: 50%">
 	
-					<div class="header panel-heading">
+					<div class="header panel-heading" ng-click = "isCollapsed = !isCollapsed">
 						<h2>Calculations</h2>
 					</div>
-				<div class="body" ng-controller="ScriptInputsController as scrCtrl">
-					<div style = "width:55%; height: 100%; float:left;">
+				<div collapse = "isCollapsed" 
+					 ng-controller="ScriptInputsController as scrCtrl">
+					<div class="body" style = "width:55%; height: 100%; float:left;">
 						<div class="btn-group">
         					<label class="btn btn-primary btn-sm" ng-model="scrCtrl.queryService.queryObject.ComputationEngine" btn-radio="'R'" uncheckable>R</label>
         					<label class="btn btn-primary btn-sm" ng-model="scrCtrl.queryService.queryObject.ComputationEngine" btn-radio="'STATA'" uncheckable>Stata</label>
@@ -235,7 +236,7 @@
 						</div>
 					</div>
 				
-					<div style = "width:45%;height: 100%; float:left;">
+					<div class="body" style = "width:45%;height: 100%; float:left;">
 						<!-- REMAPPING -->
 						
 						<div style="height : 30px; margin-top:30px">

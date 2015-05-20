@@ -12,6 +12,7 @@
 	analysisController.$inject = ['$scope','$filter', 'queryService', 'analysisService', 'WeaveService', 'QueryHandlerService', '$window','statisticsService'];
 	
 	function analysisController ($scope,$filter, queryService, analysisService, WeaveService, QueryHandlerService, $window,statisticsService ){
+		$scope.isCollapsed = false;
 		var anaCtrl = this;
 		
 		anaCtrl.queryService = queryService;

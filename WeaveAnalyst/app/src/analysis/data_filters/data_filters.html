@@ -1,10 +1,10 @@
 <div class="databox" style="width:150px">
 	
-	<div class="header panel-heading">
+	<div class="header panel-heading" ng-click = "isCollapsed = !isCollapsed">
 		<h2> Add Filter </h2>
 	</div>
 	
-	<div class="body">
+	<div class="body" collapse = "isCollapsed">
 		<br><br>
 		<button style="width : 100%; padding:10%"type="button" ng-click="queryService.queryObject.properties.showGeographyFilter = true" class="btn btn-sm new-project-button">
 				Geography Filter
