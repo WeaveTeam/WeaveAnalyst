@@ -333,7 +333,7 @@
 								<accordion-group ng-repeat="(toolId, tool) in vizCtrl.queryService.queryObject.visualizations" style="font-family: 'Open Sans', Arial, sans-serif; font-size: 14px;">
 									<accordion-heading>
 											{{tool.title || toolId}}
-											<!--hack to disable the close button on the first tools -->
+<!-- 											hack to disable the close button on the first tools -->
  											<a ng-show="fixed_ids.indexOf(toolId) < 0" href="javascript: void(0)"  
 												class="close-button" data-trigger="hover" placement="right" title="Remove"  
 												ng-click="vizCtrl.removeTool(toolId)"> 

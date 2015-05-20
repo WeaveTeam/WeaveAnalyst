@@ -9,30 +9,42 @@
 
 		var attCtrl = this;
 		attCtrl.WeaveService = WeaveService;
+		attCtrl.setAttributes = setAttributes;
+		attCtrl.tool = {
+			title : "",
+			enabled : false,
+			selectedVizTool : null, 
+			vizAttribute :{}, 
+			columns: []
+		};
 
-		$scope.$watch('tool.selectedVizTool', function(){
+		$scope.$watch(function(){
+			return attCtrl.tool.selectedVizTool;
+		}, function(){
 			//console.log("tools selected", $scope.tool.selectedVizTool);
-			if($scope.tool.selectedVizTool){
-				$scope.vizAttributeColl = [];
-				$scope.vizAttributeColl = WeaveService.getSelectableAttributes($scope.tool.title, $scope.tool.selectedVizTool);
+			if(attCtrl.tool.selectedVizTool){
+				attCtrl.vizAttributeColl = [];
+				attCtrl.vizAttributeColl = attCtrl.WeaveService.getSelectableAttributes(attCtrl.tool.title, attCtrl.tool.selectedVizTool);
 			}
 		});
 		
-		$scope.$watch('tool', function() {
-			if($scope.toolId) // this gets triggered twice, the second time toolId with a undefined value.
-				WeaveService.AttributeMenuTool($scope.tool, $scope.toolId);
+		$scope.$watch(function(){
+			return attCtrl.tool;
+		},function() {
+			if(attCtrl.toolId) // this gets triggered twice, the second time toolId with a undefined value.
+				attCtrl.WeaveService.AttributeMenuTool(attCtrl.tool, attCtrl.toolId);
 		}, true);
 		
-		$scope.setAttributes = function(attr){
+		function setAttributes (attr){
 			if(attr)
-				$scope.tool.chosenAttribute = attr;
+				attCtrl.tool.chosenAttribute = attr;
 			//check for tha attrbite selected
-			if($scope.tool.vizAttribute && $scope.tool.selectedVizTool && $scope.tool.chosenAttribute)
+			if(attCtrl.tool.vizAttribute && attCtrl.tool.selectedVizTool && attCtrl.tool.chosenAttribute)
 				//set the attribute in weave
-				WeaveService.setVizAttribute($scope.tool.title,
-											  $scope.tool.selectedVizTool,
-											  $scope.tool.vizAttribute,
-											  $scope.tool.chosenAttribute);
+				WeaveService.setVizAttribute(attCtrl.tool.title,
+											 attCtrl.tool.selectedVizTool,
+											 attCtrl.tool.vizAttribute,
+											 attCtrl.tool.chosenAttribute);
 		};
 	}
 })();
