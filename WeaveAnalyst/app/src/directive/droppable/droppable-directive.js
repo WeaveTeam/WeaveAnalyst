@@ -10,27 +10,23 @@ AnalysisModule.directive('droppable', function() {
 				console.log($scope);
 				if(ui && ui.helper) {
 					var node = ui.helper.data("dtSourceNode");
-					var weaveNode;
+					var column;
 					if(node) {
-						weaveNode = node.data.weaveNode;
-						if(weaveNode) {
+						column = node.data.column;
+						if(column) {
 							if(multiple) {
 								if(!$scope.$select.selected) {
-									$scope.$select.selected = [{
-										dataSourceName : weaveNode.getDataSourceName(),
-										metadata : weaveNode.getColumnMetadata()
-									}];
+									$scope.$select.selected = [column];
 								} else {
-									$scope.$select.selected.push({
-										dataSourceName : weaveNode.getDataSourceName(),
-										metadata : weaveNode.getColumnMetadata()
-									});
+									// double check the selected item is not already in 
+									// the selection
+									// otherwise we create ng-duplicate error
+									if($scope.$select.selected.indexOf(column) < 0) {
+										$scope.$select.selected.push(column);
+									}
 								}
 							} else {
-								$scope.$select.selected = {
-										dataSourceName : weaveNode.getDataSourceName(),
-										metadata : weaveNode.getColumnMetadata()
-									};
+								$scope.$select.selected = column;
 							}
 							$scope.$apply();
 						}

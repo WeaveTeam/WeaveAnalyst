@@ -41,63 +41,41 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	$("#queryObjectPanel" ).draggable().resizable();
 	$("#hierarchyPanel" ).draggable().resizable();
 	
-	$scope.$watch(function() {
-		return WeaveService.weave;
-	}, function () {
-		if(WeaveService.weave) {
-			var weave = WeaveService.weave;
-			$scope.weaveReady = true;
-			if(weave) {
-				
-				queryService.refreshHierarchy(weave);
-
-				$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
-					if(hierarchy) {
-						$('#hierarchyTree').dynatree(hierarchy);
-						$('#hierarchyTree').dynatree("getTree").reload();
-					}
-				}, true);
-				
-				$scope.$watchCollection("queryService.cache.filteredColumns", function(columns) {
-					if(columns) {
-						$('#columnsTree').dynatree(createColumnTree(columns));
-						$('#columnsTree').dynatree("getTree").reload();
-					}
-				});
-				
-				$scope.$watch(function() {
-					return [$scope.columnSearch, queryService.cache.columns];
-				}, function(newVal) {
-					var columnSearch = newVal[0];
-					var columns = newVal[1];
-					if(columns && columns.length) {
-						queryService.cache.filteredColumns = columns.filter(function(column) {
-							if(column) {
-								var columnTitle = column.getLabel();
-								
-								if(columnTitle) {
-									if(columnSearch) {
-										var lwCase = columnTitle.toLowerCase();
-										if(lwCase.indexOf(columnSearch.toLowerCase()) > -1) {
-											return true;
-										} else {
-											return false;
-										}
-									} else {
-										return true;
-									}
-								}
-							}
-						});
-					}
-				}, true);
-			}
+	$scope.hierarchyClass = {
+			width : "48%",
+			height: "100%",
+			marginRight: "2%",
+			float:"left"
+	};
+	
+	$scope.columnsClass = {
+			width : "48%",
+			height: "100%",
+			marginRight: "2%",
+			float:"left"
+	};
+	
+	$scope.$watch("showColumns", function() {
+		
+		if($scope.showColumns) {
+			$scope.hierarchyClass.width = "48%";
+			$scope.columnsClass.width = "48%";
+			
+		} else {
+			$scope.hierarchyClass.width = "96%";
+			$scope.columnsClass.width = "0%";
 		}
 	});
 	
 	var weaveTreeIsBusy = null;
 	
-	queryService.refreshHierarchy = function(weave) {
+	queryService.refreshHierarchy = function(aweave) {
+		var weave = aweave || WeaveService.weave;
+		
+		if(!weave)
+			return;
+		
+		queryService.cache.columns = [];
 		var weaveTreeNode = new weave.WeaveTreeNode();
 		
 		//weave.path('CensusDataSource').request("CensusDataSource");
@@ -108,6 +86,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			clickFolderMode: 2,
 			children: [createDynatreeNode(weaveTreeNode)],
 			onLazyRead : function(node) {
+				
 				var getTreeAsync = function(){
 					var children = [];
 					var leaves = [];
@@ -135,8 +114,14 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 						node.addChild(children);
 
 					if(leaves.length) {
-						queryService.cache.columns = leaves;
-						queryService.cache.filteredColumns = leaves;
+						queryService.queryObject.dataTable = node.data.weaveNode.getLabel();
+						queryService.cache.columns = leaves.map(function(wNode) {
+							return {
+								dataSourceName : wNode.getDataSourceName(),
+								metadata : wNode.getColumnMetadata()
+							};
+						});
+						queryService.cache.filteredColumns = queryService.cache.columns ;
 						$scope.$apply();
 					}
 				}; 
@@ -175,10 +160,21 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		};
 	};
 	
+	var createDynatreeColumnList = function(column) {
+		if(!column)
+			return;
+		return {
+			title : column.metadata.title,
+			isFolder : false,
+			column : column
+		};
+	};
+	
+	
 	var createColumnTree = function(columns) {
 		return {
 			minExpandLevel: 1,
-			children: columns.map(createDynatreeNode),
+			children: columns.map(createDynatreeColumnList),
 			dnd : {
 				revert : false,
 				
@@ -194,6 +190,67 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			debugLevel: 0,
 		};
 	};
+	
+	$scope.$watch(function() {
+		return WeaveService.weave;
+	}, function () {
+		if(WeaveService.weave) {
+			var weave = WeaveService.weave;
+			$scope.weaveReady = true;
+			if(weave) {
+				
+				queryService.refreshHierarchy(weave);
+
+				$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
+					if(hierarchy) {
+						$(".dynatree-container").scrollTop(scrolledPosition);
+
+						$('#hierarchyTree').dynatree(hierarchy);
+						$('#hierarchyTree').dynatree("getTree").reload();
+						
+						$(".dynatree-container").scrollTop(scrolledPosition);
+
+					}
+				}, true);
+				
+				$scope.$watchCollection("queryService.cache.filteredColumns", function(columns) {
+					if(columns) {
+						$('#columnsTree').dynatree(createColumnTree(columns));
+						$('#columnsTree').dynatree("getTree").reload();
+					}
+				});
+				
+				$scope.$watch(function() {
+					return [$scope.columnSearch, queryService.cache.columns];
+				}, function(newVal) {
+					var columnSearch = newVal[0];
+					var columns = newVal[1];
+					if(columns && columns.length) {
+						queryService.cache.filteredColumns = columns.filter(function(column) {
+							if(column) {
+								var columnTitle = column.metadata.title;
+								
+								if(columnTitle) {
+									if(columnSearch) {
+										var lwCase = columnTitle.toLowerCase();
+										if(lwCase.indexOf(columnSearch.toLowerCase()) > -1) {
+											return true;
+										} else {
+											return false;
+										}
+									} else {
+										return true;
+									}
+								}
+							}
+						});
+					}
+				}, true);
+			}
+		}
+	});
+	
+	
 	
 	
 	
@@ -647,12 +704,14 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 							for(var j in columns) {
 								var column = columns[j];
 								if(input.hasOwnProperty("defaults")) {
-									if(column.title == input['defaults']) {
+									if(column.metadata.title == input['defaults']) {
 										$scope.queryService.queryObject.scriptOptions[input.param] = column;
 										break;
 									}
 								}
 							}
+						} else if(input.type == "value" || input.type == "options") {
+							$scope.queryService.queryObject.scriptOptions[input.param];
 						}
 					}
 				}
