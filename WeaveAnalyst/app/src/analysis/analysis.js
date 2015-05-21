@@ -36,21 +36,172 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	$scope.WeaveService = WeaveService;
 	$scope.QueryHandlerService = QueryHandlerService;
 	
-	$scope.showToolMenu = false;
+	$scope.weaveReady = false;
 
 	$("#queryObjectPanel" ).draggable().resizable();
+	$("#hierarchyPanel" ).draggable().resizable();
 	
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function () {
 		if(WeaveService.weave) {
-			$scope.showToolMenu = true;
+			var weave = WeaveService.weave;
+			$scope.weaveReady = true;
+			if(weave) {
+				
+				queryService.refreshHierarchy(weave);
+
+				$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
+					if(hierarchy) {
+						$('#hierarchyTree').dynatree(hierarchy);
+						$('#hierarchyTree').dynatree("getTree").reload();
+					}
+				}, true);
+				
+				$scope.$watchCollection("queryService.cache.filteredColumns", function(columns) {
+					if(columns) {
+						$('#columnsTree').dynatree(createColumnTree(columns));
+						$('#columnsTree').dynatree("getTree").reload();
+					}
+				});
+				
+				$scope.$watch(function() {
+					return [$scope.columnSearch, queryService.cache.columns];
+				}, function(newVal) {
+					var columnSearch = newVal[0];
+					var columns = newVal[1];
+					if(columns && columns.length) {
+						queryService.cache.filteredColumns = columns.filter(function(column) {
+							if(column) {
+								var columnTitle = column.getLabel();
+								
+								if(columnTitle) {
+									if(columnSearch) {
+										var lwCase = columnTitle.toLowerCase();
+										if(lwCase.indexOf(columnSearch.toLowerCase()) > -1) {
+											return true;
+										} else {
+											return false;
+										}
+									} else {
+										return true;
+									}
+								}
+							}
+						});
+					}
+				}, true);
+			}
 		}
 	});
+	
+	var weaveTreeIsBusy = null;
+	
+	queryService.refreshHierarchy = function(weave) {
+		var weaveTreeNode = new weave.WeaveTreeNode();
+		
+		//weave.path('CensusDataSource').request("CensusDataSource");
+		weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+		
+		queryService.cache.hierarchy = {
+			minExpandLevel: 1,
+			clickFolderMode: 2,
+			children: [createDynatreeNode(weaveTreeNode)],
+			onLazyRead : function(node) {
+				var getTreeAsync = function(){
+					var children = [];
+					var leaves = [];
+					
+					// check if this is data table
+					node.data.weaveNode.getChildren().forEach(function(child) {
+						if(child.isBranch())
+							children.push(child);
+						else
+							leaves.push(child);
+					});
+					
+					
+					if(children.length)
+						children = children.map(createDynatreeNode);
+					
+					if (weaveTreeIsBusy()) {
+						setTimeout(getTreeAsync, 500);
+						return;
+					}
+					
+					node.removeChildren();
+					node.setLazyNodeStatus(DTNodeStatus_Ok);
+					if(children.length)
+						node.addChild(children);
 
+					if(leaves.length) {
+						queryService.cache.columns = leaves;
+						queryService.cache.filteredColumns = leaves;
+						$scope.$apply();
+					}
+				}; 
+				
+				setTimeout(getTreeAsync, 500);
+			},
+			onActivate : function(node) {
+			},
+			dnd : {
+				revert : false,
+				
+				onDragStart : function(node) {
+					
+					if(node.data.isFolder) {
+						return false;
+					}
+					return true;
+				},
+				onDragStop : function(node) {
+					
+				}
+			},
+			keyBoard : true,
+			debugLevel: 0
+		};
+	};
+	
+	var createDynatreeNode = function(wNode) {
+		if(!wNode)
+			return;
+		return {
+			title : wNode.getLabel(),
+			isLazy : wNode.isBranch(),
+			isFolder : wNode.isBranch(),
+			weaveNode : wNode
+		};
+	};
+	
+	var createColumnTree = function(columns) {
+		return {
+			minExpandLevel: 1,
+			children: columns.map(createDynatreeNode),
+			dnd : {
+				revert : false,
+				
+				onDragStart : function(node) {
+					
+					if(node.data.isFolder) {
+						return false;
+					}
+					return true;
+				}
+			},
+			keyBoard : true,
+			debugLevel: 0,
+		};
+	};
+	
+	
+	
 	$scope.$watch('WeaveService.weaveWindow.closed', function() {
 		queryService.queryObject.properties.openInNewWindow = WeaveService.weaveWindow.closed;
 	});
+	
+	
 	
 	//************************** query object editor**********************************
 	var expandedNodes = null;
@@ -94,9 +245,10 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.$watch('queryService.queryObject', function () {
 		
+		scrolledPosition = $(".dynatree-container").scrollTop();
+
 		if(expandedNodes) {
 			expandedNodes = [];
-			scrolledPosition = $(".dynatree-container").scrollTop();
 			activeNode = $("#queryObjTree").dynatree("getActiveNode");
 			$("#queryObjTree").dynatree("getTree").visit(function(node) {
 				if(node.bExpanded)
@@ -278,7 +430,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //	}, function() {
 //		if(WeaveService.checkWeaveReady()) 
 //		{
-//			//$scope.showToolMenu = true;
+//			//$scope.weaveReady = true;
 //			
 //			if(queryService.queryObject.weaveSessionState) {
 //				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
@@ -336,21 +488,16 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		$scope.columnToRemap = {value : param}; // bind this column to remap to the scope
 		if(column) {
 			$scope.description = column.description;
-			queryService.getEntitiesById([column.id], true).then(function (result) {
-				if(result.length) {
-					var resultMetadata = result[0];
-					if(resultMetadata.publicMetadata.hasOwnProperty("aws_metadata")) {
-						var metadata = angular.fromJson(resultMetadata.publicMetadata.aws_metadata);
-						if(metadata.hasOwnProperty("varValues")) {
-							queryService.getDataMapping(metadata.varValues).then(function(result) {
-								$scope.varValues = result;
-							});
-						} else {
-							$scope.varValues = [];
-						}
-					}
+			if(column.aws_metadata) {
+				var metadata = angular.fromJson(column.aws_metadata);
+				if(metadata.varValues) {
+					queryService.getDataMapping(metadata.varValues).then(function(result) {
+						$scope.varValues = result;
+					});
+				} else {
+					$scope.varValues = [];
 				}
-			});
+			}
 		} else {
 			// delete description and table if the indicator is clear
 			$scope.description = "";
@@ -358,52 +505,52 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	};
 
-	/************** watches for query validation******************/
-	$scope.$watchCollection(function() {
-		return [queryService.queryObject.scriptSelected,
-		        queryService.queryObject.dataTable,
-		        queryService.queryObject.scripOptions,
-		        queryService.cache.scriptMetadata
-		        ];
-	}, function () {
-		//if the datatable has not been selected
-		if(queryService.queryObject.dataTable == null || queryService.queryObject.dataTable == ""){
-			queryService.queryObject.properties.validationStatus = "Data table has not been selected.";
-			queryService.queryObject.properties.isQueryValid = false;
-		}
-		//if script has not been selected
-		else if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
-		{
-			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
-			queryService.queryObject.properties.isQueryValid = false;
-		}
-		//this leaves checking the scriptOptions
-		else if (queryService.cache.scriptMetadata) 
-		{
-			
-			$scope.$watch(function() {
-				return queryService.queryObject.scriptOptions;
-			}, function () {
-				var g = 0;
-				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
-				for(var f in queryService.queryObject.scriptOptions) {
-					if(!queryService.queryObject.scriptOptions[f]) {
-						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
-						queryService.queryObject.properties.isQueryValid = false;
-	
-						break;
-					}
-					else
-						g++;
-				}
-				if(g == counter) {
-					queryService.queryObject.properties.validationStatus = "Query is valid";
-					queryService.queryObject.properties.isQueryValid = true;
-				}
-			}, true);
-		}
-	}, true);
-	/************** watches for query validation******************/
+//	/************** watches for query validation******************/
+//	$scope.$watchCollection(function() {
+//		return [queryService.queryObject.scriptSelected,
+//		        queryService.queryObject.dataTable,
+//		        queryService.queryObject.scripOptions,
+//		        queryService.cache.scriptMetadata
+//		        ];
+//	}, function () {
+//		//if the datatable has not been selected
+//		if(queryService.queryObject.dataTable == null || queryService.queryObject.dataTable == ""){
+//			queryService.queryObject.properties.validationStatus = "Data table has not been selected.";
+//			queryService.queryObject.properties.isQueryValid = false;
+//		}
+//		//if script has not been selected
+//		else if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
+//		{
+//			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
+//			queryService.queryObject.properties.isQueryValid = false;
+//		}
+//		//this leaves checking the scriptOptions
+//		else if (queryService.cache.scriptMetadata) 
+//		{
+//			
+//			$scope.$watch(function() {
+//				return queryService.queryObject.scriptOptions;
+//			}, function () {
+//				var g = 0;
+//				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
+//				for(var f in queryService.queryObject.scriptOptions) {
+//					if(!queryService.queryObject.scriptOptions[f]) {
+//						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
+//						queryService.queryObject.properties.isQueryValid = false;
+//	
+//						break;
+//					}
+//					else
+//						g++;
+//				}
+//				if(g == counter) {
+//					queryService.queryObject.properties.validationStatus = "Query is valid";
+//					queryService.queryObject.properties.isQueryValid = true;
+//				}
+//			}, true);
+//		}
+//	}, true);
+//	/************** watches for query validation******************/
 	
 });
 
