@@ -210,14 +210,10 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function() {
-		if(WeaveService.checkWeaveReady()) 
-		{
-			//$scope.showToolMenu = true;
-			
-			if(queryService.queryObject.weaveSessionState) {
-				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
-			}
-		}
+		$("#weave").css("visibility", "hidden");
+		$("#weave").css("position", "absolute");
+		$("#weave").css("top", "50%");
+		$("#weave").css("left", "28%");
 	});
 	
 

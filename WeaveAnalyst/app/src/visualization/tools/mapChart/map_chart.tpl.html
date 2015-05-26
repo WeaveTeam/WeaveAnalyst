@@ -27,14 +27,14 @@
 				<td> State </td>
 				<td style="padding-left: 5px;">
 				
-					<ui-select ng-model="tool.stateGeometryLayer" theme="select2" style="width: 100%;">
+					<ui-select ng-model="tool.stateGeometryLayer" droppable theme="select2" style="width: 100%;">
 				    	<ui-select-match allow-clear="true" placeholder="Select Geometry layer...">{{$select.selected.title}}</ui-select-match>
 						<ui-select-choices repeat="column in queryService.cache.geometryColumns | filter : { title : $select.search }">
 				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
 				        </ui-select-choices>
 					</ui-select>
 					
-					<ui-select ng-model="tool.countyGeometryLayer" theme="select2" style="width: 100%;">
+					<ui-select ng-model="tool.countyGeometryLayer" droppable theme="select2" style="width: 100%;">
 				    	<ui-select-match allow-clear="true" placeholder="Select Geometry layer...">{{$select.selected.title}}</ui-select-match>
 						<ui-select-choices repeat="column in queryService.cache.geometryColumns | filter : { title : $select.search }">
 				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
@@ -74,12 +74,12 @@
 			</td>
 			
 			<td style="padding-left: 5px;">
-				<ui-select ng-model="tool.labelLayer" theme="select2" style="width: 100%;">
-			    	<ui-select-match allow-clear="true" placeholder="Choose Layer...">{{$select.selected.title}}</ui-select-match>
-					<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-			       		 <div ng-bind-html="column.title| highlight: $select.search"></div>
-			        </ui-select-choices>
-				</ui-select>
+				<ui-select ng-model="tool.labelLayer" droppable theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
 			</td>
 		</tr>	
 	</table>

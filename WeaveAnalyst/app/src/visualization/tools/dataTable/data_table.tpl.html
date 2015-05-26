@@ -12,13 +12,16 @@
 				Enable
 			</td>
 		</tr>
+		
+		<input type="button" value="add all" ng-click="addAll()"></input>
+		
 		<div class="portlet-content">
-			<ui-select  ng-model="tool.columns" multiple theme="select2" style="width: 100%;">
-		    	<ui-select-match allow-clear="true" placeholder="Choose Column(s)...">{{$item.title}}</ui-select-match>
-				<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-		       		 <div ng-bind-html="column.title| highlight: $select.search"></div>
-		        </ui-select-choices>
-			</ui-select>
+			<ui-select  ng-model="tool.columns" droppable multiple theme="select2" style="width: 100%;">
+		    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$item.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+				</ui-select>
 		</div>
 	</ul>
 </div>

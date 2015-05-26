@@ -1,10 +1,14 @@
 <div style="width: 100%" class="master-select2-container" ng-controller="ColorCtrl">
-				<ui-select  ng-model="tool.column" theme="select2" style="width: 100%;">
-			    	<ui-select-match allow-clear="true" placeholder="Choose Layer...">{{$select.selected.title}}</ui-select-match>
-					<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-			       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-			        </ui-select-choices>
-				</ui-select>
-						<div style = "padding : 5px"></div>
-						<input type="checkbox" ng-model="tool.showColorLegend"/> Show Color Legend
+		
+		
+		<ui-select  ng-model="tool.column" droppable theme="select2" style="width: 100%;">
+	    	<ui-select-match allow-clear="true" placeholder="Choose Layer...">{{$select.selected.metadata.title}}</ui-select-match>
+			<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+	       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+	        </ui-select-choices>
+		</ui-select>
+		
+		<div style = "padding : 5px"></div>
+		
+		<input type="checkbox" ng-model="tool.showColorLegend"/> Show Color Legend
 </div>

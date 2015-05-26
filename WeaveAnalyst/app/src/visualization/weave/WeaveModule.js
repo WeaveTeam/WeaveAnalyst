@@ -198,13 +198,21 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 					.request('CompoundBarChartTool')
 					.state({ panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true, showAllLabels : state.showAllLabels })
 					.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
-					.call(setQueryColumns, {
-						sortColumn : state.sort,
-						labelColumn : state.label,
-						heightColumns : state.heights,
-						positiveErrorColumns : state.posErr,
-						negativeErrorColumns : state.negErr
-					});
+					.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
+					.pop()
+					.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
+					.pop()
+					.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
+						return column.metadata;
+					}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
+					.pop()
+					.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
+						return column.metadata;
+					}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
+					.pop()
+					.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
+						return column.metadata;
+					}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
 					//capture session state
 					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 				}
@@ -349,8 +357,8 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		
 		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
 		if(state && state.enabled){//if enabled
-			
-			if(ws.checkWeaveReady())//if weave is ready
+			if(state.X && state.Y) {
+				if(ws.checkWeaveReady())//if weave is ready
 				{
 					//add to the enabled tools collection
 					if($.inArray(toolName, this.toolsEnabled) == -1)
@@ -359,12 +367,15 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 					ws.weave.path(toolName).request('ScatterPlotTool')
 					.state({ panelX : "50%", panelY : "50%", panelTitle : state.title, enableTitle : true})
 					.push('children', 'visualization','plotManager', 'plotters', 'plot')
-					.call(setQueryColumns, {dataX : state.X, dataY : state.Y});
+					.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName)
+					.pop()
+					.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
 					//capture session state
 					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 				}
-			else{//if weave not ready
-				ws.setWeaveWindow(window);
+				else{//if weave not ready
+					ws.setWeaveWindow(window);
+				}
 			}
 		}
 		else{//if the tool is disabled
@@ -395,7 +406,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 					//create tool
 					ws.weave.path(toolName).request('AdvancedTableTool')
 					.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
-					.call(setQueryColumns, {columns: state.columns});
+					.push("columns").setColumns(state && state.columns && state.columns.length ? state.heights.map(function(column) {
+						return column.metadata;
+					}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : "")
 					//capture session state
 					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 				}
@@ -424,7 +437,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			if(ws.checkWeaveReady())//if weave is ready
 				{
 					//create color column
-					ws.weave.path('defaultColorDataColumn').setColumn(state.column.id, state.column.dataSourceName);
+					ws.weave.path('defaultColorDataColumn').setColumn(state.column.metadata, state.column.dataSourceName);
 					
 					//hack for demo
 //					if(state.column2 && state.column3){
@@ -454,9 +467,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				ws.setWeaveWindow(window);
 			}
 		}
-		else{//if the tool is disabled
-		}
-		
 	};
 	
 	this.keyColumn = function(state){
@@ -464,7 +474,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		{
 			if(ws.checkWeaveReady()){
 				
-				ws.weave.setSessionState([state.keyColumn.dataSourceName], {keyColName : state.keyColumn.id});
+				ws.weave.setSessionState([state.keyColumn.dataSourceName], {keyColName : state.keyColumn.metadata.title});
 				//capture session state
 				queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 			}
@@ -566,7 +576,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	};
 }]);
 
-//aws.WeaveClient.prototype.reportToolInteractionTime = function(message){
 //	
 //	var time = aws.reportTime();
 //	

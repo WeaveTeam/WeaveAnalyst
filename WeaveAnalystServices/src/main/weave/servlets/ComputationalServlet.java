@@ -2,7 +2,9 @@ package weave.servlets;
 
 import static weave.config.WeaveConfig.initWeaveConfig;
 
-import java.util.ArrayList;
+import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -146,14 +148,52 @@ public class ComputationalServlet extends WeaveServlet
 				scriptInputs.clear();
 				throw (e);
 			}
-		} else {
+		} 
+		else if (AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA) {
 			resultData = AwsStataService.runScript(scriptName, scriptInputs,
 					 programPath, tempDirPath, stataScriptsPath);
 
+		} else {
+			throw new RemoteException("Unrecognized script type.");
 		}
 		//clearing scriptInputs before every successive run
 		scriptInputs.clear();
 		return resultData;
+	}
+	
+	@SuppressWarnings("serial")
+	public static class MapKeyTypeToKeysAndColumns extends HashMap<String, KeysAndColumns>
+	{
+	}
+	public static class KeysAndColumns
+	{
+		public String[] keys;
+		public Map<String, Object[]> columns;
+	}
+	
+	public Object runScriptWithInputs(String scriptName, Map<String, Object> simpleInputs, MapKeyTypeToKeysAndColumns columnData) throws Exception
+	{
+		Object resultData = null;
+		
+		for(String key : simpleInputs.keySet()) {
+			scriptInputs.put(key, simpleInputs.get(key));
+		}
+
+		if (columnData.size() > 1)
+			throw new RemoteException("Columns with different keyTypes are not supported yet.");
+		for (String keyType : columnData.keySet())
+		{
+			KeysAndColumns keysAndColumns = columnData.get(keyType);
+			for(String key : keysAndColumns.columns.keySet())
+			{
+				scriptInputs.put(key, keysAndColumns.columns.get(key));
+			}
+		}
+		
+		resultData = runScript(scriptName);
+		
+		return resultData;
+		
 	}
 	
 	//*******************************REMAPPING OF REQUIRED COLUMNS*******************************

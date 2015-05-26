@@ -32,12 +32,19 @@ metadataModule.config(function($provide){
 	
 })
 
-.controller("MetadataManagerCtrl", function($scope, queryService, authenticationService, runQueryService, dataServiceURL, errorLogService, $rootScope){			
+.controller("MetadataManagerCtrl", function($scope, queryService, WeaveService, authenticationService, runQueryService, dataServiceURL, errorLogService, $rootScope){			
 
 	var treeData = [];
 	$scope.myData = [];
 //	$scope.maxTasks;
 //	$scope.progressValue = 0;
+	
+    $scope.$watch(function() {
+     	return WeaveService.weave;
+    }, function() {
+    	$("#weave").css("visibility", "hidden");
+    });
+    
 	$scope.selectedDataTableId;//datatable selected by the user
     $scope.fileUpload;
     

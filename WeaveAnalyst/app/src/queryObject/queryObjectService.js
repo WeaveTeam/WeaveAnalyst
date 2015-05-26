@@ -204,7 +204,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 			properties : {
 				linkIndicator : false,
 				validationStatus : "test",
-				isQueryValid : false
+				isQueryValid : true
 			},
 			filterArray : [],
 			treeFilterArray : [],
@@ -229,11 +229,11 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 					template_url : 'src/visualization/tools/scatterPlot/scatter_plot.tpl.html',
 					enabled : false
 				},
-				AttributeMenuTool : {
-					title : 'AttributeMenuTool',
-					template_url : 'src/visualization/tools/attributeMenu/attribute_Menu.tpl.html',
-					enabled: false
-				},
+//				AttributeMenuTool : {
+//					title : 'AttributeMenuTool',
+//					template_url : 'src/visualization/tools/attributeMenu/attribute_Menu.tpl.html',
+//					enabled: false
+//				},
 				ColorColumn : {
 					title : "ColorColumn",
 					template_url : 'src/visualization/tools/color/color_Column.tpl.html'

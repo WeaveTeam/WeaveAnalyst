@@ -13,13 +13,6 @@ AnalysisModule.service('AnalysisService', ['geoFilter_tool','timeFilter_tool', '
 	};
 	//getting the list of datatables
 	queryService.getDataTableList(true);
-//	queryService.queryObject.visualizations = [MapTool,
-//	                              BarChartTool,
-//	                              DataTableTool,
-//	                              ScatterPlotTool,
-//	                              color_Column,
-//	                              key_Column];
-//	
 	AnalysisService.geoFilter_tool = geoFilter_tool;
 	AnalysisService.timeFilter_tool = timeFilter_tool;
 	
@@ -69,16 +62,16 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	var weaveTreeIsBusy = null;
 	
-	queryService.refreshHierarchy = function(aweave) {
-		var weave = aweave || WeaveService.weave;
+	queryService.refreshHierarchy = function() {
+		var weave = WeaveService.weave;
 		
-		if(!weave)
+		if(!WeaveService.checkWeaveReady())
 			return;
 		
 		queryService.cache.columns = [];
 		var weaveTreeNode = new weave.WeaveTreeNode();
 		
-		//weave.path('CensusDataSource').request("CensusDataSource");
+		weave.path('CensusDataSource').request("CensusDataSource");
 		weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 		
 		queryService.cache.hierarchy = {
@@ -195,11 +188,14 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		return WeaveService.weave;
 	}, function () {
 		if(WeaveService.weave) {
+			$("#weave").css("position", "absolute");
+			$("#weave").css("top", "50%");
+			$("#weave").css("left", "28%");
+			$("#weave").css("visibility", "visible");
 			var weave = WeaveService.weave;
 			$scope.weaveReady = true;
 			if(weave) {
-				
-				queryService.refreshHierarchy(weave);
+				queryService.refreshHierarchy();
 
 				$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
 					if(hierarchy) {
@@ -248,7 +244,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 				}, true);
 			}
 		}
-	});
+	}, true);
 	
 	
 	
@@ -519,8 +515,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 							"abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes"));
 		}
 	});
-
-	
 	//******************************managing weave and its session state END**********************************************//
 	
 	

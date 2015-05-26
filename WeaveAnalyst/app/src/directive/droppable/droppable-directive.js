@@ -6,8 +6,6 @@ AnalysisModule.directive('droppable', function() {
 		
 		element.droppable({
 			drop : function(event, ui) {
-				console.log("dropped");
-				console.log($scope);
 				if(ui && ui.helper) {
 					var node = ui.helper.data("dtSourceNode");
 					var column;

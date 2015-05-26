@@ -1,3 +1,5 @@
 [submodule "Weave"]
 	path = Weave
 	url = https://github.com/IVPR/Weave.git
+	master = master
+	aws-column-selector = aws-column-selector

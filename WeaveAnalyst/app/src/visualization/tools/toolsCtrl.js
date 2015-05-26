@@ -11,7 +11,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 //		 });
 	$scope.tool_options = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTable"];
 
-	$scope.fixed_ids = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "KeyColumn", "ColorColumn", "AttributeMenuTool"];
+	$scope.fixed_ids = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "KeyColumn", "ColorColumn"/*, "AttributeMenuTool"*/];
 	
 	$scope.addTool = function(name) {
 		switch(name) {
