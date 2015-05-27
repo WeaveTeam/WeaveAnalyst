@@ -91,14 +91,7 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		               {field :"type", displayName : "Type", enableCellEdit : false, cellTemplate : '<select style="vertical-align:middle;" ng-input="COL_FIELD" ng-model="COL_FIELD" ng-options="input for input in inputTypes" style="align:center"></select>'},
 		               {field : "columnType", displayName : "Column Type", enableCellEdit : false, cellTemplate : '<select  ng-input="COL_FIELD" ng-if="scriptMetadata.inputs[row.rowIndex].type == &quot;column&quot" ng-model="COL_FIELD" ng-options="type for type in columnTypes" style="align:center"></select>'},
 		               {field : "options", displayName : "Options"},
-		               {field : "defaults", displayName : "defaults", enableCellEdit : false, 
-		            	   cellTemplate : '<ui-select ng-model="COL_FIELD" theme="select2" style="width: 80%; z-index:100000;">' +
-							    			'<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>' +
-												'<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search, columnType : input.columnType } }">' +
-									       			 '<div ng-bind-html="column.metadata.title | highlight: $select.search"></div>' +
-									        	'</ui-select-choices>' +
-											'</ui-select>'
-		               },
+		               {field : "defaults", displayName : "defaults"},
 		               {field : "description", displayName : "Description"}],
 			  multiSelect: false,
 			  enableRowSelection: true,

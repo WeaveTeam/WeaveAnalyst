@@ -406,9 +406,13 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 					//create tool
 					ws.weave.path(toolName).request('AdvancedTableTool')
 					.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
-					.push("columns").setColumns(state && state.columns && state.columns.length ? state.heights.map(function(column) {
+					.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
 						return column.metadata;
-					}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : "")
+					}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
+					
+					// empty columns
+					if(state.columns && !state.columns.length)
+						weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
 					//capture session state
 					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 				}

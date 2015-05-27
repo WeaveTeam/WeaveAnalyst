@@ -12,7 +12,7 @@ AnalysisModule.service('AnalysisService', ['geoFilter_tool','timeFilter_tool', '
 			
 	};
 	//getting the list of datatables
-	queryService.getDataTableList(true);
+	//queryService.getDataTableList(true);
 	AnalysisService.geoFilter_tool = geoFilter_tool;
 	AnalysisService.timeFilter_tool = timeFilter_tool;
 	
@@ -65,10 +65,13 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	queryService.refreshHierarchy = function() {
 		var weave = WeaveService.weave;
 		
+		queryService.queryObject.dataTable = "";
+		queryService.cache.columns = [];
+		queryService.cache.filteredColumns = [];
+		
 		if(!WeaveService.checkWeaveReady())
 			return;
 		
-		queryService.cache.columns = [];
 		var weaveTreeNode = new weave.WeaveTreeNode();
 		
 		weave.path('CensusDataSource').request("CensusDataSource");
@@ -116,6 +119,8 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 						});
 						queryService.cache.filteredColumns = queryService.cache.columns ;
 						$scope.$apply();
+					} else {
+						queryService.queryObject.dataTable = "";
 					}
 				}; 
 				
@@ -192,6 +197,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			$("#weave").css("top", "50%");
 			$("#weave").css("left", "28%");
 			$("#weave").css("visibility", "visible");
+			$("#weave").css("z-index", 0);
 			var weave = WeaveService.weave;
 			$scope.weaveReady = true;
 			if(weave) {
@@ -450,12 +456,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //	 };
 	 //**********************************************************REMAPPING END**************************************
 	
-	$scope.$watch("queryService.queryObject.dataTable", function(newVal, oldVal) {
-		if($scope.queryService.queryObject.dataTable) {
-			queryService.getDataColumnsEntitiesFromId(queryService.queryObject.dataTable.id, true);
-		}
-		
-	}, true);
+//	$scope.$watch("queryService.queryObject.dataTable", function(newVal, oldVal) {
+//		if($scope.queryService.queryObject.dataTable) {
+//			queryService.getDataColumnsEntitiesFromId(queryService.queryObject.dataTable.id, true);
+//		}
+//		
+//	}, true);
 	
 	$scope.$watch("queryService.cache.columns", function(newVal, oldVal) {
 		
@@ -671,25 +677,25 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 
 	//  clear script options when script changes
 	$scope.$watch(function() {
-		return [queryService.queryObject.scriptSelected,
-                queryService.queryObject.dataTable];
-	}, function(newVal, oldVal) {
+		return queryService.queryObject.scriptSelected;
+                
+	}, function(newVal) {
 		
 			// this check is necessary because when angular changes tabs, it triggers changes
 			// for the script selected or data table even if the user may not have change them.
-			if(!angular.equals(newVal[0], oldVal[0]) || !angular.equals(newVal[1], oldVal[1])) {
+			if(!angular.equals(newVal)) {
 				queryService.queryObject.scriptOptions = {};
 			}
 	}, true);
 	
 	
 	//handles the defaults appearing in the script options selection
-	$scope.$watchCollection(function() {
-		return [queryService.cache.scriptMetadata, queryService.cache.columns];
-	}, function(newValue, oldValue) {
+	$scope.$watch(function() {
+		return queryService.cache.scriptMetadata;
+	}, function(scriptMetadata) {
 		
-			var scriptMetadata = newValue[0];
-			var columns = newValue[1];
+			var columns = queryService.cache.columns;
+			
 			if(scriptMetadata && columns) {
 				if(scriptMetadata.hasOwnProperty("inputs")) {
 					for(var i in scriptMetadata.inputs) {
@@ -705,12 +711,12 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 								}
 							}
 						} else if(input.type == "value" || input.type == "options") {
-							$scope.queryService.queryObject.scriptOptions[input.param];
+							$scope.queryService.queryObject.scriptOptions[input.param] = input['defaults'];
 						}
 					}
 				}
 		}
-	});
+	}, true);
 	
 	//handles the indicators in the script options
 	$scope.$watch(function() {
