@@ -18,7 +18,7 @@ AnalysisModule.directive('droppable', function() {
 								} else {
 									// double check the selected item is not already in 
 									// the selection
-									// otherwise we create ng-duplicate error
+									// otherwise it would cause ng-duplicate error
 									if($scope.$select.selected.indexOf(column) < 0) {
 										$scope.$select.selected.push(column);
 									}

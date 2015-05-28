@@ -523,6 +523,27 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	});
 	//******************************managing weave and its session state END**********************************************//
 	
+	$scope.filterColumn = function(criteria)
+	{
+		return function(item) {
+			if(item && item.metadata && item.metadata.aws_metadata)
+			{
+				var metadata =  angular.fromJson(item.metadata.aws_metadata);
+				if(metadata && metadata.columnType)
+				{
+					// filter by columnType first
+					if(metadata.columnType == criteria.columnType) {
+						
+						// then we match the search text
+						var lwCase = metadata.title.toLowerCase();
+						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+							return true;
+						}
+					}
+				}
+			}
+		};
+	};
 	
 	$scope.IndicDescription = "";
 	$scope.varValues = [];

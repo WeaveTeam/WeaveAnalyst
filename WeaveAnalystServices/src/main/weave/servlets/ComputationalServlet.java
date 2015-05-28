@@ -165,13 +165,19 @@ public class ComputationalServlet extends WeaveServlet
 	public static class MapKeyTypeToKeysAndColumns extends HashMap<String, KeysAndColumns>
 	{
 	}
+	
 	public static class KeysAndColumns
 	{
 		public String[] keys;
 		public Map<String, Object[]> columns;
 	}
 	
-	public Object runScriptWithInputs(String scriptName, Map<String, Object> simpleInputs, MapKeyTypeToKeysAndColumns columnData) throws Exception
+	@SuppressWarnings("serial")
+	public static class MapNameToColumns extends HashMap<String, Map<String, Object[]>>
+	{
+	}
+	
+	public Object runScriptWithInputs(String scriptName, Map<String, Object> simpleInputs, MapKeyTypeToKeysAndColumns columnData, MapNameToColumns tableData) throws Exception
 	{
 		Object resultData = null;
 		
@@ -189,6 +195,8 @@ public class ComputationalServlet extends WeaveServlet
 				scriptInputs.put(key, keysAndColumns.columns.get(key));
 			}
 		}
+		
+		scriptInputs.putAll(tableData);
 		
 		resultData = runScript(scriptName);
 		

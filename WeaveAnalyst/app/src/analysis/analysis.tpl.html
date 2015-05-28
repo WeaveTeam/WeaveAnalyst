@@ -167,7 +167,7 @@
 									<td>
 											<ui-select ng-if="input.type == 'column' && input.columnType && input.columnType != 'all' && input.columnType != ' '" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
 									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
-												<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search, columnType : input.columnType } }">
+												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType)}">
 									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 									        	</ui-select-choices>
 											</ui-select>
