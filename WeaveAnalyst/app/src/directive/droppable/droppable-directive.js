@@ -13,13 +13,14 @@ AnalysisModule.directive('droppable', function() {
 						column = node.data.column;
 						if(column) {
 							if(multiple) {
-								if(!$scope.$select.selected) {
-									$scope.$select.selected = [column];
-								} else {
-									// double check the selected item is not already in 
-									// the selection
-									// otherwise it would cause ng-duplicate error
-									if($scope.$select.selected.indexOf(column) < 0) {
+								// double check the selected item is not already in 
+								// the selection and that it's the same keyType as the first column
+								// otherwise it would cause ng-duplicate error
+								if($scope.$select.selected.indexOf(column) < 0) {
+									if($scope.$select.selected.length > 0) {
+										if($scope.$select.selected[0].metadata.keyType == column.metadata.keyType)
+											$scope.$select.selected.push(column);
+									} else {
 										$scope.$select.selected.push(column);
 									}
 								}

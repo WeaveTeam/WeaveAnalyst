@@ -65,10 +65,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	queryService.refreshHierarchy = function() {
 		var weave = WeaveService.weave;
 		
-		queryService.queryObject.dataTable = "";
-		queryService.cache.columns = [];
-		queryService.cache.filteredColumns = [];
-		
 		if(!WeaveService.checkWeaveReady())
 			return;
 		
@@ -463,26 +459,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //		
 //	}, true);
 	
-	$scope.$watch("queryService.cache.columns", function(newVal, oldVal) {
-		
-		
-		if(!angular.equals(newVal, oldVal)) {
-			// this deletes the columns from the old data table selected in the resultSet
-			var tempArray = [];
-			for(var i = 0; i < queryService.queryObject.resultSet.length; i++) {
-				if(queryService.queryObject.resultSet[i].dataSourceName != "WeaveDataSource") {
-					tempArray.push(queryService.queryObject.resultSet[i]); // creating a temp array is faster than splicing
-				}
-			}
-			queryService.queryObject.resultSet = tempArray;
-		}
-		
-		for(var i in queryService.cache.columns) {
-			var column = queryService.cache.columns[i];
-			queryService.queryObject.resultSet.push({ id : column.id, title: column.title, dataSourceName : column.dataSourceName });
-		}
-	});
-	
 	//*************************watch for Weave in different Weave windows*********************************************
 //	$scope.$watch(function() {
 //		return WeaveService.weave;
@@ -528,23 +504,35 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		return function(item) {
 			if(item && item.metadata && item.metadata.aws_metadata)
 			{
-				var metadata =  angular.fromJson(item.metadata.aws_metadata);
-				if(metadata && metadata.columnType)
+				var awsmetadata =  angular.fromJson(item.metadata.aws_metadata);
+				if(awsmetadata && awsmetadata.columnType)
 				{
 					// filter by columnType first
-					if(metadata.columnType == criteria.columnType) {
-						
+					if(awsmetadata.columnType == criteria.columnType) {
 						// then we match the search text
-						var lwCase = metadata.title.toLowerCase();
+						var lwCase = item.metadata.title.toLowerCase();
+						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+							return true;
+						}
+					} else {
+						// if no column type, filter search text only
+						var lwCase = item.metadata.title.toLowerCase();
 						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
 							return true;
 						}
 					}
 				}
+			} else {
+				if(item && item.metadata && item.metadata.title) {
+					var lwCase = item.metadata.title.toLowerCase();
+					if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+						return true;
+					}
+				}
 			}
 		};
 	};
-	
+
 	$scope.IndicDescription = "";
 	$scope.varValues = [];
 	
@@ -566,8 +554,8 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		$scope.columnToRemap = {value : param}; // bind this column to remap to the scope
 		if(column) {
 			$scope.description = column.description;
-			if(column.aws_metadata) {
-				var metadata = angular.fromJson(column.aws_metadata);
+			if(column.metadata && column.metadata.aws_metadata) {
+				var metadata = angular.fromJson(column.metadata.aws_metadata);
 				if(metadata.varValues) {
 					queryService.getDataMapping(metadata.varValues).then(function(result) {
 						$scope.varValues = result;

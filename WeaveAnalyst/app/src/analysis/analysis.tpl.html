@@ -165,21 +165,15 @@
 									</td>
 		
 									<td>
-											<ui-select ng-if="input.type == 'column' && input.columnType && input.columnType != 'all' && input.columnType != ' '" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
+											<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
 									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
-												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType)}">
+												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType})">
 									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 									        	</ui-select-choices>
 											</ui-select>
 											
-											<!--  handle the case where the column doesn't have a column type in which case we don't filter by columnType -->
-											<ui-select ng-if="input.type == 'column' && (!input.columnType || input.columnType == 'all' || input.columnType == ' ')" ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
-									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
-												<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search } }">
-									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
-									        	</ui-select-choices>
-											</ui-select>
 											
+											<!-- Remapping -->
 											<a href="javascript: void(0)" 
 												ng-click="showColumnInfo(queryService.queryObject.scriptOptions[input.param], input.param)"
 											> 
@@ -188,21 +182,8 @@
 													class="fa fa-pencil-square-o fa-lg"
 												></i>
 											</a>
-											<!-- Remapping -->
 											
-											<!-- handling toggle input types -->
-<!-- 											<div class="btn-group btn-toggle" -->
-<!-- 												ng-if="input.type == 'options' && input.options.length == 2" -->
-<!-- 												ng-init="queryService.queryObject.scriptOptions[input.param] = input.options[0]" -->
-<!-- 												ng-click="toggleButton(input)"> -->
-<!-- 												<button -->
-<!-- 													ng-class="{'active btn-primary': queryService.queryObject.scriptOptions[input.param] == input.options[0]}" -->
-<!-- 													class="btn btn-default">{{input.options[0]}}</button> -->
-<!-- 												<button -->
-<!-- 													ng-class="{'active btn-primary': queryService.queryObject.scriptOptions[input.param] == input.options[1]}" -->
-<!-- 													class="btn btn-default">{{input.options[1]}}</button> -->
-<!-- 											</div> -->
-											
+											<!-- Handling options type -->
 											<ui-select ng-if="input.type == 'options'" ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
 											    <ui-select-match allow-clear="true" placeholder="Select option...">{{$select.selected}}</ui-select-match>
 											    <ui-select-choices repeat="option in input.options | filter: $select.search">
@@ -210,36 +191,16 @@
 											    </ui-select-choices>
 										    </ui-select>
 										    
-											<!-- Handling boolean options -->
+											<!-- Handling boolean type -->
 											<input type="checkbox" ng-if="input.type == 'boolean'" ng-model="queryService.queryObject.scriptOptions[input.param]"></input>
-<!-- 											<div class="btn-group btn-toggle" style="width:100%; height:100%" -->
-<!-- 												ng-if="input.type == 'boolean'" -->
-<!-- 												ng-init="queryService.queryObject.scriptOptions[input.param] = true" -->
-<!-- 												ng-click="queryService.queryObject.scriptOptions[input.param] = !queryService.queryObject.scriptOptions[input.param]"> -->
-<!-- 												<button -->
-<!-- 													ng-class="{'active btn-primary': queryService.queryObject.scriptOptions[input.param] == true}" -->
-<!-- 													class="btn btn-default">True</button> -->
-<!-- 												<button -->
-<!-- 													ng-class="{'active btn-danger': queryService.queryObject.scriptOptions[input.param] == false}" -->
-<!-- 													class="btn btn-default">False</button> -->
-<!-- 											</div>  -->
 											
-											<!-- handling value types -->
-											<input style="width: 80%" ng-if="input.type == 'value'"
-											ng-model="queryService.queryObject.scriptOptions[input.param]">
+											<!-- handling values type -->
+											<input style="width: 80%" ng-if="input.type == 'value'" ng-model="queryService.queryObject.scriptOptions[input.param]">
 											
-	<!-- 										Handling multiple column types -->
-											<ui-select ng-if="input.type == 'multiColumns' && input.columnType && input.columnType != 'all' && input.columnType != ' '" multiple droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
+											<!-- Handling multiple column types -->
+											<ui-select ng-if="input.type == 'multiColumns'" multiple droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
 											    <ui-select-match placeholder="Select Columns...">{{$item.metadata.title}}</ui-select-match>
-											    <ui-select-choices repeat="column in queryService.cache.columns | filter: { metadata : { title : $select.search, columnType : input.columnType } }">
-										      	      <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
-											    </ui-select-choices>
-										    </ui-select>
-										    
-											<!--  handle the case where the column doesn't have a column type in which case we don't filter by columnType -->
-											<ui-select ng-if="input.type == 'multiColumns' && (!input.columnType || input.columnType == 'all' || input.columnType == ' ')" multiple droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
-											    <ui-select-match placeholder="Select Columns...">{{$item.metadata.title}}</ui-select-match>
-											    <ui-select-choices repeat="column in queryService.cache.columns | filter: { metadata : { title : $select.search } }">
+											    <ui-select-choices repeat="column in queryService.cache.columns | filter: filterColumn({title : $select.search, columnType : input.columnType})">
 										      	      <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 											    </ui-select-choices>
 										    </ui-select>
