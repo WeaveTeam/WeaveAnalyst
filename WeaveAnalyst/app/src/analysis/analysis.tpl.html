@@ -269,10 +269,10 @@
 					<geo-Filter  ng-if="queryService.queryObject.properties.showGeographyFilter" ng-model= "queryService.queryObject.GeographyFilter"></geo-Filter>
 				
 					<!--  regular column filter -->	
-					<filter  ng-repeat="filter in queryService.queryObject.filterArray" columns="queryService.cache.columns" ng-model='queryService.queryObject.filters[$index]'></filter>
+					<filter  ng-repeat="(filterName, filter) in queryService.queryObject.filters" columns="queryService.cache.columns" ng-model='queryService.queryObject.filters[filterName]'></filter>
 		
 					<!-- two columns filter -->
-					<tree-filter ng-repeat="filter in queryService.queryObject.treeFilterArray" columns="queryService.cache.columns" ng-model="queryService.queryObject.treeFilters[$index]"></tree-filter>
+<!-- 					<tree-filter ng-repeat="filter in queryService.queryObject.treeFilterArray" columns="queryService.cache.columns" ng-model="queryService.queryObject.treeFilters[$index]"></tree-filter> -->
 				</div>
 				
 				

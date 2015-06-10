@@ -1,25 +1,39 @@
-AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, $filter){
-	$scope.queryService = queryService;
-	$scope.filtersModel = queryService.queryObject.filters;
-	$scope.treeFiltersModel = queryService.queryObject.treeFilters;
+AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, WeaveService){
 	
-	$scope.addFilter = function() {
+	
+	var weave = WeaveService.weave;
+	var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
+	
+	$scope.$watch(function() {
+		return WeaveService.weave;
+	}, function() {
+		weave = WeaveService.weave;
+	});
+	
+	$scope.queryService = queryService;
+	
+	$scope.addCategoricalFilter = function() {
 		// the values are the same as the index for convenience
-		queryService.queryObject.filterArray.push(queryService.queryObject.filterArray.length);
+		if(!weave)
+			return;
+		filterName = WeaveService.generateUniqueName("filter", pathToFilters);
+		weave.path(pathToFilters).push(filterName).request("StringDataFilter");
+		queryService.queryObject.filters[filterName] = {};
 	};
 	
-	$scope.removeFilter = function(index) {
-		queryService.queryObject.filterArray.splice(index, 1);
-		queryService.queryObject.filters.splice(index, 1);
+	$scope.removeFilter = function(filterName) {
+		if(!weave)
+			return;
+		weave.path(pathToFilters).push(filterName).remove();
+		delete queryService.queryObject.filters[filterName];
 	};
 
-	$scope.addTreeFilter = function() {
+	$scope.addContinuousFilter = function() {
+		if(!weave)
+			return;
 		// the values are the same as the index for convenience
-		queryService.queryObject.treeFilterArray.push(queryService.queryObject.treeFilterArray.length);
+		filterName = WeaveService.generateUniqueName("filter");
+		weave.path("defaultSubsetKeyFilter", "filters").push(filterName).request("NumberDataFilter");
+		queryService.queryObject.filters[filterName] = {};
 	};
-	
-	$scope.removeTreeFilter = function(index) {
-		queryService.queryObject.treeFilterArray.splice(index, 1);
-		queryService.queryObject.treeFilters.splice(index, 1);
-	};	
 });

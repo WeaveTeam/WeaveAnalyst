@@ -10,10 +10,18 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	this.columnNames = [];
 	
-	this.generateUniqueName = function(className) {
+	/**
+	 * 
+	 * @param className {String}
+	 * @param path {Array} path to the desired location in the session state, if no path is provided
+	 * 					   it defaults to the root of the session state
+	 * 
+	 * @return {string}
+	 */
+	this.generateUniqueName = function(className, path) {
 		if(!ws.weave)
 			return null;
-		return ws.weave.path().getValue('generateUniqueName')(className);
+		return ws.weave.path(path || []).getValue('generateUniqueName')(className);
 	};
 	
 	this.tileWindows = function() {

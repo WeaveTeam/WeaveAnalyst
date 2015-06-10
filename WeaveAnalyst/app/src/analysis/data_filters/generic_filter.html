@@ -1,9 +1,20 @@
 <div class=" header panel-heading" style="display: inline-block">
+	
+ 	<div class="btn-group" dropdown is-open="status.isopen">
+      <button type="button" class="btn btn-primary dropdown-toggle" dropdown-toggle ng-disabled="disabled">
+        St <span class="caret"></span>
+      </button>
+       <ul class="dropdown-menu">
+        <li ng-repeat="style in filterStyle">
+          <a href>{{style}}</a>
+        </li>
+      </ul>
+    </div>
+    	
 	<h2>Filter</h2>
-
 	<a href="javascript: void(0)" 
 		class="close-button" data-trigger="hover" placement="right" title="Remove"
-		ng-click="$parent.removeFilter($parent.$index)"	
+		ng-click="$parent.removeFilter($parent.filterName)"	
 	> 
 		<i style="margin:8px 0px 2px 10px; font-size: 10px" class="glyphicon glyphicon-remove"></i> 
 	</a>
@@ -11,39 +22,32 @@
 
 <div class="body" style="width: 100%; height:100%;">
 	
-	<ui-select ng-model="ngModel.column" theme="select2" style="width: 100%;">
-   		<ui-select-match allow-clear="true" placeholder="Select column to filter...">{{$select.selected.title}}</ui-select-match>
-		<ui-select-choices repeat="column in columns | filter : { title : $select.search }">
-      			 <div ng-bind-html="column.title | highlight: $select.search"></div>
+	<ui-select droppable ng-model="ngModel.column" theme="select2" style="width: 80%;">
+   		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
+		<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : {title : $select.search}}">
+      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
        	</ui-select-choices>
 	</ui-select>
 	<br>
 	
-	{{ ngModel.column.description }}
-	
 	<br><br>
-		<!-- multi select picker -->
- 	<div ng-if="filterType == 'multiselect'">
-		<ui-select ng-model="ngModel.multiselectModel" multiple theme="select2" style="width: 100%;">
-   			<ui-select-match allow-clear="true" placeholder="Select column to filter...">{{$item.label}}</ui-select-match>
-			<ui-select-choices repeat="filter.value as filter in filterOptions | filter : { label : $select.search }">
-      			 <div ng-bind-html="filter.label | highlight: $select.search"></div>
-       		</ui-select-choices>
-	</ui-select>
-		
- 	</div>
-		<!-- combo box picker -->
-	<div ng-if="filterType == 'combobox'" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
+
+	<!-- multi select picker -->
+ 	<div ng-if="ngModel.selectedFilterStlyle == 'Checklist'">
 		<div ng-repeat="option in filterOptions">
 			<input type="checkbox" ng-init="ngModel.comboboxModel[$index] = false" ng-model=ngModel.comboboxModel[$index]> {{option.label}} </input>
 		</div>
+ 	</div>
+
+	<!-- combo box picker -->
+	<div ng-if="ngModel.selectedFilterStyle == 'Combo Box'" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
+		<ui-select ng-model="ngModel.checkListModel" multiple theme="select2" style="width: 100%;">
+   			<ui-select-match allow-clear="true" placeholder="Select column to filter...">{{$item.label}}</ui-select-match>
+			<ui-select-choices repeat="filter.value as filter in filterOptions | filter : { label : $select.search }">
+      			 <div ng-bind-html="filter.label | highlight: $select.search"></div>
+     		</ui-select-choices>
+		</ui-select>
 	</div>
-		<!-- slider picker -->
-	<div ng-if="filterType == 'slider'">
-		<div style="text-align: center;">
-				{{ngModel.sliderModel[0]}} - {{ngModel.sliderModel[1]}}
-		</div>
-		<div  class="ui-slider-range" style="z-index: 0" ui-slider="sliderOptions" step="1" ng-model="ngModel.sliderModel"/>
-	</div>
+
 	<br>
 </div>

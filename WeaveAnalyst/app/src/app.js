@@ -210,10 +210,10 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function() {
-		$("#weave").css("visibility", "hidden");
-		$("#weave").css("position", "absolute");
-		$("#weave").css("top", "50%");
-		$("#weave").css("left", "28%");
+//		$("#weave").css("visibility", "hidden");
+//		$("#weave").css("position", "absolute");
+//		$("#weave").css("top", "50%");
+//		$("#weave").css("left", "28%");
 	});
 	
 

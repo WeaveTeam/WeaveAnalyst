@@ -209,13 +209,20 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				for(var key in queryObject.scriptOptions)
 				{
 					var input = queryObject.scriptOptions[key];
-					// check if the input is a column
-					if(typeof input == "object") {
-						if(input.dataSourceName && input.metadata) {
-							inputsPath.push(key).request("DynamicColumn").setColumn(input.metadata, input.dataSourceName);
-						}
+					// check if the input is an array of columns
+					if(Array.isArray(input)) {
+						inputsPath.push(key).request("LinkableHashMap")
+							.forEach(input, function(column) {
+								this.push(column.metadata.title).setColumn(column.metadata, column.dataSourceName);
+							});
 					} else {
-						inputsPath.push(key).request("LinkableVariable").state(input);
+						if(typeof input == "object") {
+							if(input.dataSourceName && input.metadata) {
+								inputsPath.push(key).request("DynamicColumn").setColumn(input.metadata, input.dataSourceName);
+							}
+						} else {
+							inputsPath.push(key).request("LinkableVariable").state(input);
+						}
 					}
 				}
 				
