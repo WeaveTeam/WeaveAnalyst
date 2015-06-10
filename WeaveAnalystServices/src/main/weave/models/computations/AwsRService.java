@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.rosuda.REngine.REXP;
@@ -178,12 +179,13 @@ public class AwsRService implements IScriptEngine//TODO extends RserviceUsingRse
 		
 			else
 				throw new RemoteException("Unsupported value type");
-		} else if (object instanceof StringMap<?>) {
+		} else if (object instanceof Map<?, ?>) {
 			// if it's a string map, we create a R list for each
-			StringMap<?> stringMap = (StringMap<?>) object;
 			RList l = new RList();
-			for(String key : stringMap.keySet()) {
-				Object value = stringMap.get(key);
+			Map<?, ?> map = (Map<?, ?>) object;
+			
+			for(Object key : map.keySet()) {
+				Object value = map.get(key);
 				l.put(key, getREXP(value));
 			}
 			

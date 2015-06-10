@@ -29,11 +29,6 @@ public class ComputationalServlet extends WeaveServlet
 {	
 	public ComputationalServlet() throws Exception
 	{
-//		try {
-//			rService = new AwsRService();
-//		} catch (Exception e) {
-//			throw new Exception("Cannot Start RService. Make sure Rserve is running.");
-//		}
 	}
 	
 	private String programPath = "";
@@ -169,15 +164,10 @@ public class ComputationalServlet extends WeaveServlet
 	public static class KeysAndColumns
 	{
 		public String[] keys;
-		public Map<String, Object[]> columns;
+		public Map<String, Object> columns;
 	}
 	
-	@SuppressWarnings("serial")
-	public static class MapNameToColumns extends HashMap<String, Map<String, Object[]>>
-	{
-	}
-	
-	public Object runScriptWithInputs(String scriptName, Map<String, Object> simpleInputs, MapKeyTypeToKeysAndColumns columnData, MapNameToColumns tableData) throws Exception
+	public Object runScriptWithInputs(String scriptName, Map<String, Object> simpleInputs, MapKeyTypeToKeysAndColumns columnData) throws Exception
 	{
 		Object resultData = null;
 		
@@ -196,7 +186,6 @@ public class ComputationalServlet extends WeaveServlet
 			}
 		}
 		
-		scriptInputs.putAll(tableData);
 		
 		resultData = runScript(scriptName);
 		
