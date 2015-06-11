@@ -181,7 +181,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 				}
 			},
 			keyBoard : true,
-			debugLevel: 0,
+			debugLevel: 0
 		};
 	};
 	
