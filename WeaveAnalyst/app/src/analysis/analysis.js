@@ -70,7 +70,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		
 		var weaveTreeNode = new weave.WeaveTreeNode();
 		
-		weave.path('CensusDataSource').request("CensusDataSource");
+		//weave.path('CensusDataSource').request("CensusDataSource");
 		weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 		
 		queryService.cache.hierarchy = {

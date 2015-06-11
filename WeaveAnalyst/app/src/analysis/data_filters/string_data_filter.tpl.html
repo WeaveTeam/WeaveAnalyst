@@ -1,16 +1,5 @@
 <div class=" header panel-heading" style="display: inline-block">
 	
- 	<div class="btn-group" dropdown is-open="status.isopen">
-      <button type="button" class="btn btn-primary dropdown-toggle" dropdown-toggle ng-disabled="disabled">
-        St <span class="caret"></span>
-      </button>
-       <ul class="dropdown-menu">
-        <li ng-repeat="style in filterStyle">
-          <a href>{{style}}</a>
-        </li>
-      </ul>
-    </div>
-    	
 	<h2>Filter</h2>
 	<a href="javascript: void(0)" 
 		class="close-button" data-trigger="hover" placement="right" title="Remove"
@@ -22,32 +11,35 @@
 
 <div class="body" style="width: 100%; height:100%;">
 	
-	<ui-select droppable ng-model="ngModel.column" theme="select2" style="width: 80%;">
+	<ui-select droppable ng-model="ngModel.column" theme="select2" style="width: 100%;">
    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
 		<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : {title : $select.search}}">
       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
        	</ui-select-choices>
 	</ui-select>
-	<br>
-	
 	<br><br>
 
-	<!-- multi select picker -->
- 	<div ng-if="ngModel.selectedFilterStlyle == 'Checklist'">
+	<div>
+		<input style="float:left" type="button" value="checklist" ng-click="ngModel.selectedFilterStyle = 'checklist'"/>
+		<input style="float:right" type="button" value="combobox" ng-click="ngModel.selectedFilterStyle = 'combobox'"/>
+	</div>
+	
+	<br><br>
+		<!-- multi select picker -->
+ 	<div ng-if="ngModel.selectedFilterStyle == 'checklist'" style="height:70%; overflow-y: scroll">
 		<div ng-repeat="option in filterOptions">
-			<input type="checkbox" ng-init="ngModel.comboboxModel[$index] = false" ng-model=ngModel.comboboxModel[$index]> {{option.label}} </input>
+			<input type="checkbox" ng-init="ngModel.checklistModel[option.value] = false" ng-model="ngModel.checklistModel[option.value]" style="padding-top: 10%"> {{option.label}} </input>
 		</div>
  	</div>
 
 	<!-- combo box picker -->
-	<div ng-if="ngModel.selectedFilterStyle == 'Combo Box'" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
-		<ui-select ng-model="ngModel.checkListModel" multiple theme="select2" style="width: 100%;">
+	<div ng-if="ngModel.selectedFilterStyle == 'combobox'" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
+		<br><br>
+		<ui-select ng-model="ngModel.stringValues" multiple theme="select2" style="width: 100%;">
    			<ui-select-match allow-clear="true" placeholder="Select column to filter...">{{$item.label}}</ui-select-match>
-			<ui-select-choices repeat="filter.value as filter in filterOptions | filter : { label : $select.search }">
+			<ui-select-choices repeat="filter in filterOptions | filter : { label : $select.search }">
       			 <div ng-bind-html="filter.label | highlight: $select.search"></div>
      		</ui-select-choices>
 		</ui-select>
 	</div>
-
-	<br>
 </div>
