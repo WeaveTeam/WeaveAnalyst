@@ -1,4 +1,4 @@
-AnalysisModule.directive('stringDataFilter', function(queryService, WeaveService) {
+AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 	
 	function link($scope, element, attrs, ngModelCtrl) {
 //		element.draggable({ containment: "parent" }).resizable({
@@ -22,7 +22,7 @@ AnalysisModule.directive('stringDataFilter', function(queryService, WeaveService
 			columns : '=',
 			ngModel : '=',
 		},
-		controller : function($scope, $filter, queryService) {
+		controller : function($scope, $filter) {
 			
 			var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
 			
@@ -39,22 +39,25 @@ AnalysisModule.directive('stringDataFilter', function(queryService, WeaveService
 			$scope.filterOptions = [];
 			$scope.ngModel.stringValues = [];
 			$scope.ngModel.comboboxModel = [];
-			$scope.ngModel.checklistModel = [];
-			
-			$scope.ngModel.selectedFilterStyle = "checklist";
+			$scope.ngModel.checklistModel = {};
 			
 			$scope.$watch('ngModel.selectedFilterStyle', function(selectedFilterStyle) {
 				if(selectedFilterStyle == "checklist")
 				{
-					//$scope.ngModel.comboboxModel = [];
+					$scope.ngModel.comboboxModel = [];
 				} else if(selectedFilterStyle == "combobox")
 				{
-					//$scope.ngModel.checklistModel = [];
+					$scope.ngModel.checklistModel = {};
 				}
-			})
+			});
+			
 			$scope.$watch('ngModel.column', function(column) {
 				if(column)
 				{
+					$scope.ngModel.stringValues = [];
+					$scope.ngModel.comboboxModel = [];
+					$scope.ngModel.checklistModel = {};
+					
 					weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
 					
 					if(column.metadata && column.metadata.aws_metadata) {
@@ -68,33 +71,35 @@ AnalysisModule.directive('stringDataFilter', function(queryService, WeaveService
 							$scope.filterOptions = options.map(function(option){
 								return { value : option, label : option };
 							});
-							$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
 							$scope.$apply();
 						});
-						
 					}
+				} else {
+					$scope.ngModel.stringValues = [];
+					$scope.ngModel.comboboxModel = [];
+					$scope.ngModel.checklistModel = {};
 				}
 			});
 			
-			$scope.$watchCollection('ngModel.checklistModel', function(checkListModel) {
+			$scope.$watch('ngModel.checklistModel', function(checklistModel) {
 				$scope.ngModel.stringValues = [];
-				for(value in checkListModel) {
-					if(checkListModel[value])
+				for(value in checklistModel) {
+					if(checklistModel[value])
 					{
 						$scope.ngModel.stringValues.push(value);
 					}
 				}
-			});
+			}, true);
 			
-			$scope.$watchCollection('ngModel.comboboxModel', function(comboboxModel) {
+			$scope.$watch('ngModel.comboboxModel', function(comboboxModel) {
 				$scope.ngModel.stringValues = comboboxModel.map(function(obj) {
 					return obj.value;
 				});
-			});
+			}, true);
 			
-			$scope.$watchCollection("ngModel.stringValues", function () {
+			$scope.$watch("ngModel.stringValues", function () {
 				weave.path(pathToFilters).push(filterName, "stringValues").state($scope.ngModel.stringValues);
-			});
+			}, true);
 		}
 	};
 });
