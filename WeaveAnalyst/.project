@@ -23,7 +23,7 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/WeaveAnalystBuilder.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/WeaveAnalystbuilder.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
