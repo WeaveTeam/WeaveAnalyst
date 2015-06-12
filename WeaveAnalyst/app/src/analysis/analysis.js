@@ -31,8 +31,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.weaveReady = false;
 
-	$("#queryObjectPanel" ).draggable().resizable();
-	$("#hierarchyPanel" ).draggable().resizable();
+	$("#queryObjectPanel" ).draggable().resizable({
+       handles: 'n, e, s, w'
+    });
+	$("#hierarchyPanel" ).draggable().resizable({
+       handles: 'n, e, s, w'
+    });
 	
 	$scope.hierarchyClass = {
 			width : "48%",
