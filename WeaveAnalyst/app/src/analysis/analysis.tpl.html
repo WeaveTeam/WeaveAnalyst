@@ -269,10 +269,10 @@
 					<geo-Filter  ng-if="queryService.queryObject.properties.showGeographyFilter" ng-model= "queryService.queryObject.GeographyFilter"></geo-Filter>
 				
 					<!--  regular column filter -->	
-					<string-data-filter  ng-repeat="(filterName, filter) in queryService.queryObject.filters" columns="queryService.cache.columns" ng-model='queryService.queryObject.filters[filterName]'></string-data-filter>
+					<string-data-filter  ng-repeat="(filterName, filter) in queryService.queryObject.categoricalFilters" columns="queryService.cache.columns" ng-model='queryService.queryObject.categoricalFilters[filterName]'></string-data-filter>
 		
 					<!-- two columns filter -->
-<!-- 					<tree-filter ng-repeat="filter in queryService.queryObject.treeFilterArray" columns="queryService.cache.columns" ng-model="queryService.queryObject.treeFilters[$index]"></tree-filter> -->
+					<number-data-filter ng-repeat="(filterName, filter) in queryService.queryObject.rangeFilters" columns="queryService.cache.columns" ng-model="queryService.queryObject.rangeFilters[filterName]"></tree-filter>
 				</div>
 				
 				
@@ -322,6 +322,7 @@
 							</accordion>
 						</div>
 					</div>
+					<div id="flashContent" style="width: 70%; height: 800px; float:left;"></div>
 				</div>
 				
 				<!-- individual tool widgets when Weave is opened in a new window -->

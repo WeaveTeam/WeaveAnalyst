@@ -193,11 +193,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		return WeaveService.weave;
 	}, function () {
 		if(WeaveService.weave) {
-			$("#weave").css("position", "absolute");
-			$("#weave").css("top", "50%");
-			$("#weave").css("left", "28%");
-			$("#weave").css("visibility", "visible");
-			$("#weave").css("z-index", 0);
 			var weave = WeaveService.weave;
 			$scope.weaveReady = true;
 			if(weave) {
