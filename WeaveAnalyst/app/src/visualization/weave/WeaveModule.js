@@ -443,42 +443,65 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		return toolName;
 	};
 	
-	this.ColorColumn = function(state){
-		if(state.column){//if enabled
+	this.ColorColumn = function(state) {
+		var columns;
+		var showColorLegends;
+
+		if (Array.isArray(state.columns)) 
+			columns = state.columns;
+		else
+			columns = [state.column];
+
+		if (Array.isArray(state.showColorLegends))
+			showColorLegends = state.showColorLegends;
+		else
+			showColorLegends = [state.showColorLegend];
+
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window); // why? shouldn't we be queuing this function call for when the state is ready next?
+			return;
+		}
+
+		/* If there are more existing automatically-generated legends or colorcolumns than there are showColorLegend/columns entries, 
+			this will iterate over the remainder and remove them. */
+		var idx;
+		var existingLegends = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.visualization.tools::ColorBinLegendTool'; });
+		var existingColorColumns = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.data.AttributeColumns::ColorColumn'; });
+		var max_length = Math.max(columns.length, existingLegends.length, existingColorColumns.length);
+
+		for (idx = 0; idx < max_length; idx++)
+		{
+			var column = columns[idx];
+			var showColorLegend = showColorLegends[idx];
+			var colorColumnName = (idx == 0) ? 'defaultColorColumn' : 'colorColumn' + idx;
 			
-			if(ws.checkWeaveReady())//if weave is ready
-				{
-					//create color column
-					ws.weave.path('defaultColorDataColumn').setColumn(state.column.metadata, state.column.dataSourceName);
-					
-					//hack for demo
-//					if(state.column2 && state.column3){
-//						console.log("getting columns together", state.column2, state.column3);
-//						//gets their ids
-//						//call modified combinedColumnfunction
-//						ws.weave.path('defaultColorDataColumn', 'internalDynamicColumn', null)
-//						  .request('CombinedColumn')
-//						  .push('columns')
-//						  .setColumns([ state.column3.id, state.column2.id]);
-//					}
-					//hack for demo end
-					
-					//handle color legend
-					if(state.showColorLegend)//add it
-					{
-						ws.weave.path("ColorBinLegendTool").request('ColorBinLegendTool')
-						.state({panelX : "80%", panelY : "0%"});
-					}
-					else{//remove it
-						ws.weave.path("ColorBinLegendTool").remove();
-					}
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-				}
-			else{//if weave not ready
-				ws.setWeaveWindow(window);
+			var colorColumnPath = ws.weave.path(colorColumnName);
+
+			if (column)
+			{
+				colorColumnPath.request('ColorColumn').setColumn(column.metadata, column.dataSourceName);
+			}
+			else
+			{
+				if (idx != 0) colorColumnPath.remove();
+			}
+
+			var legendPath = ws.weave.path('ColorBinLegendTool'+idx);
+
+			if (showColorLegend)
+			{
+				legendPath.request('ColorBinLegendTool').state({panelX: "80%", panelY: "0%"});
+				legendPath.pushLayerSettings().push('dynamicColorColumn').state(colorColumnName);
+			}
+			else
+			{
+				legendPath.remove();
 			}
 		}
+
+		queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 	};
 	
 	this.keyColumn = function(state){
