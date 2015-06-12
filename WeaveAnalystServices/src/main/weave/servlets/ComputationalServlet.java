@@ -175,8 +175,6 @@ public class ComputationalServlet extends WeaveServlet
 			scriptInputs.put(key, simpleInputs.get(key));
 		}
 
-		if (columnData.size() > 1)
-			throw new RemoteException("Columns with different keyTypes are not supported yet.");
 		for (String keyType : columnData.keySet())
 		{
 			KeysAndColumns keysAndColumns = columnData.get(keyType);
@@ -185,7 +183,6 @@ public class ComputationalServlet extends WeaveServlet
 				scriptInputs.put(key, keysAndColumns.columns.get(key));
 			}
 		}
-		
 		
 		resultData = runScript(scriptName);
 		
