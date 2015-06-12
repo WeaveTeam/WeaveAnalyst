@@ -18,22 +18,25 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 			return;
 		filterName = WeaveService.generateUniqueName("filter", pathToFilters);
 		weave.path(pathToFilters).push(filterName).request("StringDataFilter");
-		queryService.queryObject.filters[filterName] = {};
+		queryService.queryObject.categoricalFilters[filterName] = {};
 	};
 	
-	$scope.removeFilter = function(filterName) {
+	$scope.removeFilter = function(filterName, filterType) {
 		if(!weave)
 			return;
 		weave.path(pathToFilters).push(filterName).remove();
-		delete queryService.queryObject.filters[filterName];
+		if(filterType == "categorical")
+			delete queryService.queryObject.categoricalFilters[filterName];
+		else 
+			delete queryService.queryObject.rangeFilters[filterName];
 	};
 
-	$scope.addContinuousFilter = function() {
+	$scope.addRangeFilter = function() {
 		if(!weave)
 			return;
 		// the values are the same as the index for convenience
-		filterName = WeaveService.generateUniqueName("filter");
+		filterName = WeaveService.generateUniqueName("filter", pathToFilters);
 		weave.path("defaultSubsetKeyFilter", "filters").push(filterName).request("NumberDataFilter");
-		queryService.queryObject.filters[filterName] = {};
+		queryService.queryObject.rangeFilters[filterName] = {};
 	};
 });
