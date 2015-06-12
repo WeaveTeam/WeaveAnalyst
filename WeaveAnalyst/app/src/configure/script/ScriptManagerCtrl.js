@@ -29,11 +29,11 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 	  $scope.inputTypes = ["column", "options", "boolean", "value", "multiColumns"];
 	  $scope.columnTypes = ["", "all", "analytic", "geography", "indicator", "time", "by-variable"];
 	  
-	  $scope.$watch(function() {
-	    	return WeaveService.weave;
-	  }, function() {
-	    	$("#weave").css("visibility", "hidden");
-	  });
+//	  $scope.$watch(function() {
+//	    	return WeaveService.weave;
+//	  }, function() {
+//	    	$("#weave").css("visibility", "hidden");
+//	  });
 	  
 	  $scope.service = scriptManagerService;
 	  $scope.queryService = queryService;

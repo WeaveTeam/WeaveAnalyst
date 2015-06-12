@@ -39,11 +39,11 @@ metadataModule.config(function($provide){
 //	$scope.maxTasks;
 //	$scope.progressValue = 0;
 	
-    $scope.$watch(function() {
-     	return WeaveService.weave;
-    }, function() {
-    	$("#weave").css("visibility", "hidden");
-    });
+//    $scope.$watch(function() {
+//     	return WeaveService.weave;
+//    }, function() {
+//    	$("#weave").css("visibility", "hidden");
+//    });
     
 	$scope.selectedDataTableId;//datatable selected by the user
     $scope.fileUpload;

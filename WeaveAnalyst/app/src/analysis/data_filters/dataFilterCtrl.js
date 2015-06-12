@@ -4,11 +4,11 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 	var weave = WeaveService.weave;
 	var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
 	
-	$scope.$watch(function() {
-		return WeaveService.weave;
-	}, function() {
-		weave = WeaveService.weave;
-	});
+//	$scope.$watch(function() {
+//		return WeaveService.weave;
+//	}, function() {
+//		weave = WeaveService.weave;
+//	});
 	
 	$scope.queryService = queryService;
 	
