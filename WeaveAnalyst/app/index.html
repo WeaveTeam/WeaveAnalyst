@@ -49,34 +49,13 @@
 
 						<!--The main navbar-->
 						 <ul class="nev">
+       						 <li ng-class="{active: state.current.data.activetab == 'project'}"><a ui-sref="project">Project</a></li>
        						 <li ng-class="{active: state.current.data.activetab == 'metadata'}"><a ui-sref="metadata">Metadata</a></li>
        						 <li ng-class="{active: state.current.data.activetab == 'script_management'}"><a ui-sref="script_management">Scripts</a></li>
        						 <li ng-class="{active: state.current.data.activetab == 'analysis'}" ><a ui-sref="analysis">Analysis</a></li>
        						 <li ng-class="{active: state.current.data.activetab == 'cross_tab'}"><a ui-sref="cross_tab">Cross Tabulation</a></li>
        						 <li ng-class="{active: state.current.data.activetab == 'data_stats'}"><a ui-sref="data_stats">Data Stats</a></li>
-       						 <li ng-class="{active: state.current.data.activetab == 'project'}"><a ui-sref="project">Project</a></li>
-   						 </ul>
-					
-<!--**********************Using ng-route***************************************/  -->
-<!-- 						<ul class="nev" > -->
-<!-- 							<li ng-class="{active: $route.current.activetab == 'metadata'}"> -->
-<!-- 								<a href="#/metadata">Metadata</a> -->
-<!-- 							</li> -->
-<!-- 							<li ng-class="{active: $route.current.activetab == 'script_management'}"> -->
-<!-- 								<a href="#/script_management">Scripts</a> -->
-<!-- 							</li> -->
-<!-- 							<li ng-class="{active: $route.current.activetab == 'analysis'}"> -->
-<!-- 								<a href="#/analysis">Analysis</a> -->
-<!-- 							</li> -->
-<!-- 							<li ng-class = "{active : $route.current.activetab == 'data_stats'}"> -->
-<!-- 							<a href="#/data_stats">Data Stats</a> -->
-<!-- 							</li> -->
-<!-- 							<li ng-class="{active: $route.current.activetab == 'project_management'}"> -->
-<!-- 								<a href="#/project_management">Projects</a> -->
-<!-- 							</li> -->
-
-<!-- 							</ul> -->
-<!--**********************Using ng-route***************************************/  -->						
+   						 </ul>					
 
 						<font color="white">Release Version 0.9b - 05/27/2015</font>
 						
@@ -101,14 +80,7 @@
 			<div style = "width:100%; height: 100%" >
 				    <div style = "width:100%; height: 100%" ui-view></div>
 			</div>
-<!--**********************Using ng-route***************************************/  -->
-<!-- 			<div style="height: 100%" class = "tab-container" > -->
-<!-- 				<div ng-view style="height: 100%"> -->
 
-<!-- 				</div> -->
-
-<!-- 			</div> -->
-<!--**********************Using ng-route***************************************/  -->	
 		
 <!-- FOOTER -->			
 			<footer>
@@ -225,6 +197,7 @@
 		<script src="src/visualization/tools/mapChart/mapChartCtrl.js"></script>
 		<script src="src/visualization/tools/scatterPlot/scatterPlotCtrl.js"></script>
 		<script src="src/visualization/tools/color/colorCtrl.js"></script>
+		<script src="src/visualization/tools/color/color_column_directive.js"></script>
 		<script src='src/visualization/tools/color/keyColumnCtrl.js'></script>
 		<script src="src/visualization/tools/attributeMenu/attributeMenuCtrl.js"></script>
 		<script type="text/javascript" src="/swfobject.js"></script>

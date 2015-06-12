@@ -1,7 +1,7 @@
 AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, WeaveService){
 	
 	var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
-	
+
 	$scope.queryService = queryService;
 	
 	$scope.addCategoricalFilter = function() {
