@@ -40,14 +40,14 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	//$scope.queryService.refreshHierarchy();
 	
-	$scope.$watch(function() {
-		return WeaveService.weave;
-	}, function () {
-		if(WeaveService.weave) {
-			$scope.showToolMenu = true;
-		}
-	});
-	
+//	$scope.$watch(function() {
+//		return WeaveService.weave;
+//	}, function () {
+//		if(WeaveService.weave) {
+//			$scope.showToolMenu = true;
+//		}
+//	});
+//	
 	
 	$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
 		if(hierarchy) {
