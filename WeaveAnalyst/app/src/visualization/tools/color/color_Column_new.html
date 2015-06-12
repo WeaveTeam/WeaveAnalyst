@@ -1,0 +1,20 @@
+<div>
+<table>
+	<tr>
+		<td>
+			<input type="checkbox" ng-model = "diffColor" ng-init= "diffColor = false" /> Use different  color column
+		</td>
+		
+		
+		
+		<td>
+			<ui-select ng-if = "diffColor"   ng-model="colorColumn" droppable theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+							<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+					       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+					        </ui-select-choices>
+			</ui-select>
+		</td>
+	</tr>
+</table>
+</div>
