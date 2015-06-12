@@ -26,7 +26,6 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 			
 			var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
 			
-			var weave = WeaveService.weave;
 			var filterName = $scope.$parent.filterName;
 			
 			var getFilterType = function (length) {
@@ -52,32 +51,36 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 			});
 			
 			$scope.$watch('ngModel.column', function(column) {
-				if(column)
-				{
-					$scope.ngModel.stringValues = [];
-					$scope.ngModel.comboboxModel = [];
-					$scope.ngModel.checklistModel = {};
-					
-					weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
-					
-					if(column.metadata && column.metadata.aws_metadata) {
-						var aws_metadata = angular.fromJson(column.metadata.aws_metadata);
-						$scope.filterOptions = aws_metadata.varValues || [];
-						$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
-					} else {
-						var options = [];
-						weave.path(pathToFilters).push(filterName).addCallback(function() {
-							options = this.getValue("StringDataFilterEditor.getChoices(column)");
-							$scope.filterOptions = options.map(function(option){
-								return { value : option, label : option };
+				
+				var weave = WeaveService.weave;
+				if(weave && WeaveService.checkWeaveReady()) {
+					if(column)
+					{
+						$scope.ngModel.stringValues = [];
+						$scope.ngModel.comboboxModel = [];
+						$scope.ngModel.checklistModel = {};
+						
+						weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
+						
+						if(column.metadata && column.metadata.aws_metadata) {
+							var aws_metadata = angular.fromJson(column.metadata.aws_metadata);
+							$scope.filterOptions = aws_metadata.varValues || [];
+							$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
+						} else {
+							var options = [];
+							weave.path(pathToFilters).push(filterName).addCallback(function() {
+								options = this.getValue("StringDataFilterEditor.getChoices(column)");
+								$scope.filterOptions = options.map(function(option){
+									return { value : option, label : option };
+								});
+								$scope.$apply();
 							});
-							$scope.$apply();
-						});
+						}
+					} else {
+						$scope.ngModel.stringValues = [];
+						$scope.ngModel.comboboxModel = [];
+						$scope.ngModel.checklistModel = {};
 					}
-				} else {
-					$scope.ngModel.stringValues = [];
-					$scope.ngModel.comboboxModel = [];
-					$scope.ngModel.checklistModel = {};
 				}
 			});
 			
@@ -98,7 +101,9 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 			}, true);
 			
 			$scope.$watch("ngModel.stringValues", function () {
-				weave.path(pathToFilters).push(filterName, "stringValues").state($scope.ngModel.stringValues);
+				var weave = WeaveService.weave;
+				if(weave && WeaveService.checkWeaveReady())
+					weave.path(pathToFilters).push(filterName, "stringValues").state($scope.ngModel.stringValues);
 			}, true);
 		}
 	};

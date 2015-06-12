@@ -26,27 +26,33 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 		controller : function($scope, $element, $rootScope, $filter) {
 			
 			var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
-			var weave = WeaveService.weave; 
 			
 			var filterName = $scope.$parent.filterName;
 
-			$scope.columnMin = 0;
-			$scope.columnMax = 100;
-			
 			$scope.$watch('ngModel.column', function(column) {
+				
+				var weave = WeaveService.weave;
 				if(column)
 				{
-					weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
-					
-					weave.path(pathToFilters).push(filterName).addCallback(function() {
-						$scope.columnMin = this.getValue("EquationColumnLib.getMin(column);");
-						$scope.columnMax = this.getValue("EquationColumnLib.getMax(column);");
-						console.log($scope.columnMin);
-						console.log($scope.columnMax);
-						$scope.$apply();
-					});
-				}
+					if(weave && WeaveService.checkWeaveReady()) {
+						weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
+
+						weave.path(pathToFilters).push(filterName).addCallback(function() {
+							var min = this.getValue("EquationColumnLib.getMin(column);") || 0;
+							var max = this.getValue("EquationColumnLib.getMax(column);") || 100;
+							$scope.sliderOptions = { range:true, min:min, max:max };
+							$scope.$apply();
+						});
+					}
+				} 
+			}, true);
+
+			$scope.$watchCollection('ngModel.range', function() {
+				console.log($scope.ngModel.range);
+				weave.path(pathToFilters).push(filterName, "min").state($scope.ngModel.range[0]);
+				weave.path(pathToFilters).push(filterName, "max").state($scope.ngModel.range[1]);
 			});
+			
 		}
 	};
 });
