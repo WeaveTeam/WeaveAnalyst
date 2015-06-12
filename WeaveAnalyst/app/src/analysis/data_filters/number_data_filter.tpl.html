@@ -21,9 +21,11 @@
 			</ui-select>
 			<br><br>
 			
-			<div style="text-align: center;">
-				{{ngModel.range[0]}} - {{ngModel.range[1]}}
+			<div ng-if="ngModel.column">
+				<div style="text-align: center;">
+					{{ngModel.range[0]}} - {{ngModel.range[1]}}
+				</div>
+				<div  class="ui-slider-range" style="z-index: 0" ui-slider="sliderOptions" step="1" ng-model="ngModel.range"/>
 			</div>
-			<div  class="ui-slider-range" style="z-index: 0" ui-slider="sliderOptions" step="1" ng-model="ngModel.range"/>
 
 </div>
