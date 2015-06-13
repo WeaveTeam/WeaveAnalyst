@@ -130,7 +130,7 @@
 	    	var saveQueryObjectInstance = $modal.open(bbCtrl.opts);
 	    	saveQueryObjectInstance.result.then(function(params){//this takes only a single object
 	    	//console.log("params", params);
-	    		bbCtrl.projectService.getBase64SessionState(params);
+	    		//bbCtrl.projectService.getBase64SessionState(params);
 	    		
 	    	});
 	    };
