@@ -443,7 +443,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		return toolName;
 	};
 	
-	this.ColorColumn = function(colorColumn, tool){
+	//this.ColorColumn = function(colorColumn, tool){
 		//1.check if the default color column has already been set
 			//if true do step 2
 			//if false set as the defaultcolorcolumn
@@ -457,6 +457,66 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 //		else{//if weave not ready
 //			ws.setWeaveWindow(window);
 //		}
+
+	this.ColorColumn = function(state) {
+		var columns;
+		var showColorLegends;
+
+		if (Array.isArray(state.columns)) 
+			columns = state.columns;
+		else
+			columns = [state.column];
+
+		if (Array.isArray(state.showColorLegends))
+			showColorLegends = state.showColorLegends;
+		else
+			showColorLegends = [state.showColorLegend];
+
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window); // why? shouldn't we be queuing this function call for when the state is ready next?
+			return;
+		}
+
+		/* If there are more existing automatically-generated legends or colorcolumns than there are showColorLegend/columns entries, 
+			this will iterate over the remainder and remove them. */
+		var idx;
+		var existingLegends = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.visualization.tools::ColorBinLegendTool'; });
+		var existingColorColumns = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.data.AttributeColumns::ColorColumn'; });
+		var max_length = Math.max(columns.length, existingLegends.length, existingColorColumns.length);
+
+		for (idx = 0; idx < max_length; idx++)
+		{
+			var column = columns[idx];
+			var showColorLegend = showColorLegends[idx];
+			var colorColumnName = (idx == 0) ? 'defaultColorColumn' : 'colorColumn' + idx;
+			
+			var colorColumnPath = ws.weave.path(colorColumnName);
+
+			if (column)
+			{
+				colorColumnPath.request('ColorColumn').setColumn(column.metadata, column.dataSourceName);
+			}
+			else
+			{
+				if (idx != 0) colorColumnPath.remove();
+			}
+
+			var legendPath = ws.weave.path('ColorBinLegendTool'+idx);
+
+			if (showColorLegend)
+			{
+				legendPath.request('ColorBinLegendTool').state({panelX: "80%", panelY: "0%"});
+				legendPath.pushLayerSettings().push('dynamicColorColumn').state(colorColumnName);
+			}
+			else
+			{
+				legendPath.remove();
+			}
+		}
+
+		queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 	};
 	
 //	this.ColorColumn = function(state){
