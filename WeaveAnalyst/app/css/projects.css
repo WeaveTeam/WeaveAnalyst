@@ -160,7 +160,9 @@
 
 .dd {
   position: relative;
+  width : 50%;
   display: block;
+  float:left;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -368,6 +370,7 @@
 }
 .dd-dragel > li.dd-item.dd3-item {
   position: relative;
+  display: inline;
   top: 10px;
   left: 10px;
   z-index: 999

@@ -443,44 +443,60 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		return toolName;
 	};
 	
-	this.ColorColumn = function(state){
-		if(state.column){//if enabled
-			
-			if(ws.checkWeaveReady())//if weave is ready
-				{
-					//create color column
-					ws.weave.path('defaultColorDataColumn').setColumn(state.column.metadata, state.column.dataSourceName);
-					
-					//hack for demo
-//					if(state.column2 && state.column3){
-//						console.log("getting columns together", state.column2, state.column3);
-//						//gets their ids
-//						//call modified combinedColumnfunction
-//						ws.weave.path('defaultColorDataColumn', 'internalDynamicColumn', null)
-//						  .request('CombinedColumn')
-//						  .push('columns')
-//						  .setColumns([ state.column3.id, state.column2.id]);
-//					}
-					//hack for demo end
-					
-					//handle color legend
-					if(state.showColorLegend)//add it
-					{
-						ws.weave.path("ColorBinLegendTool").request('ColorBinLegendTool')
-						.state({panelX : "80%", panelY : "0%"});
-					}
-					else{//remove it
-						ws.weave.path("ColorBinLegendTool").remove();
-					}
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-				}
-			else{//if weave not ready
-				ws.setWeaveWindow(window);
-			}
-		}
+	this.ColorColumn = function(colorColumn, tool){
+		//1.check if the default color column has already been set
+			//if true do step 2
+			//if false set as the defaultcolorcolumn
+		//2. set the selected column as color column for that tool
+		
+		
+//		if(ws.checkWeaveReady())//if weave is ready
+//			
+//		}
+//	
+//		else{//if weave not ready
+//			ws.setWeaveWindow(window);
+//		}
 	};
 	
+//	this.ColorColumn = function(state){
+//		if(state.column){//if enabled
+//			
+//			if(ws.checkWeaveReady())//if weave is ready
+//				{
+//					//create color column
+//					ws.weave.path('defaultColorDataColumn').setColumn(state.column.metadata, state.column.dataSourceName);
+//					
+//					//hack for demo
+////					if(state.column2 && state.column3){
+////						console.log("getting columns together", state.column2, state.column3);
+////						//gets their ids
+////						//call modified combinedColumnfunction
+////						ws.weave.path('defaultColorDataColumn', 'internalDynamicColumn', null)
+////						  .request('CombinedColumn')
+////						  .push('columns')
+////						  .setColumns([ state.column3.id, state.column2.id]);
+////					}
+//					//hack for demo end
+//					
+//					//handle color legend
+//					if(state.showColorLegend)//add it
+//					{
+//						ws.weave.path("ColorBinLegendTool").request('ColorBinLegendTool')
+//						.state({panelX : "80%", panelY : "0%"});
+//					}
+//					else{//remove it
+//						ws.weave.path("ColorBinLegendTool").remove();
+//					}
+//					//capture session state
+//					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+//				}
+//			else{//if weave not ready
+//				ws.setWeaveWindow(window);
+//			}
+//		}
+//	};
+//	
 	this.keyColumn = function(state){
 		if(state.keyColumn)
 		{

@@ -54,10 +54,14 @@
 						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
 				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 				        </ui-select-choices>
-					</ui-select>
+				</ui-select>
 			</td>
 		</tr>
+		
+		
+
 	</table>
+		<color-Column-Selector></color-Column-Selector>
 
 	</ul>
 </div>
