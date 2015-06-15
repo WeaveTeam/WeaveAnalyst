@@ -443,6 +443,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		return toolName;
 	};
 	
+	this.DataFilterTool = function(state, aToolName) {
+		
+	};
 	//this.ColorColumn = function(colorColumn, tool){
 		//1.check if the default color column has already been set
 			//if true do step 2

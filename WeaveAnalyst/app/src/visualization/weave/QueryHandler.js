@@ -225,7 +225,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 						}
 					}
 				}
-				
+				waDataSourcePath.push("inputKeyFilter").state(["defaultSubsetKeyFilter"]);
 				waDataSourcePath.push("scriptName").state(queryObject.scriptSelected);
 				waDataSourcePath.exec("getCallbackCollection(this).resumeCallbacks(); hierarchyRefresh.triggerCallbacks();");
 				
