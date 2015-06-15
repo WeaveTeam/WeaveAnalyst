@@ -12,14 +12,7 @@ AnalysisModule.service('AnalysisService', ['geoFilter_tool','timeFilter_tool', '
 			
 	};
 	//getting the list of datatables
-	queryService.getDataTableList(true);
-//	queryService.queryObject.visualizations = [MapTool,
-//	                              BarChartTool,
-//	                              DataTableTool,
-//	                              ScatterPlotTool,
-//	                              color_Column,
-//	                              key_Column];
-//	
+	//queryService.getDataTableList(true);
 	AnalysisService.geoFilter_tool = geoFilter_tool;
 	AnalysisService.timeFilter_tool = timeFilter_tool;
 	
@@ -38,8 +31,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.showToolMenu = false;
 	
-	//$scope.queryService.refreshHierarchy();
-	
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function () {
@@ -47,7 +38,165 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			$scope.showToolMenu = true;
 		}
 	});
+
+	$("#queryObjectPanel" ).draggable().resizable({
+       handles: 'n, e, s, w'
+    });
 	
+	$("#hierarchyPanel" ).draggable().resizable({
+       handles: 'n, e, s, w'
+    });
+	
+	$scope.hierarchyClass = {
+			width : "48%",
+			height: "100%",
+			marginRight: "2%",
+			float:"left"
+	};
+	
+	$scope.columnsClass = {
+			width : "48%",
+			height: "100%",
+			marginRight: "2%",
+			float:"left"
+	};
+	
+	$scope.$watch("showColumns", function() {
+		
+		if($scope.showColumns) {
+			$scope.hierarchyClass.width = "48%";
+			$scope.columnsClass.width = "48%";
+			
+		} else {
+			$scope.hierarchyClass.width = "96%";
+			$scope.columnsClass.width = "0%";
+		}
+	});
+	
+	var weaveTreeIsBusy = null;
+	
+	queryService.refreshHierarchy = function() {
+		var weave = WeaveService.weave;
+		
+		if( weave && WeaveService.checkWeaveReady()){
+			
+			var weaveTreeNode = new weave.WeaveTreeNode();
+			
+			//weave.path('CensusDataSource').request("CensusDataSource");
+			weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+			
+			queryService.cache.hierarchy = {
+				minExpandLevel: 1,
+				clickFolderMode: 2,
+				children: [createDynatreeNode(weaveTreeNode)],
+				onLazyRead : function(node) {
+					
+					var getTreeAsync = function(){
+						var children = [];
+						var leaves = [];
+						
+						// check if this is data table
+						node.data.weaveNode.getChildren().forEach(function(child) {
+							if(child.isBranch())
+								children.push(child);
+							else
+								leaves.push(child);
+						});
+						
+						
+						if(children.length)
+							children = children.map(createDynatreeNode);
+						
+						if (weaveTreeIsBusy()) {
+							setTimeout(getTreeAsync, 500);
+							return;
+						}
+						
+						node.removeChildren();
+						node.setLazyNodeStatus(DTNodeStatus_Ok);
+						if(children.length)
+							node.addChild(children);
+
+						if(leaves.length) {
+							queryService.queryObject.dataTable = node.data.weaveNode.getLabel();
+							queryService.cache.columns = leaves.map(function(wNode) {
+								return {
+									dataSourceName : wNode.getDataSourceName(),
+									metadata : wNode.getColumnMetadata()
+								};
+							});
+							queryService.cache.filteredColumns = queryService.cache.columns ;
+							$scope.$apply();
+						} else {
+							queryService.queryObject.dataTable = "";
+						}
+					}; 
+					
+					setTimeout(getTreeAsync, 500);
+				},
+				onActivate : function(node) {
+				},
+				dnd : {
+					revert : false,
+					
+					onDragStart : function(node) {
+						
+						if(node.data.isFolder) {
+							return false;
+						}
+						return true;
+					},
+					onDragStop : function(node) {
+						
+					}
+				},
+				keyBoard : true,
+				debugLevel: 0
+			};
+		}
+	};
+	
+	var createDynatreeNode = function(wNode) {
+		if(!wNode)
+			return;
+		return {
+			title : wNode.getLabel(),
+			isLazy : wNode.isBranch(),
+			isFolder : wNode.isBranch(),
+			weaveNode : wNode
+		};
+	};
+	
+	var createDynatreeColumnList = function(column) {
+		if(!column)
+			return;
+		return {
+			title : column.metadata.title,
+			isFolder : false,
+			column : column
+		};
+	};
+	
+	
+	var createColumnTree = function(columns) {
+		return {
+			minExpandLevel: 1,
+			children: columns.map(createDynatreeColumnList),
+			dnd : {
+				revert : false,
+				
+				onDragStart : function(node) {
+					
+					if(node.data.isFolder) {
+						return false;
+					}
+					return true;
+				}
+			},
+			keyBoard : true,
+			debugLevel: 0
+		};
+	};
 	
 	$scope.$watch('queryService.cache.hierarchy', function(hierarchy) {
 		if(hierarchy) {
@@ -61,8 +210,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	}, true);
 	
-	
-
 	$scope.$watchCollection("queryService.cache.filteredColumns", function(columns) {
 		if(columns) {
 			$('#columnsTree').dynatree(createColumnTree(columns));
@@ -96,170 +243,14 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			});
 		}
 	}, true);
-	
+
 	
 	$scope.$watch('WeaveService.weaveWindow.closed', function() {
 		queryService.queryObject.properties.openInNewWindow = WeaveService.weaveWindow.closed;
 	});
-
-	$("#queryObjectPanel" ).draggable().resizable({
-	       handles: 'n, e, s, w'
-	    });
-		$("#hierarchyPanel" ).draggable().resizable({
-	       handles: 'n, e, s, w'
-	    });
-		
-		$scope.hierarchyClass = {
-				width : "48%",
-				height: "100%",
-				marginRight: "2%",
-				float:"left"
-		};
-		
-		$scope.columnsClass = {
-				width : "48%",
-				height: "100%",
-				marginRight: "2%",
-				float:"left"
-		};
-		
-		$scope.$watch("showColumns", function() {
-			
-			if($scope.showColumns) {
-				$scope.hierarchyClass.width = "48%";
-				$scope.columnsClass.width = "48%";
-				
-			} else {
-				$scope.hierarchyClass.width = "96%";
-				$scope.columnsClass.width = "0%";
-			}
-		});
-		
-		var weaveTreeIsBusy = null;
 	
-		queryService.refreshHierarchy = function() {
-			var weave = WeaveService.weave;
-			
-			if( weave && WeaveService.checkWeaveReady()){
-				
-				var weaveTreeNode = new weave.WeaveTreeNode();
-				
-				//weave.path('CensusDataSource').request("CensusDataSource");
-				weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
-				
-				queryService.cache.hierarchy = {
-					minExpandLevel: 1,
-					clickFolderMode: 2,
-					children: [createDynatreeNode(weaveTreeNode)],
-					onLazyRead : function(node) {
-						
-						var getTreeAsync = function(){
-							var children = [];
-							var leaves = [];
-							
-							// check if this is data table
-							node.data.weaveNode.getChildren().forEach(function(child) {
-								if(child.isBranch())
-									children.push(child);
-								else
-									leaves.push(child);
-							});
-							
-							
-							if(children.length)
-								children = children.map(createDynatreeNode);
-							
-							if (weaveTreeIsBusy()) {
-								setTimeout(getTreeAsync, 500);
-								return;
-							}
-							
-							node.removeChildren();
-							node.setLazyNodeStatus(DTNodeStatus_Ok);
-							if(children.length)
-								node.addChild(children);
-
-							if(leaves.length) {
-								queryService.queryObject.dataTable = node.data.weaveNode.getLabel();
-								queryService.cache.columns = leaves.map(function(wNode) {
-									return {
-										dataSourceName : wNode.getDataSourceName(),
-										metadata : wNode.getColumnMetadata()
-									};
-								});
-								queryService.cache.filteredColumns = queryService.cache.columns ;
-								$scope.$apply();
-							} else {
-								queryService.queryObject.dataTable = "";
-							}
-						}; 
-						
-						setTimeout(getTreeAsync, 500);
-					},
-					onActivate : function(node) {
-					},
-					dnd : {
-						revert : false,
-						
-						onDragStart : function(node) {
-							
-							if(node.data.isFolder) {
-								return false;
-							}
-							return true;
-						},
-						onDragStop : function(node) {
-							
-						}
-					},
-					keyBoard : true,
-					debugLevel: 0
-				};
-			}
-		};
-		
-		var createDynatreeNode = function(wNode) {
-			if(!wNode)
-				return;
-			return {
-				title : wNode.getLabel(),
-				isLazy : wNode.isBranch(),
-				isFolder : wNode.isBranch(),
-				weaveNode : wNode
-			};
-		};
-		
-		var createDynatreeColumnList = function(column) {
-			if(!column)
-				return;
-			return {
-				title : column.metadata.title,
-				isFolder : false,
-				column : column
-			};
-		};
-		
-		
-		var createColumnTree = function(columns) {
-			return {
-				minExpandLevel: 1,
-				children: columns.map(createDynatreeColumnList),
-				dnd : {
-					revert : false,
-					
-					onDragStart : function(node) {
-						
-						if(node.data.isFolder) {
-							return false;
-						}
-						return true;
-					}
-				},
-				keyBoard : true,
-				debugLevel: 0
-			};
-		};
-		
+	
+	
 	//************************** query object editor**********************************
 	var expandedNodes = null;
 	var scrolledPosition = 0;
@@ -302,9 +293,10 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.$watch('queryService.queryObject', function () {
 		
+		scrolledPosition = $(".dynatree-container").scrollTop();
+
 		if(expandedNodes) {
 			expandedNodes = [];
-			scrolledPosition = $(".dynatree-container").scrollTop();
 			activeNode = $("#queryObjTree").dynatree("getActiveNode");
 			$("#queryObjTree").dynatree("getTree").visit(function(node) {
 				if(node.bExpanded)
@@ -453,32 +445,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //	 };
 	 //**********************************************************REMAPPING END**************************************
 	
-	$scope.$watch("queryService.queryObject.dataTable", function(newVal, oldVal) {
-		if($scope.queryService.queryObject.dataTable) {
-			queryService.getDataColumnsEntitiesFromId(queryService.queryObject.dataTable.id, true);
-		}
-		
-	}, true);
-	
-	$scope.$watch("queryService.cache.columns", function(newVal, oldVal) {
-		
-		
-		if(!angular.equals(newVal, oldVal)) {
-			// this deletes the columns from the old data table selected in the resultSet
-			var tempArray = [];
-			for(var i = 0; i < queryService.queryObject.resultSet.length; i++) {
-				if(queryService.queryObject.resultSet[i].dataSourceName != "WeaveDataSource") {
-					tempArray.push(queryService.queryObject.resultSet[i]); // creating a temp array is faster than splicing
-				}
-			}
-			queryService.queryObject.resultSet = tempArray;
-		}
-		
-		for(var i in queryService.cache.columns) {
-			var column = queryService.cache.columns[i];
-			queryService.queryObject.resultSet.push({ id : column.id, title: column.title, dataSourceName : column.dataSourceName });
-		}
-	});
+//	$scope.$watch("queryService.queryObject.dataTable", function(newVal, oldVal) {
+//		if($scope.queryService.queryObject.dataTable) {
+//			queryService.getDataColumnsEntitiesFromId(queryService.queryObject.dataTable.id, true);
+//		}
+//		
+//	}, true);
 	
 	//*************************watch for Weave in different Weave windows*********************************************
 //	$scope.$watch(function() {
@@ -486,7 +458,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //	}, function() {
 //		if(WeaveService.checkWeaveReady()) 
 //		{
-//			//$scope.showToolMenu = true;
+//			//$scope.weaveReady = true;
 //			
 //			if(queryService.queryObject.weaveSessionState) {
 //				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
@@ -518,11 +490,51 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 							"abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes"));
 		}
 	});
-
-	
 	//******************************managing weave and its session state END**********************************************//
 	
-	
+	$scope.filterColumn = function(criteria)
+	{
+		return function(item) {
+			
+			// if the script metadata has a columnType
+			if(criteria.columnType && criteria.columnType != "all") {
+				// we check if the column inputs have aws_metadata
+				if(item && item.metadata && item.metadata.aws_metadata)
+				{
+					// if we have aws_metadata, then we filter
+					var awsmetadata =  angular.fromJson(item.metadata.aws_metadata);
+					if(awsmetadata && awsmetadata.columnType)
+					{
+						if(awsmetadata.columnType == criteria.columnType) {
+							// then we match the search text
+							var lwCase = item.metadata.title.toLowerCase();
+							if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+								return true;
+							}
+						} 
+					}
+					
+				} else {
+					// if we don't have aws_metadata, we only filter with search text
+					if(item && item.metadata && item.metadata.title) {
+						var lwCase = item.metadata.title.toLowerCase();
+						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+							return true;
+						}
+					}
+				}
+			} else {
+				// if no script metadata columnType or "all" is specified
+				if(item && item.metadata && item.metadata.title) {
+					var lwCase = item.metadata.title.toLowerCase();
+					if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+						return true;
+					}
+				}
+			}
+		};
+	};
+
 	$scope.IndicDescription = "";
 	$scope.varValues = [];
 	
@@ -544,21 +556,16 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		$scope.columnToRemap = {value : param}; // bind this column to remap to the scope
 		if(column) {
 			$scope.description = column.description;
-			queryService.getEntitiesById([column.id], true).then(function (result) {
-				if(result.length) {
-					var resultMetadata = result[0];
-					if(resultMetadata.publicMetadata.hasOwnProperty("aws_metadata")) {
-						var metadata = angular.fromJson(resultMetadata.publicMetadata.aws_metadata);
-						if(metadata.hasOwnProperty("varValues")) {
-							queryService.getDataMapping(metadata.varValues).then(function(result) {
-								$scope.varValues = result;
-							});
-						} else {
-							$scope.varValues = [];
-						}
-					}
+			if(column.metadata && column.metadata.aws_metadata) {
+				var metadata = angular.fromJson(column.metadata.aws_metadata);
+				if(metadata.varValues) {
+					queryService.getDataMapping(metadata.varValues).then(function(result) {
+						$scope.varValues = result;
+					});
+				} else {
+					$scope.varValues = [];
 				}
-			});
+			}
 		} else {
 			// delete description and table if the indicator is clear
 			$scope.description = "";
@@ -566,52 +573,52 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	};
 
-	/************** watches for query validation******************/
-	$scope.$watchCollection(function() {
-		return [queryService.queryObject.scriptSelected,
-		        queryService.queryObject.dataTable,
-		        queryService.queryObject.scripOptions,
-		        queryService.cache.scriptMetadata
-		        ];
-	}, function () {
-		//if the datatable has not been selected
-		if(queryService.queryObject.dataTable == null || queryService.queryObject.dataTable == ""){
-			queryService.queryObject.properties.validationStatus = "Data table has not been selected.";
-			queryService.queryObject.properties.isQueryValid = false;
-		}
-		//if script has not been selected
-		else if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
-		{
-			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
-			queryService.queryObject.properties.isQueryValid = false;
-		}
-		//this leaves checking the scriptOptions
-		else if (queryService.cache.scriptMetadata) 
-		{
-			
-			$scope.$watch(function() {
-				return queryService.queryObject.scriptOptions;
-			}, function () {
-				var g = 0;
-				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
-				for(var f in queryService.queryObject.scriptOptions) {
-					if(!queryService.queryObject.scriptOptions[f]) {
-						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
-						queryService.queryObject.properties.isQueryValid = false;
-	
-						break;
-					}
-					else
-						g++;
-				}
-				if(g == counter) {
-					queryService.queryObject.properties.validationStatus = "Query is valid";
-					queryService.queryObject.properties.isQueryValid = true;
-				}
-			}, true);
-		}
-	}, true);
-	/************** watches for query validation******************/
+//	/************** watches for query validation******************/
+//	$scope.$watchCollection(function() {
+//		return [queryService.queryObject.scriptSelected,
+//		        queryService.queryObject.dataTable,
+//		        queryService.queryObject.scripOptions,
+//		        queryService.cache.scriptMetadata
+//		        ];
+//	}, function () {
+//		//if the datatable has not been selected
+//		if(queryService.queryObject.dataTable == null || queryService.queryObject.dataTable == ""){
+//			queryService.queryObject.properties.validationStatus = "Data table has not been selected.";
+//			queryService.queryObject.properties.isQueryValid = false;
+//		}
+//		//if script has not been selected
+//		else if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
+//		{
+//			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
+//			queryService.queryObject.properties.isQueryValid = false;
+//		}
+//		//this leaves checking the scriptOptions
+//		else if (queryService.cache.scriptMetadata) 
+//		{
+//			
+//			$scope.$watch(function() {
+//				return queryService.queryObject.scriptOptions;
+//			}, function () {
+//				var g = 0;
+//				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
+//				for(var f in queryService.queryObject.scriptOptions) {
+//					if(!queryService.queryObject.scriptOptions[f]) {
+//						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
+//						queryService.queryObject.properties.isQueryValid = false;
+//	
+//						break;
+//					}
+//					else
+//						g++;
+//				}
+//				if(g == counter) {
+//					queryService.queryObject.properties.validationStatus = "Query is valid";
+//					queryService.queryObject.properties.isQueryValid = true;
+//				}
+//			}, true);
+//		}
+//	}, true);
+//	/************** watches for query validation******************/
 	
 });
 
@@ -681,25 +688,25 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 
 	//  clear script options when script changes
 	$scope.$watch(function() {
-		return [queryService.queryObject.scriptSelected,
-                queryService.queryObject.dataTable];
-	}, function(newVal, oldVal) {
+		return queryService.queryObject.scriptSelected;
+                
+	}, function(newVal) {
 		
 			// this check is necessary because when angular changes tabs, it triggers changes
 			// for the script selected or data table even if the user may not have change them.
-			if(!angular.equals(newVal[0], oldVal[0]) || !angular.equals(newVal[1], oldVal[1])) {
+			if(!angular.equals(newVal)) {
 				queryService.queryObject.scriptOptions = {};
 			}
 	}, true);
 	
 	
 	//handles the defaults appearing in the script options selection
-	$scope.$watchCollection(function() {
-		return [queryService.cache.scriptMetadata, queryService.cache.columns];
-	}, function(newValue, oldValue) {
+	$scope.$watch(function() {
+		return queryService.cache.scriptMetadata;
+	}, function(scriptMetadata) {
 		
-			var scriptMetadata = newValue[0];
-			var columns = newValue[1];
+			var columns = queryService.cache.columns;
+			
 			if(scriptMetadata && columns) {
 				if(scriptMetadata.hasOwnProperty("inputs")) {
 					for(var i in scriptMetadata.inputs) {
@@ -708,17 +715,19 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 							for(var j in columns) {
 								var column = columns[j];
 								if(input.hasOwnProperty("defaults")) {
-									if(column.title == input['defaults']) {
+									if(column.metadata.title == input['defaults']) {
 										$scope.queryService.queryObject.scriptOptions[input.param] = column;
 										break;
 									}
 								}
 							}
+						} else if(input.type == "value" || input.type == "options") {
+							$scope.queryService.queryObject.scriptOptions[input.param] = input['defaults'];
 						}
 					}
 				}
 		}
-	});
+	}, true);
 	
 	//handles the indicators in the script options
 	$scope.$watch(function() {
