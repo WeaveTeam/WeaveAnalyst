@@ -204,6 +204,10 @@ public class AwsRService implements IScriptEngine//TODO extends RserviceUsingRse
 	 * Taken from rJava Opensource code and 
 	 * added support for Rlist
 	 * added support for RFactor(REngine)
+	 * 
+	 * Note : this function has been slightly modified and the check for single
+	 * value removed, to accommodate for loading results as CSV tables 
+	 * TODO : find the right implementation of the return type
 	 */
 	private static Object rexp2javaObj(REXP rexp) throws REXPMismatchException {
 		if(rexp == null || rexp.isNull() || rexp instanceof REXPUnknown) {
@@ -212,20 +216,25 @@ public class AwsRService implements IScriptEngine//TODO extends RserviceUsingRse
 		if(rexp.isVector()) {
 			int len = rexp.length();
 			if(rexp.isString()) {
+//				 return len == 1 ? rexp.asString() : rexp.asStrings();
 				return rexp.asStrings();
 			}
 			if(rexp.isFactor()){
 				return rexp.asFactor();
 			}
 			if(rexp.isInteger()) {
+//				 return len == 1 ? rexp.asInteger() : rexp.asIntegers();
 				return rexp.asIntegers();
 			}
 			if(rexp.isNumeric()) {
 				int[] dim = rexp.dim();
+//				return (dim != null && dim.length == 2) ? rexp.asDoubleMatrix() :
+//					(len == 1) ? rexp.asDouble() : rexp.asDoubles();
 				return (dim != null && dim.length == 2) ? rexp.asDoubleMatrix() : rexp.asDoubles();
 			}
 			if(rexp.isLogical()) {
 				boolean[] bools = ((REXPLogical)rexp).isTRUE();
+//				return len == 1 ? bools[0] : bools;
 				return bools;
 			}
 			if(rexp.isRaw()) {
