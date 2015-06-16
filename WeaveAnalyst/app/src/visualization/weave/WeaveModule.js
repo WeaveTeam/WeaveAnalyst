@@ -103,12 +103,15 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	//returns a list of visualization tools currently open in Weave
 	this.listOfTools = function(){
+		var tools = [];
 		if(ws.checkWeaveReady()){
-			var tools =  ws.weave.path().libs('weave.api.ui.IVisTool').getValue('getNames(IVisTool)');
+			tools =  ws.weave.path().libs('weave.api.ui.IVisTool').getValue('getNames(IVisTool)');
 		}
 
 		return tools;
 	};
+
+	Object.defineProperty(this, "toolsEnabled", {get: this.listOfTools});
 	
 	this.getSelectableAttributes = function(toolName, vizTool){
 		
@@ -168,194 +171,172 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	this.AttributeMenuTool = function(state, aToolName){
 		
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
 		var toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
 		if(state && state.enabled){
-			if(ws.checkWeaveReady()){
-				
+			ws.weave.path(toolName).request('AttributeMenuTool')
+			.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
+			.call(setQueryColumns, {choices: state.columns});
+			
+			if(state.vizAttribute && state.selectedVizTool)
 				ws.weave.path(toolName).request('AttributeMenuTool')
-				.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
-				.call(setQueryColumns, {choices: state.columns});
-				
-				if(state.vizAttribute && state.selectedVizTool)
-					ws.weave.path(toolName).request('AttributeMenuTool')
-					.state({targetAttribute : state.vizAttribute.title , targetToolPath : [state.selectedVizTool]});
-			}
-			else{
-				ws.setWeaveWindow(window);
-			}
+				.state({targetAttribute : state.vizAttribute.title , targetToolPath : [state.selectedVizTool]});
 		}
 		else{//if the tool is disabled
-			if(ws.checkWeaveReady())
-				ws.weave.path(toolName).remove();
+			ws.weave.path(toolName).remove();
 		}
 		
 		return toolName;
 	};
 	
 	this.BarChartTool = function(state, aToolName){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
 		var toolName = aToolName || ws.generateUniqueName("BarChartTool");
 		
 		if(state && state.enabled){//if enabled
-			if(ws.checkWeaveReady())//if weave is ready
-				{
-					//add to the enabled tools collection
-					if($.inArray(toolName, this.toolsEnabled) == -1)
-						this.toolsEnabled.push(toolName);
-					//create tool
-					ws.weave.path(toolName)
-					.request('CompoundBarChartTool')
-					.state({ panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true, showAllLabels : state.showAllLabels })
-					.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
-					.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
-					.pop()
-					.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
-					.pop()
-					.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
-						return column.metadata;
-					}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
-					.pop()
-					.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
-						return column.metadata;
-					}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
-					.pop()
-					.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
-						return column.metadata;
-					}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-				}
-			else{//if weave not ready
-				//setTimeout(ws.setWeaveWindow, 50, ws.analysisWindow);
-				ws.setWeaveWindow(window);
-			}
+			//create tool
+			ws.weave.path(toolName)
+			.request('CompoundBarChartTool')
+			.state({ panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true, showAllLabels : state.showAllLabels })
+			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
+			.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
+			.pop()
+			.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
+			.pop()
+			.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
+			.pop()
+			.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
+			.pop()
+			.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
+				return column.metadata;
+			}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 		}
 		else{//if the tool is disabled
-			if(ws.checkWeaveReady())
-				{
-					//remove from enabled tool collection
-					if($.inArray(toolName, this.toolsEnabled) != -1){
-						var index = this.toolsEnabled.indexOf(toolName);
-						this.toolsEnabled.splice(index, 1);
-					}
-					ws.weave.path(toolName).remove();
-				}
+			ws.weave.path(toolName).remove();
 		}
 		
 		return toolName;
 	};
 	
 	this.MapTool = function(state, aToolName){
-		var toolName = aToolName || ws.generateUniqueName("MapTool");
-		if(state && state.enabled){//if enabled
-			if(ws.checkWeaveReady())//if weave is ready
-				{
-					//add to the enabled tools collection
-					if($.inArray(toolName, this.toolsEnabled) == -1)
-						this.toolsEnabled.push(toolName);
-					//create tool
-					ws.weave.path(toolName).request('MapTool').state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
-					
-					
-					//STATE LAYER
-					if(state.stateGeometryLayer)
-					{
-						var stateGeometry = state.stateGeometryLayer;
 
-						ws.weave.path(toolName).request('MapTool')
-						.push('children', 'visualization', 'plotManager', 'plotters')
-						.push('Albers_State_Layer').request('weave.visualization.plotters.GeometryPlotter')
-						.push('line', 'color', 'defaultValue').state('0').pop()
-						.call(setQueryColumns, {geometryColumn: stateGeometry});
-						
-						if(state.useKeyTypeForCSV)
-						{
-							if(state.labelLayer)
-							{
-								ws.weave.setSessionState([state.labelLayer.dataSourceName], {"keyType" : stateGeometry.keyType});
-							}
-						}
-						
-					}
-					else{//to remove state layer
-						
-						if($.inArray('Albers_State_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
-							ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_State_Layer').remove();
-					}
-					
-					
-					//COUNTY LAYER
-					if(state.countyGeometryLayer)
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		var toolName = aToolName || ws.generateUniqueName("MapTool");
+
+		if(state && state.enabled){//if enabled
+			//create tool
+			ws.weave.path(toolName).request('MapTool').state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
+			
+			//STATE LAYER
+			if(state.stateGeometryLayer)
+			{
+				var stateGeometry = state.stateGeometryLayer;
+
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager', 'plotters')
+				.push('Albers_State_Layer').request('weave.visualization.plotters.GeometryPlotter')
+				.push('line', 'color', 'defaultValue').state('0').pop()
+				.call(setQueryColumns, {geometryColumn: stateGeometry});
+				
+				if(state.useKeyTypeForCSV)
+				{
+					if(state.labelLayer)
 					{
-						var countyGeometry = state.countyGeometryLayer;
-						
-						ws.weave.path(toolName).request('MapTool')
-						.push('children', 'visualization', 'plotManager', 'plotters')
-						.push('Albers_County_Layer').request('weave.visualization.plotters.GeometryPlotter')
-						.push('line', 'color', 'defaultValue').state('0').pop()
-						.call(setQueryColumns, {geometryColumn : countyGeometry});
+						ws.weave.setSessionState([state.labelLayer.dataSourceName], {"keyType" : stateGeometry.keyType});
+					}
+				}
+				
+			}
+			else{//to remove state layer
+				
+				if($.inArray('Albers_State_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
+					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_State_Layer').remove();
+			}
+			
+			
+			//COUNTY LAYER
+			if(state.countyGeometryLayer)
+			{
+				var countyGeometry = state.countyGeometryLayer;
+				
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager', 'plotters')
+				.push('Albers_County_Layer').request('weave.visualization.plotters.GeometryPlotter')
+				.push('line', 'color', 'defaultValue').state('0').pop()
+				.call(setQueryColumns, {geometryColumn : countyGeometry});
+			
+				//TODO change following
+				//done for handling albers projection What about other projection?
+				ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
+				ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
+			}
+			else{//to remove county layer
+				
+				if($.inArray('Albers_County_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
+					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_County_Layer').remove();
+			}
+			
+			
+			//LABEL LAYER
+			if(state.labelLayer && state.stateGeometryLayer)
+			{
+				var labelLayer = state.labelLayer;
+				//ws.weave.setSessionState([labelLayer.dataSourceName], {keyColName : "fips"});
+				
+				var stateGeometryLayer = state.stateGeometryLayer;
+				
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager','plotters')
+				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
+				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
+				.call(setQueryColumns, {text : labelLayer});
+			}
+			
+			//LAYER ZOOM
+			if(state.zoomLevel)
+				{
+					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
 					
-						//TODO change following
-						//done for handling albers projection What about other projection?
-						ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
+					//for demo
+					if(state.zoomLevel > 3 && state.countyGeometryLayer)
+					{
+						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
+			
+					}
+					else{
 						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
 					}
-					else{//to remove county layer
-						
-						if($.inArray('Albers_County_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
-							ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_County_Layer').remove();
-					}
-					
-					
-					//LABEL LAYER
-					if(state.labelLayer && state.stateGeometryLayer)
-					{
-						var labelLayer = state.labelLayer;
-						//ws.weave.setSessionState([labelLayer.dataSourceName], {keyColName : "fips"});
-						
-						var stateGeometryLayer = state.stateGeometryLayer;
-						
-						ws.weave.path(toolName).request('MapTool')
-						.push('children', 'visualization', 'plotManager','plotters')
-						.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
-						.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
-						.call(setQueryColumns, {text : labelLayer});
-					}
-					
-					//LAYER ZOOM
-					if(state.zoomLevel)
-						{
-							ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
-							
-							//for demo
-							if(state.zoomLevel > 3 && state.countyGeometryLayer)
-							{
-								ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
-					
-							}
-							else{
-								ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
-							}
-							//for demo end
-						}
-					
-					
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+					//for demo end
 				}
-			else{//if weave not ready
-				ws.setWeaveWindow(window);
-			}
+			
+			
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 		}
 		else{//if the tool is disabled
-			if(ws.checkWeaveReady())
-				{
-					//remove from enabled tool collection
-					if($.inArray(toolName, this.toolsEnabled) != -1){
-						var index = this.toolsEnabled.indexOf(toolName);
-						this.toolsEnabled.splice(index, 1);
-					}
-					ws.weave.path(toolName).remove();
-				}
+			ws.weave.path(toolName).remove();
 		}
 		
 		return toolName;
@@ -363,39 +344,27 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 
 	this.ScatterPlotTool = function(state, aToolName){
 		
-		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
-		if(state && state.enabled){//if enabled
-			if(state.X && state.Y) {
-				if(ws.checkWeaveReady())//if weave is ready
-				{
-					//add to the enabled tools collection
-					if($.inArray(toolName, this.toolsEnabled) == -1)
-						this.toolsEnabled.push(toolName);
-					//create tool
-					ws.weave.path(toolName).request('ScatterPlotTool')
-					.state({ panelX : "50%", panelY : "50%", panelTitle : state.title, enableTitle : true})
-					.push('children', 'visualization','plotManager', 'plotters', 'plot')
-					.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName)
-					.pop()
-					.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-				}
-				else{//if weave not ready
-					ws.setWeaveWindow(window);
-				}
-			}
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
 		}
-		else{//if the tool is disabled
-			if(ws.checkWeaveReady() && state)
-				{
-					//remove from enabled tool collection
-					if($.inArray(toolName, this.toolsEnabled) != -1){
-						var index = this.toolsEnabled.indexOf(toolName);
-						this.toolsEnabled.splice(index, 1);
-					}
-					ws.weave.path(toolName).remove();
-				}
+		
+		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
+
+		if(state && state.enabled && state.X && state.Y){//if enabled
+			//create tool
+			ws.weave.path(toolName).request('ScatterPlotTool')
+			.state({ panelX : "50%", panelY : "50%", panelTitle : state.title, enableTitle : true})
+			.push('children', 'visualization','plotManager', 'plotters', 'plot')
+			.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName)
+			.pop()
+			.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+		}
+		else {//if the tool is disabled
+			ws.weave.path(toolName).remove();
 		}
 		
 		return toolName;
@@ -403,41 +372,30 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	this.DataTableTool = function(state, aToolName){
 
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
 		var toolName = aToolName || ws.generateUniqueName("DataTableTool");
 		
-		if(state && state.enabled){//if enabled
-			if(ws.checkWeaveReady())//if weave is ready
-				{
-					//add to the enabled tools collection
-					if($.inArray(toolName, this.toolsEnabled) == -1)
-						this.toolsEnabled.push(toolName);
-					//create tool
-					ws.weave.path(toolName).request('AdvancedTableTool')
-					.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
-					.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
-						return column.metadata;
-					}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
-					
-					// empty columns
-					if(state.columns && !state.columns.length)
-						weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
-					//capture session state
-					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-				}
-			else{//if weave not ready
-				ws.setWeaveWindow(window);
-			}
+		if(state && state.enabled){//if enabled			
+			//create tool
+			ws.weave.path(toolName).request('AdvancedTableTool')
+			.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
+			.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
+			
+			// empty columns
+			if(state.columns && !state.columns.length)
+				weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 		}
 		else{//if the tool is disabled
-			if(ws.checkWeaveReady())
-				{
-					//remove from enabled tool collection
-					if($.inArray(toolName, this.toolsEnabled) != -1){
-						var index = this.toolsEnabled.indexOf(toolName);
-						this.toolsEnabled.splice(index, 1);
-					}
-					ws.weave.path(toolName).remove();
-				}
+			ws.weave.path(toolName).remove();
 		}
 		
 		return toolName;
@@ -446,132 +404,57 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.DataFilterTool = function(state, aToolName) {
 		
 	};
-	//this.ColorColumn = function(colorColumn, tool){
-		//1.check if the default color column has already been set
-			//if true do step 2
-			//if false set as the defaultcolorcolumn
-		//2. set the selected column as color column for that tool
-		
-		
-//		if(ws.checkWeaveReady())//if weave is ready
-//			
-//		}
-//	
-//		else{//if weave not ready
-//			ws.setWeaveWindow(window);
-//		}
 
-	this.ColorColumn = function(state) {
-		var columns;
-		var showColorLegends;
-
-		if (Array.isArray(state.columns)) 
-			columns = state.columns;
-		else
-			columns = [state.column];
-
-		if (Array.isArray(state.showColorLegends))
-			showColorLegends = state.showColorLegends;
-		else
-			showColorLegends = [state.showColorLegend];
-
+//		
+	this.SummaryAnnotation = function(state, summaryName) {
+		var toolName = summaryName || ws.generateUniqueName("SummaryBox");
 
 		if (!ws.checkWeaveReady())
 		{
-			ws.setWeaveWindow(window); // why? shouldn't we be queuing this function call for when the state is ready next?
+			ws.setWeaveWindow(window);
 			return;
 		}
 
-		/* If there are more existing automatically-generated legends or colorcolumns than there are showColorLegend/columns entries, 
-			this will iterate over the remainder and remove them. */
-		var idx;
-		var existingLegends = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.visualization.tools::ColorBinLegendTool'; });
-		var existingColorColumns = ws.weave.path().getChildren().filter(function (item) { return item.getType() == 'weave.data.AttributeColumns::ColorColumn'; });
-		var max_length = Math.max(columns.length, existingLegends.length, existingColorColumns.length);
-
-		for (idx = 0; idx < max_length; idx++)
+		if (state.enabled)
 		{
-			var column = columns[idx];
-			var showColorLegend = showColorLegends[idx];
-			var colorColumnName = (idx == 0) ? 'defaultColorColumn' : 'colorColumn' + idx;
-			
-			var colorColumnPath = ws.weave.path(colorColumnName);
+			ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);	
+		}
+		else
+		{
+			ws.weave.path(toolName).remove();
+		}
+		
+	}
 
-			if (column)
-			{
-				colorColumnPath.request('ColorColumn').setColumn(column.metadata, column.dataSourceName);
-			}
-			else
-			{
-				if (idx != 0) colorColumnPath.remove();
-			}
+	this.ColorColumn = function ()
+	{
+		// stub for compat;
+	}
+	
+	this.setColorGroup = function(dynamicColumnPath, groupName, columnInfo)
+	{
+		ws.weave.path(groupName).request('ColorColumn').setColumn(columnInfo.metadata, columnInfo.dataSourceName);
+		dynamicColumnPath.vars({name: groupName}).exec("ColumnUtils.unlinkNestedColumns(this); globalName = name");
+	}
 
-			var legendPath = ws.weave.path('ColorBinLegendTool'+idx);
+	this.cleanupColorGroups = function()
+	{
+		return;
+	}
 
-			if (showColorLegend)
-			{
-				legendPath.request('ColorBinLegendTool').state({panelX: "80%", panelY: "0%"});
-				legendPath.pushLayerSettings().push('dynamicColorColumn').state(colorColumnName);
-			}
-			else
-			{
-				legendPath.remove();
-			}
+	this.keyColumn = function(state){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
 		}
 
-		queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-	};
-	
-//	this.ColorColumn = function(state){
-//		if(state.column){//if enabled
-//			
-//			if(ws.checkWeaveReady())//if weave is ready
-//				{
-//					//create color column
-//					ws.weave.path('defaultColorDataColumn').setColumn(state.column.metadata, state.column.dataSourceName);
-//					
-//					//hack for demo
-////					if(state.column2 && state.column3){
-////						console.log("getting columns together", state.column2, state.column3);
-////						//gets their ids
-////						//call modified combinedColumnfunction
-////						ws.weave.path('defaultColorDataColumn', 'internalDynamicColumn', null)
-////						  .request('CombinedColumn')
-////						  .push('columns')
-////						  .setColumns([ state.column3.id, state.column2.id]);
-////					}
-//					//hack for demo end
-//					
-//					//handle color legend
-//					if(state.showColorLegend)//add it
-//					{
-//						ws.weave.path("ColorBinLegendTool").request('ColorBinLegendTool')
-//						.state({panelX : "80%", panelY : "0%"});
-//					}
-//					else{//remove it
-//						ws.weave.path("ColorBinLegendTool").remove();
-//					}
-//					//capture session state
-//					queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-//				}
-//			else{//if weave not ready
-//				ws.setWeaveWindow(window);
-//			}
-//		}
-//	};
-//	
-	this.keyColumn = function(state){
 		if(state.keyColumn)
 		{
-			if(ws.checkWeaveReady()){
-				
-				ws.weave.setSessionState([state.keyColumn.dataSourceName], {keyColName : state.keyColumn.metadata.title});
-				//capture session state
-				queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-			}
-			else{//if weave is not ready
-				ws.setWeaveWindow(window);
-			}
+			ws.weave.setSessionState([state.keyColumn.dataSourceName], {keyColName : state.keyColumn.metadata.title});
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
 		}
 	};
 	
@@ -666,16 +549,3 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			return final2DArray;
 	};
 }]);
-
-//	
-//	var time = aws.reportTime();
-//	
-//	ws.weave.evaluateExpression([], "WeaveAPI.ProgressIndictor.getNormalizedProgress()", {},['weave.api.WeaveAPI']); 
-//	
-//	console.log(time);
-//	try{
-//		$("#LogBox").append(time + message + "\n");
-//	}catch(e){
-//		//ignore
-//	}	
-//};
