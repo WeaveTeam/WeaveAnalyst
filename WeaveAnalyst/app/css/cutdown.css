@@ -3,6 +3,9 @@
 	width: 100%;
 }
 
+.blue .ui-slider-range { background: #729fcf; }
+.blue .ui-slider-handle { border-color: #729fcf; }
+
 #loading {
 	width: 77px;
 	height: 20px;

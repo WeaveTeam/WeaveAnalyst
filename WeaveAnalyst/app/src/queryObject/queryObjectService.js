@@ -204,10 +204,8 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 			properties : {
 				linkIndicator : false,
 				validationStatus : "Run Query",
-				isQueryValid : true
+				isQueryValid : false
 			},
-			filterArray : [],
-			treeFilterArray : [],
 			visualizations : {
 				MapTool : {
 					title : 'MapTool',
@@ -241,6 +239,10 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 				KeyColumn : {
 					title : "KeyColumn",
 					template_url : 'src/visualization/tools/color/key_Column.tpl.html'
+				},
+				DataFilterTool : {
+					title : "DataFilterTool", 
+					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
 				}
 			},
 			resultSet : [],

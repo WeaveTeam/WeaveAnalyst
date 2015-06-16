@@ -16,6 +16,49 @@ AnalysisModule.service('AnalysisService', ['geoFilter_tool','timeFilter_tool', '
 	AnalysisService.geoFilter_tool = geoFilter_tool;
 	AnalysisService.timeFilter_tool = timeFilter_tool;
 	
+	AnalysisService.filterColumn = function(criteria)
+	{
+		return function(item) {
+			
+			// if the script metadata has a columnType
+			if(criteria.columnType && criteria.columnType != "all") {
+				// we check if the column inputs have aws_metadata
+				if(item && item.metadata && item.metadata.aws_metadata)
+				{
+					// if we have aws_metadata, then we filter
+					var awsmetadata =  angular.fromJson(item.metadata.aws_metadata);
+					if(awsmetadata && awsmetadata.columnType)
+					{
+						if(awsmetadata.columnType == criteria.columnType) {
+							// then we match the search text
+							var lwCase = item.metadata.title.toLowerCase();
+							if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+								return true;
+							}
+						} 
+					}
+					
+				} else {
+					// if we don't have aws_metadata, we only filter with search text
+					if(item && item.metadata && item.metadata.title) {
+						var lwCase = item.metadata.title.toLowerCase();
+						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+							return true;
+						}
+					}
+				}
+			} else {
+				// if no script metadata columnType or "all" is specified
+				if(item && item.metadata && item.metadata.title) {
+					var lwCase = item.metadata.title.toLowerCase();
+					if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
+						return true;
+					}
+				}
+			}
+		};
+	};
+	
 	return AnalysisService;
 	
 }]);
@@ -31,6 +74,8 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.showToolMenu = false;
 	
+	$scope.filterColumn = AnalysisService.filterColumn;
+	
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function () {
@@ -43,9 +88,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
        handles: 'n, e, s, w'
     });
 	
+	
+	/*********************** BEGIN Data Source Panel *******************************************/
 	$("#hierarchyPanel" ).draggable().resizable({
        handles: 'n, e, s, w'
     });
+	
 	
 	$scope.hierarchyClass = {
 			width : "48%",
@@ -82,7 +130,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			
 			var weaveTreeNode = new weave.WeaveTreeNode();
 			
-			//weave.path('CensusDataSource').request("CensusDataSource");
 			weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 			
 			queryService.cache.hierarchy = {
@@ -119,6 +166,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 
 						if(leaves.length) {
 							queryService.queryObject.dataTable = node.data.weaveNode.getLabel();
+							// console.log(node.data.weaveNode.findPath(leaves[0].getDataSourceName(), leaves[0].getColumnMetadata()));
 							queryService.cache.columns = leaves.map(function(wNode) {
 								return {
 									dataSourceName : wNode.getDataSourceName(),
@@ -131,7 +179,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 							queryService.queryObject.dataTable = "";
 						}
 					}; 
-					
 					setTimeout(getTreeAsync, 500);
 				},
 				onActivate : function(node) {
@@ -243,7 +290,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			});
 		}
 	}, true);
-
+	/*********************** END Data Source Panel *******************************************/
 	
 	$scope.$watch('WeaveService.weaveWindow.closed', function() {
 		queryService.queryObject.properties.openInNewWindow = WeaveService.weaveWindow.closed;
@@ -491,49 +538,6 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	});
 	//******************************managing weave and its session state END**********************************************//
-	
-	$scope.filterColumn = function(criteria)
-	{
-		return function(item) {
-			
-			// if the script metadata has a columnType
-			if(criteria.columnType && criteria.columnType != "all") {
-				// we check if the column inputs have aws_metadata
-				if(item && item.metadata && item.metadata.aws_metadata)
-				{
-					// if we have aws_metadata, then we filter
-					var awsmetadata =  angular.fromJson(item.metadata.aws_metadata);
-					if(awsmetadata && awsmetadata.columnType)
-					{
-						if(awsmetadata.columnType == criteria.columnType) {
-							// then we match the search text
-							var lwCase = item.metadata.title.toLowerCase();
-							if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
-								return true;
-							}
-						} 
-					}
-					
-				} else {
-					// if we don't have aws_metadata, we only filter with search text
-					if(item && item.metadata && item.metadata.title) {
-						var lwCase = item.metadata.title.toLowerCase();
-						if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
-							return true;
-						}
-					}
-				}
-			} else {
-				// if no script metadata columnType or "all" is specified
-				if(item && item.metadata && item.metadata.title) {
-					var lwCase = item.metadata.title.toLowerCase();
-					if(lwCase.indexOf(criteria.title.toLowerCase()) > -1) {
-						return true;
-					}
-				}
-			}
-		};
-	};
 
 	$scope.IndicDescription = "";
 	$scope.varValues = [];
@@ -549,7 +553,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	};
 	
 	$scope.columnToRemap = {
-			value : {}
+		value : {}
 	};
 	
 	$scope.showColumnInfo = function(column, param) {
@@ -573,52 +577,46 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	};
 
-//	/************** watches for query validation******************/
-//	$scope.$watchCollection(function() {
-//		return [queryService.queryObject.scriptSelected,
-//		        queryService.queryObject.dataTable,
-//		        queryService.queryObject.scripOptions,
-//		        queryService.cache.scriptMetadata
-//		        ];
-//	}, function () {
-//		//if the datatable has not been selected
-//		if(queryService.queryObject.dataTable == null || queryService.queryObject.dataTable == ""){
-//			queryService.queryObject.properties.validationStatus = "Data table has not been selected.";
-//			queryService.queryObject.properties.isQueryValid = false;
-//		}
-//		//if script has not been selected
-//		else if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
-//		{
-//			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
-//			queryService.queryObject.properties.isQueryValid = false;
-//		}
-//		//this leaves checking the scriptOptions
-//		else if (queryService.cache.scriptMetadata) 
-//		{
-//			
-//			$scope.$watch(function() {
-//				return queryService.queryObject.scriptOptions;
-//			}, function () {
-//				var g = 0;
-//				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
-//				for(var f in queryService.queryObject.scriptOptions) {
-//					if(!queryService.queryObject.scriptOptions[f]) {
-//						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
-//						queryService.queryObject.properties.isQueryValid = false;
-//	
-//						break;
-//					}
-//					else
-//						g++;
-//				}
-//				if(g == counter) {
-//					queryService.queryObject.properties.validationStatus = "Query is valid";
-//					queryService.queryObject.properties.isQueryValid = true;
-//				}
-//			}, true);
-//		}
-//	}, true);
-//	/************** watches for query validation******************/
+	/************** watches for query validation******************/
+	$scope.$watchCollection(function() {
+		return [queryService.queryObject.scriptSelected,
+		        queryService.queryObject.scripOptions,
+		        queryService.cache.scriptMetadata
+		        ];
+	}, function () {
+		//if script has not been selected
+		if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
+		{
+			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
+			queryService.queryObject.properties.isQueryValid = false;
+		}
+		//this leaves checking the scriptOptions
+		else if (queryService.cache.scriptMetadata) 
+		{
+			
+			$scope.$watch(function() {
+				return queryService.queryObject.scriptOptions;
+			}, function () {
+				var g = 0;
+				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
+				for(var f in queryService.queryObject.scriptOptions) {
+					if(!queryService.queryObject.scriptOptions[f]) {
+						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
+						queryService.queryObject.properties.isQueryValid = false;
+	
+						break;
+					}
+					else
+						g++;
+				}
+				if(g == counter) {
+					queryService.queryObject.properties.validationStatus = "Query is valid";
+					queryService.queryObject.properties.isQueryValid = true;
+				}
+			}, true);
+		}
+	}, true);
+	/************** watches for query validation******************/
 	
 });
 
@@ -674,31 +672,17 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 			queryService.getListOfScripts(true, $scope.queryService.queryObject.ComputationEngine);
 	});
 	
-	$scope.$watch("queryService.queryObject.scriptSelected", function() {
-		$scope.getScriptMetadata($scope.queryService.queryObject.scriptSelected, true);
-	});
-	
-	//clears scrip options when script clear button is hit
-	$scope.getScriptMetadata = function(scriptSelected, forceUpdate){
-		if($scope.queryService.queryObject.scriptSelected)
-			$scope.queryService.getScriptMetadata(scriptSelected, forceUpdate);
+	$scope.$watch("queryService.queryObject.scriptSelected", function(scriptSelected) {
+		if(scriptSelected)
+			$scope.queryService.getScriptMetadata(scriptSelected, true);
 		else
 			$scope.queryService.cache.scriptMetadata = {};
-	};
-
-	//  clear script options when script changes
-	$scope.$watch(function() {
-		return queryService.queryObject.scriptSelected;
-                
-	}, function(newVal) {
-		
-			// this check is necessary because when angular changes tabs, it triggers changes
-			// for the script selected or data table even if the user may not have change them.
-			if(!angular.equals(newVal)) {
-				queryService.queryObject.scriptOptions = {};
-			}
-	}, true);
+	});
 	
+	//clears script options when script clear button is hit
+	$scope.clearScriptOptions = function() {
+		queryService.queryObject.scriptOptions = {};
+	};
 	
 	//handles the defaults appearing in the script options selection
 	$scope.$watch(function() {
@@ -729,108 +713,98 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 		}
 	}, true);
 	
-	//handles the indicators in the script options
-	$scope.$watch(function() {
-		return queryService.queryObject.scriptOptions;
-	}, function(newValue, oldValue) {
-		// run this only if the user chooses to link the indicator
-		if(queryService.queryObject.properties.linkIndicator) {
-			if(!angular.equals(newValue, oldValue)) {
-				var scriptOptions = newValue;
-				for(var key in scriptOptions) { 
-					var option = scriptOptions[key];
-					if(option) {
-						if(option.hasOwnProperty("columnType")) {
-							if(option.columnType.toLowerCase() == "indicator") {
-								queryService.queryObject.Indicator = option;
-							}
-						}
-					}
-				}
-				var oldScriptOptions = oldValue;
-				var newScriptOptions = newValue;
-				var flag = true;
-				for(var key in oldScriptOptions) { 
-					var option = oldScriptOptions[key];
-					if(option) {
-						if(option.hasOwnProperty("columnType")) {
-							if(option.columnType.toLowerCase() == "indicator") {
-								for(var key2 in newScriptOptions) {
-									var option2 = newScriptOptions[key2];
-									if(option2) {
-										if(option2.hasOwnProperty("columnType")) {
-											if(option2.columnType.toLowerCase() == "indicator") {
-												flag = false;
-											}
-										}
-									}
-								}
-								if(flag)
-									queryService.queryObject.Indicator = undefined;
-							}
-						}
-					}
-				}	
-			}
-		}
-	}, true);
-
-	$scope.$watchCollection(function() {
-		return [queryService.queryObject.Indicator, queryService.queryObject.scriptSelected, queryService.cache.scriptMetadata];
-	}, function(newVal, oldVal) {
-		if(newVal != oldVal) {
-			var indicator = newVal[0];
-			var scriptSelected = newVal[1];
-			var scriptMetadata = newVal[2];
-			
-			$scope.$watch(function() {
-				return queryService.cache.scriptMetadata;
-			}, function(newValue, oldValue) {
-				// run this only if the user chooses to link the indicator
-
-				if(queryService.queryObject.properties.linkIndicator) {
-					if(newValue) {
-						scriptMetadata = newValue;
-						if(indicator && scriptMetadata) {
-							for(var i in queryService.cache.scriptMetadata.inputs) {
-								var metadata = queryService.cache.scriptMetadata.inputs[i];
-								if(metadata.hasOwnProperty('type')) {
-									if(metadata.type == 'column') {
-										if(metadata.hasOwnProperty('columnType')) {
-											if(metadata.columnType.toLowerCase() == "indicator") {
-												queryService.queryObject.scriptOptions[metadata.param] = indicator;
-											}
-										}
-									}
-								}
-							}
-						} else if(!indicator) {
-							for(var i in queryService.cache.scriptMetadata.inputs) {
-								var metadata = queryService.cache.scriptMetadata.inputs[i];
-								if(metadata.hasOwnProperty('type')) {
-									if(metadata.type == 'column') {
-										if(metadata.hasOwnProperty('columnType')) {
-											if(metadata.columnType.toLowerCase() == "indicator") {
-												queryService.queryObject.scriptOptions[metadata.param] = undefined;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}, true);
-		}
-	}, true);
-		
-	$scope.toggleButton = function(input) {
-		
-		if (queryService.queryObject.scriptOptions[input.param] == input.options[0]) {
-			queryService.queryObject.scriptOptions[input.param] = input.options[1];
-		} else {
-			queryService.queryObject.scriptOptions[input.param] = input.options[0];
-		}
-	};
-	
+//	//handles the indicators in the script options
+//	$scope.$watch(function() {
+//		return queryService.queryObject.scriptOptions;
+//	}, function(newValue, oldValue) {
+//		// run this only if the user chooses to link the indicator
+//		if(queryService.queryObject.properties.linkIndicator) {
+//			if(!angular.equals(newValue, oldValue)) {
+//				var scriptOptions = newValue;
+//				for(var key in scriptOptions) { 
+//					var option = scriptOptions[key];
+//					if(option) {
+//						if(option.hasOwnProperty("columnType")) {
+//							if(option.columnType.toLowerCase() == "indicator") {
+//								queryService.queryObject.Indicator = option;
+//							}
+//						}
+//					}
+//				}
+//				var oldScriptOptions = oldValue;
+//				var newScriptOptions = newValue;
+//				var flag = true;
+//				for(var key in oldScriptOptions) { 
+//					var option = oldScriptOptions[key];
+//					if(option) {
+//						if(option.hasOwnProperty("columnType")) {
+//							if(option.columnType.toLowerCase() == "indicator") {
+//								for(var key2 in newScriptOptions) {
+//									var option2 = newScriptOptions[key2];
+//									if(option2) {
+//										if(option2.hasOwnProperty("columnType")) {
+//											if(option2.columnType.toLowerCase() == "indicator") {
+//												flag = false;
+//											}
+//										}
+//									}
+//								}
+//								if(flag)
+//									queryService.queryObject.Indicator = undefined;
+//							}
+//						}
+//					}
+//				}	
+//			}
+//		}
+//	}, true);
+//
+//	$scope.$watchCollection(function() {
+//		return [queryService.queryObject.Indicator, queryService.queryObject.scriptSelected, queryService.cache.scriptMetadata];
+//	}, function(newVal, oldVal) {
+//		if(newVal != oldVal) {
+//			var indicator = newVal[0];
+//			var scriptSelected = newVal[1];
+//			var scriptMetadata = newVal[2];
+//			
+//			$scope.$watch(function() {
+//				return queryService.cache.scriptMetadata;
+//			}, function(newValue, oldValue) {
+//				// run this only if the user chooses to link the indicator
+//
+//				if(queryService.queryObject.properties.linkIndicator) {
+//					if(newValue) {
+//						scriptMetadata = newValue;
+//						if(indicator && scriptMetadata) {
+//							for(var i in queryService.cache.scriptMetadata.inputs) {
+//								var metadata = queryService.cache.scriptMetadata.inputs[i];
+//								if(metadata.hasOwnProperty('type')) {
+//									if(metadata.type == 'column') {
+//										if(metadata.hasOwnProperty('columnType')) {
+//											if(metadata.columnType.toLowerCase() == "indicator") {
+//												queryService.queryObject.scriptOptions[metadata.param] = indicator;
+//											}
+//										}
+//									}
+//								}
+//							}
+//						} else if(!indicator) {
+//							for(var i in queryService.cache.scriptMetadata.inputs) {
+//								var metadata = queryService.cache.scriptMetadata.inputs[i];
+//								if(metadata.hasOwnProperty('type')) {
+//									if(metadata.type == 'column') {
+//										if(metadata.hasOwnProperty('columnType')) {
+//											if(metadata.columnType.toLowerCase() == "indicator") {
+//												queryService.queryObject.scriptOptions[metadata.param] = undefined;
+//											}
+//										}
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}, true);
+//		}
+//	}, true);
 });

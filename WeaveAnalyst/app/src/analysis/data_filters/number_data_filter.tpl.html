@@ -13,7 +13,7 @@
 	<div style="display: inline">
 	
 	
-			<ui-select droppable ng-model="ngModel.column" theme="select2" style="width: 100%;">
+			<ui-select droppable ng-change="getRange()" ng-model="ngModel.column" theme="select2" style="width: 100%;">
 		   		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
 				<ui-select-choices repeat="column in columns | filter : { metadata : {title : $select.search}}">
 		      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
@@ -25,7 +25,6 @@
 				<div style="text-align: center;">
 					{{ngModel.range[0]}} - {{ngModel.range[1]}}
 				</div>
-				<div  class="ui-slider-range" style="z-index: 0" ui-slider="sliderOptions" step="1" ng-model="ngModel.range"/>
+				<div  id="slider" class="blue ui-slider-range" style="z-index: 0" ui-slider="sliderOptions" step="1" ng-model="ngModel.range"/>
 			</div>
-
 </div>

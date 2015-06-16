@@ -56,7 +56,15 @@
 							<span  class = "fa fa-floppy-o"></span> 
 							</button>
 					
-							<!-- RUN button -->		
+							<!-- Update button -->		
+							<button  class="btn btn-primary wa_buttonBar" title = "Update query"
+								ng-click="QueryHandlerService.run(queryService.queryObject, true)" 
+								popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
+								ng-Disabled = "!queryService.queryObject.properties.isQueryValid">
+								 <span class = "fa fa fa-refresh fa-lg"></span>
+							 </button>
+							 
+							<!-- Run button -->		
 							<button  class="btn btn-primary wa_buttonBar" title = "Run query"
 								ng-click="QueryHandlerService.run(queryService.queryObject)" 
 								popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
@@ -64,7 +72,6 @@
 								 <span class = "fa fa-play-circle fa-lg"></span>
 							 </button>
 
-							 
 							<br>
 							<div style = "float:left; margin-left : 8px; width: 50%"  
 								 ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone}" >
@@ -143,7 +150,7 @@
 							<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !queryService.queryObject.scriptSelected, 'validatedUI' : queryService.queryObject.scriptSelected}"
 								title = "Red flags indicate required selections for query validation">
 								
-									<ui-select ng-model="queryService.queryObject.scriptSelected" theme="select2" style="width: 97%;">
+									<ui-select ng-model="queryService.queryObject.scriptSelected" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
 							    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{($select.selected).substr(0, ($select.selected).lastIndexOf('.'))}}</ui-select-match>
 										<ui-select-choices repeat="script in queryService.cache.scriptList | filter : $select.search">
 <!-- 							       			 <div ng-bind-html="script | highlight: $select.search"></div> -->

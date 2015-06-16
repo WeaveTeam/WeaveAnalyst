@@ -1,0 +1,74 @@
+<div class="panel-body" ng-controller="DataFilterToolCtrl">
+	<ul class="input-controls">
+	<table style="width:100%">
+		<tr>	
+			<td>
+				<input   type="checkbox"
+						 ng-model="tool.enabled"/>
+			</td>
+			
+			<td style="padding-left: 5px;">
+				Enable
+			</td>
+		</tr>
+		
+		
+		<tr>
+			<td>
+				<input type="checkbox" ng-init="tool.showToggle = true" ng-model="tool.showToggle"></input>
+			</td>
+			
+			<td style="padding-left: 5px;">
+				Show filter toggle CheckBox
+			</td>
+		</tr>
+		
+		<tr>
+			<td>
+				<input type="checkbox" ng-init="tool.showPlayButton = true" ng-model="tool.showPlayButton"></input>
+			</td>
+			
+			<td style="padding-left: 5px;">
+				Show play button
+			</td>
+		</tr>
+		
+		
+		<tr>
+			<td>
+				Filter Style
+			</td>
+			
+			<td style="padding-left: 5px;">
+			
+				<div style="width:100%">
+					<input type="button" value="{{tool.filterStyle}}" ng-click="toggleFiterStyle()" style="float:left;width:50%"></input>
+					
+					<ui-select ng-if="tool.filterStyle == 'Discrete values'" ng-model="tool.layoutMode" droppable theme="select2" style="width: 50%; float:right">
+				    	<ui-select-match allow-clear="true" placeholder="Layout Mode...">{{$select.selected.label}}</ui-select-match>
+							<ui-select-choices  repeat="mode in layoutModes | filter : {label : $select.search}">
+					       		 <div ng-bind-html="mode.label | highlight: $select.search"></div>
+					        </ui-select-choices>
+					</ui-select>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Column
+			</td>
+			
+			<td style="padding-left: 5px;">
+
+				<ui-select ng-model="tool.column" droppable theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices  repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+			</td>
+		</tr>
+	</table>
+	</ul>
+</div>
+		

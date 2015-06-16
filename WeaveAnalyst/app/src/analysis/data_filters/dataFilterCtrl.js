@@ -11,14 +11,15 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 		{
 			filterName = WeaveService.generateUniqueName("filter", pathToFilters);
 			weave.path(pathToFilters).push(filterName).request("StringDataFilter");
-			queryService.queryObject.categoricalFilters[filterName] = {};
+			
+			if(!queryService.queryObject.categoricalFilters[filterName])
+				queryService.queryObject.categoricalFilters[filterName] = {};
 		}
 	};
 	
 	$scope.removeFilter = function(filterName, filterType) {
 		
 		var weave = WeaveService.weave;
-		
 		if(weave && WeaveService.checkWeaveReady())
 		{
 			weave.path(pathToFilters).push(filterName).remove();
@@ -38,7 +39,8 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 			// the values are the same as the index for convenience
 			filterName = WeaveService.generateUniqueName("filter", pathToFilters);
 			weave.path("defaultSubsetKeyFilter", "filters").push(filterName).request("NumberDataFilter");
-			queryService.queryObject.rangeFilters[filterName] = {};
+			if(!queryService.queryObject.rangeFilters[filterName])
+				queryService.queryObject.rangeFilters[filterName] = {};
 		}
 	};
 });

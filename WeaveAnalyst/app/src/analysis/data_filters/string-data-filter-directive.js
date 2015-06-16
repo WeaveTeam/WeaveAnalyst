@@ -35,17 +35,14 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 					return "combobox";
 			};
 			
-			$scope.filterOptions = [];
-			$scope.ngModel.stringValues = [];
-			$scope.ngModel.comboboxModel = [];
-			$scope.ngModel.checklistModel = {};
-			
 			$scope.$watch('ngModel.selectedFilterStyle', function(selectedFilterStyle) {
 				if(selectedFilterStyle == "checklist")
 				{
+					console.log("this runs too");
 					$scope.ngModel.comboboxModel = [];
 				} else if(selectedFilterStyle == "combobox")
 				{
+					console.log("this runs");
 					$scope.ngModel.checklistModel = {};
 				}
 			});
@@ -56,10 +53,6 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 				if(weave && WeaveService.checkWeaveReady()) {
 					if(column)
 					{
-						$scope.ngModel.stringValues = [];
-						$scope.ngModel.comboboxModel = [];
-						$scope.ngModel.checklistModel = {};
-						
 						weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
 						
 						if(column.metadata && column.metadata.aws_metadata) {

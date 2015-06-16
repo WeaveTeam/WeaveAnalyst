@@ -17,7 +17,6 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 		switch(name) {
 			case "MapTool":
 				var toolName = WeaveService.MapTool(null, "");
-				console.log(toolName);
 				queryService.queryObject.visualizations[toolName] = {
 					title : toolName,
 					template_url : 'src/visualization/tools/mapChart/map_chart.tpl.html'
@@ -48,7 +47,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.DataFilterTool(null, "");
 				queryService.queryObject.visualizations[toolName] = {
 					title : toolName,
-					template_url : 'src/visualization/tools/attributeMenu/attribute_Menu.tpl.html'
+					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
 				};
 				break;
 		}

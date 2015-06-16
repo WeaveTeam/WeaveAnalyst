@@ -444,8 +444,48 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	};
 	
 	this.DataFilterTool = function(state, aToolName) {
-		
+		var toolName = aToolName || ws.generateUniqueName("DataFilterTool");
+				
+		if(state && state.enabled) {//if enabled
+			if(ws.checkWeaveReady()) {//if weave is ready
+				//add to the enabled tools collection
+				if($.inArray(toolName, this.toolsEnabled) == -1)
+					this.toolsEnabled.push(toolName);
+				//create tool
+				ws.weave.path(toolName).request('DataFilterTool')
+				.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, panelHeight: "10%"});
+				
+				if(state.filterStyle == "Discrete values") {
+					ws.weave.path(toolName, "editor", null).request("StringDataFilterEditor").state({
+						layoutMode : state.layoutMode.value,
+						showPlayButton : state.showPlayButton,
+						showToggle : state.showToggle
+					});
+				} else if(state.filterStyle == "Continuous range") {
+					ws.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
+				}
+				if(state.column) {
+					ws.weave.path(toolName, "filter", null, "column").setColumn(state.column.metadata, state.column.dataSourceName);
+				}
+			} else {//if weave not ready
+				ws.setWeaveWindow(window);
+			}
+		}
+		else{//if the tool is disabled
+			if(ws.checkWeaveReady()) {
+				//remove from enabled tool collection
+				if($.inArray(toolName, this.toolsEnabled) != -1) {
+					var index = this.toolsEnabled.indexOf(toolName);
+					this.toolsEnabled.splice(index, 1);
+				}
+				
+				ws.weave.path(toolName).remove();
+			}
+		}
+				
+		return toolName;
 	};
+	
 	//this.ColorColumn = function(colorColumn, tool){
 		//1.check if the default color column has already been set
 			//if true do step 2

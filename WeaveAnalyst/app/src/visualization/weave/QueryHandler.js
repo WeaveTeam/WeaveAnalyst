@@ -197,15 +197,21 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				
     };
     
-    
 
-    this.run = function(queryObject) {
+    this.run = function(queryObject, update) {
     	if(queryObject.properties.isQueryValid) {
     		if(WeaveService.weave)
 			{
-    			//var rDataSourceName = WeaveService.generateUniqueName("RDataSource");
-    			var waDataSourcePath = weave.path("WeaveAnalystDataSource").request("WeaveAnalystDataSource").exec("getCallbackCollection(this).delayCallbacks()");
-				var inputsPath = waDataSourcePath.push("inputs");
+    			var currentDataSource = "";
+    			var sources = weave.path().getValue('getNames(WeaveAnalystDataSource)');
+    			if (update && sources.length)
+    				currentDataSource = sources.pop();
+    			else
+    				currentDataSource = WeaveService.generateUniqueName("WeaveAnalystDataSource");
+
+    			var waDataSourcePath = weave.path(currentDataSource).request("WeaveAnalystDataSource").exec("getCallbackCollection(this).delayCallbacks()");
+				
+    			var inputsPath = waDataSourcePath.push("inputs");
 				for(var key in queryObject.scriptOptions)
 				{
 					var input = queryObject.scriptOptions[key];
@@ -228,7 +234,6 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				waDataSourcePath.push("inputKeyFilter").state(["defaultSubsetKeyFilter"]);
 				waDataSourcePath.push("scriptName").state(queryObject.scriptSelected);
 				waDataSourcePath.exec("getCallbackCollection(this).resumeCallbacks(); hierarchyRefresh.triggerCallbacks();");
-				
 				queryService.refreshHierarchy(WeaveService.weave);
 			}
     	}
