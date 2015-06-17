@@ -206,24 +206,25 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 				validationStatus : "Run Query",
 				isQueryValid : false
 			},
+			// titles are blank so they can be set to weave defaults
 			visualizations : {
 				MapTool : {
-					title : 'MapTool',
+					title : '',
 					template_url : 'src/visualization/tools/mapChart/map_chart.tpl.html',
 					enabled : false
 				},
 				BarChartTool : {
-					title : 'BarChartTool',
+					title : '',
 					template_url : 'src/visualization/tools/barChart/bar_chart.tpl.html',
 					enabled : false
 				},
 				DataTableTool : {
-					title : 'DataTableTool',
+					title : '',
 					template_url : 'src/visualization/tools/dataTable/data_table.tpl.html',
 					enabled : false
 				},
 				ScatterPlotTool : {
-					title : 'ScatterPlotTool',
+					title : '',
 					template_url : 'src/visualization/tools/scatterPlot/scatter_plot.tpl.html',
 					enabled : false
 				},
@@ -233,15 +234,15 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 //					enabled: false
 //				},
 				ColorColumn : {
-					title : "ColorColumn",
+					title : "",
 					template_url : 'src/visualization/tools/color/color_Column.tpl.html'
 				},
 				KeyColumn : {
-					title : "KeyColumn",
+					title : "",
 					template_url : 'src/visualization/tools/color/key_Column.tpl.html'
 				},
 				DataFilterTool : {
-					title : "DataFilterTool", 
+					title : "", 
 					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
 				}
 			},
