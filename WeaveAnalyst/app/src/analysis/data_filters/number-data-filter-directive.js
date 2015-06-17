@@ -25,7 +25,7 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 		},
 		controller : function($scope, $element, $rootScope, $filter) {
 			
-			var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
+			var pathToFilters = ["scriptKeyFilter", "filters"];
 			
 			var filterName = $scope.$parent.filterName;
 			$scope.ngModel.sliderOptions = { range:true };

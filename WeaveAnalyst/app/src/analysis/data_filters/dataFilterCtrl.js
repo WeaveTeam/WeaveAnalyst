@@ -4,7 +4,7 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 	
 	var initKeyFilter = function() {
 		if(WeaveService.checkWeaveReady()) {
-			WeaveService.path("scriptKeyFilter").request("KeyFilter");
+			WeaveService.weave.path("scriptKeyFilter").request("KeyFilter");
 			return true;
 		}
 		return false;

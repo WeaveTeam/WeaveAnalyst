@@ -24,7 +24,7 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 		},
 		controller : function($scope, $filter) {
 			
-			var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
+			var pathToFilters = ["scriptKeyFilter", "filters"];
 			
 			var filterName = $scope.$parent.filterName;
 			
