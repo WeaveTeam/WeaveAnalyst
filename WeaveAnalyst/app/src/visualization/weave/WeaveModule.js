@@ -9,9 +9,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.toolsEnabled = [];
 	
 	this.columnNames = [];
-	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color"];
-	this.BarchartTool_Path = ["visualization", "children", "plotManager", "plotters", "plot", "colorColumn"];
-	this.MapTool_Path = ["visualization", "children", "plotManager", "plotters", "Albers_State_Layer", "color"];
+	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color", "internalDynamicColumn"];
+	this.BarchartTool_Path = ["children", "visualization", "plotManager", "plotters", "plot", "colorColumn", "internalDynamicColumn"];
+	this.MapTool_Path = ["children", "visualization", "plotManager", "plotters", "Albers_State_Layer", "color", "internalDynamicColumn"];
 	
 	/**
 	 * 

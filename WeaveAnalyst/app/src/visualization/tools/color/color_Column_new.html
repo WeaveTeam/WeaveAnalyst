@@ -6,7 +6,7 @@
 		Color Group
 		</td>	
 		<td>
-			<ui-select ng-model="color.group" theme="select2" tagging style="width: 160px;" ng-change = "setColorGroup()">
+			<ui-select ng-model="color.group" theme="select2" tagging style="width: 160px;" ng-change = "setColorGroup()" ng-click="getColorGroups()">
 									    		<ui-select-match placeholder="Select column...">{{$select.selected}}</ui-select-match>
 												<ui-select-choices repeat="choice in colorGroups | filter : $select.search">
 													{{choice}}
