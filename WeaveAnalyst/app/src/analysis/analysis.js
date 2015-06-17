@@ -21,7 +21,7 @@ AnalysisModule.service('AnalysisService', ['geoFilter_tool','timeFilter_tool', '
 		return function(item) {
 			
 			// if the script metadata has a columnType
-			if(criteria.columnType && criteria.columnType != "all") {
+			if(criteria.columnType && criteria.columnType != "all" && criteria.columnType != " ") {
 				// we check if the column inputs have aws_metadata
 				if(item && item.metadata && item.metadata.aws_metadata)
 				{
