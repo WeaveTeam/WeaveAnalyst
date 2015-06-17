@@ -452,8 +452,8 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				if($.inArray(toolName, this.toolsEnabled) == -1)
 					this.toolsEnabled.push(toolName);
 				//create tool
-				ws.weave.path(toolName).request('DataFilterTool')
-				.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, panelHeight: "10%"});
+				ws.weave.path(toolName).request('DataFilterTool');
+				//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, panelHeight: "10%"});
 				
 				if(state.filterStyle == "Discrete values") {
 					ws.weave.path(toolName, "editor", null).request("StringDataFilterEditor").state({

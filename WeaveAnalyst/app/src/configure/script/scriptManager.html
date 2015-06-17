@@ -64,6 +64,34 @@
 								</div>
 							</td>
 						</tr>
+						<tr>
+							<td>
+								<b>Key Column:</b>
+							</td>
+							<td>
+								<div class="well">
+									<input type="button" value="{{EditDoneKey}}" ng-click="toggleEditKeyType()" style="float:right;"><!-- TODO replace EditDoneDesc with ng-class -->
+									
+									<div style="float:left">
+										<div>
+											Key Type:
+										</div>
+										<div>
+											<input type="text" ng-disabled="!editKey" ng-model="scriptMetadata.keyType"></input>
+										</div>
+									</div>
+									
+									<div style="float:left; margin-left: 20%">
+										<div>
+											Key Column Name:
+										</div>
+										<div>
+											<input type="text" ng-disabled="!editKey" ng-model="scriptMetadata.keyColumnName"></input>
+										</div>
+									</div>
+								</div>
+							</td>
+						</tr>
 					</table>
 				</div>
 				

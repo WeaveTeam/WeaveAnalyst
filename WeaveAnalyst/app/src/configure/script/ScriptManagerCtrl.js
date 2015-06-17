@@ -53,6 +53,7 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 	  $scope.jsonbtn = "json";
 	  $scope.EditDone = "Edit";
 	  $scope.EditDoneDesc = "Edit";
+	  $scope.EditDoneKey = "Edit";
 	  $scope.inputsAsString = "";
 
 	  //creates the tree for scripts 
@@ -108,16 +109,10 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		  if(newVal) {
 			  //retrieve its metadata
 			  scriptManagerService.getScriptMetadata(newVal).then(function(result) {
-				  $scope.scriptMetadata.description = result.description;
-				  $scope.scriptMetadata.inputs = result.inputs;
+				  $scope.scriptMetadata = result;
 			  }, function(error) {
 				   // no metadata was found, so we create an empty metadata file
-				  scriptManagerService.saveScriptMetadata($scope.selectedScript, "{}").then(function(result) { 
-					  if(!result) {
-						  $scope.statusColor = "red";
-						  $scope.status = "Error saving script metadata";
-					  }
-				  });
+				  saveScriptMetadata($scope.selectedScript, "{}");
 			  });
 			  //get the actual content of the script
 			  scriptManagerService.getScript(newVal).then(function(result) {
@@ -126,15 +121,26 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		  }
       });
 	  //
+	  
+	  $scope.saveScriptMetadata = function() {
+		  if($scope.scriptSelected && $scope.scriptMetadata) {
+			  saveScriptMetadata($scope.sriptSelected, angular.toJson($scope.scriptMetadata));
+		  }
+	  };
+	  
+	  var saveScriptMetadata = function(script, JsonMetadata) {
+		  scriptManagerService.saveScriptMetadata(script, JsonMetadata, true).then(function(result) { 
+			  if(!result) {
+				  $scope.statusColor = "red";
+				  $scope.status = "Error creating new script metadata";
+			  }
+		  });
+	  };
+	  
 	  $scope.$watchCollection('scriptMetadata.inputs', function() {
 		    if($scope.scriptMetadata.inputs && $scope.selectedScript) {
 		    	  //returns the metadata of a script if it already exists else creates a metadata data file
-				  scriptManagerService.saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata), true).then(function(result) { 
-					  if(!result) {
-						  $scope.statusColor = "red";
-						  $scope.status = "Error creating new script metadata";
-					  }
-				  });
+				  saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata));
 			  }
       });
 	  
@@ -152,12 +158,8 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 			 				input.options = input.options.split(','); // otherwise if it's a list we turn it into an array
 			 		}
 			 	}
-				  scriptManagerService.saveScriptMetadata($scope.selectedScript, angular.toJson(angular.fromJson($scope.scriptMetadata), true)).then(function(result) { 
-					  if(!result) {
-						  $scope.statusColor = "red";
-						  $scope.status = "Error saving script metadata";
-					  }
-				  });
+			 	// prettify the string before saving it on server
+				scriptManagerService.saveScriptMetadata($scope.selectedScript, angular.toJson(angular.fromJson($scope.scriptMetadata)));
 			  }
 		 });
 	  
@@ -207,18 +209,26 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		  if(!$scope.editDesc) {
 			  $scope.EditDoneDesc = "Edit";
 				if($scope.scriptMetadata.description && $scope.selectedScript) {
-					scriptManagerService.saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata, true)).then(function(result) { 
-						 if(!result) {
-							 $scope.statusColor = "red";
-							 $scope.status = "Error saving script metadata";
-						 }
-					 });
+					saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata));
 				}
 	  		} else {
 	  			$scope.EditDoneDesc = "Done";
 	  		}
 	  };
 	  
+	  $scope.toggleEditKeyType = function() {
+		  $scope.editKey = !$scope.editKey;
+		  
+		  // every time editKey is turnOff, we should save the changes.
+		  if(!$scope.editKey) {
+			  $scope.EditDoneKey = "Edit";
+				if($scope.scriptMetadata.description && $scope.selectedScript) {
+					saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata));
+				}
+	  		} else {
+	  			$scope.EditDoneKey = "Done";
+	  		}
+	  };
 	  
 	  $scope.toggleJsonView = function() {
 		  $scope.viewasjson = !$scope.viewasjson;

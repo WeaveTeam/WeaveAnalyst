@@ -1,13 +1,23 @@
 AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, WeaveService){
 	
-	var pathToFilters = ["defaultSubsetKeyFilter", "filters"];
-
+	var pathToFilters = ["scriptKeyFilter", "filters"];
+	
+	var initKeyFilter = function() {
+		if(WeaveService.checkWeaveReady()) {
+			WeaveService.path("scriptKeyFilter").request("KeyFilter");
+			return true;
+		}
+		return false;
+	};
+	
 	$scope.queryService = queryService;
 	
 	$scope.addCategoricalFilter = function() {
 		// the values are the same as the index for convenience
 		var weave = WeaveService.weave;
-		if(weave && WeaveService.checkWeaveReady())
+		
+		// make sure weave is ready and that we have the keyFilter in the session state
+		if(initKeyFilter())
 		{
 			filterName = WeaveService.generateUniqueName("filter", pathToFilters);
 			weave.path(pathToFilters).push(filterName).request("StringDataFilter");
@@ -20,7 +30,8 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 	$scope.removeFilter = function(filterName, filterType) {
 		
 		var weave = WeaveService.weave;
-		if(weave && WeaveService.checkWeaveReady())
+		
+		if(initKeyFilter())
 		{
 			weave.path(pathToFilters).push(filterName).remove();
 			if(filterType == "categorical")
@@ -34,11 +45,11 @@ AnalysisModule.controller('dataFilterCtrl', function($scope, queryService, Weave
 		
 		var weave = WeaveService.weave;
 		
-		if(weave && WeaveService.checkWeaveReady())
+		if(initKeyFilter())
 		{
 			// the values are the same as the index for convenience
 			filterName = WeaveService.generateUniqueName("filter", pathToFilters);
-			weave.path("defaultSubsetKeyFilter", "filters").push(filterName).request("NumberDataFilter");
+			weave.path(pathToFilters).push(filterName).request("StringDataFilter");
 			if(!queryService.queryObject.rangeFilters[filterName])
 				queryService.queryObject.rangeFilters[filterName] = {};
 		}
