@@ -9,12 +9,18 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 //	 $scope.$watch('selectedToolToAdd.value', function() {
 //			console.log($scope.selectedToolToAdd.value); 
 //		 });
-	$scope.tool_options = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "DataFilterTool"];
+	$scope.tool_options = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "DataFilterTool", "SummaryAnnotation"];
 
-	$scope.fixed_ids = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "KeyColumn", "ColorColumn", "DataFilterTool"];
+	$scope.fixed_ids = ["MapTool", "BarChartTool", "ScatterPlotTool", "DataTableTool", "KeyColumn", "ColorColumn", "DataFilterTool", "SummaryAnnotation"];
 	
 	$scope.addTool = function(name) {
 		switch(name) {
+			case "SummaryAnnotation":
+				var toolName = WeaveService.SummaryAnnotation(null, "");
+				queryService.queryObject.visualization[toolName] = {
+					title : toolName,
+					template_url : 'src/visualization/tools/summaryAnnotation/summary_annotation.tpl.html'
+				}
 			case "MapTool":
 				var toolName = WeaveService.MapTool(null, "");
 				console.log(toolName);

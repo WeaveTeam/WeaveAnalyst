@@ -1,0 +1,39 @@
+<div class="panel-body" ng-controller="SummaryAnnotationCtrl">
+	<ul class="input-controls">
+			<table>
+			<tr>
+				<tr>	
+					<td>
+						<input   type="checkbox"
+								 ng-model="tool.enabled"/>
+					</td>
+					
+					<td style="padding-left: 5px;">
+						Enable
+					</td>
+				</tr>
+				<td>
+					 Title:
+				</td>
+				<td style="padding-left: 5px;">
+					<input  style = "width : 100%" type="text" placeholder="Default" 
+							ng-model='tool.title'>
+
+				</td>
+			</tr>
+			
+			<tr>
+			<td><input type="checkbox" ng-model="tool.generated"/></td>
+			<td>Generate content</td>
+			</tr>
+			<tr>
+				<td>Content:</td>
+				<td style="padding-left: 5px;">
+					<textarea ng-disabled="tool.generated" ng-model="tool.content" name="contentTextArea" required ngRequired="string"></textarea>
+				</td>
+			</tr>		
+		
+
+	</table>
+	</ul>
+</div>
