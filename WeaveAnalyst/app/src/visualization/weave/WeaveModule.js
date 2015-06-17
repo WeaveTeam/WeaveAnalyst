@@ -9,6 +9,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.toolsEnabled = [];
 	
 	this.columnNames = [];
+	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color"];
+	this.BarchartTool_Path = ["visualization", "children", "plotManager", "plotters", "plot", "colorColumn"];
+	this.MapTool_Path = ["visualization", "children", "plotManager", "plotters", "Albers_State_Layer", "color"];
 	
 	/**
 	 * 
@@ -352,7 +355,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		
 		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
 
-		if(state && state.enabled && state.X && state.Y){//if enabled
+		if(state && state.enabled){//if enabled
 			//create tool
 			ws.weave.path(toolName).request('ScatterPlotTool')
 			.state({ panelX : "50%", panelY : "50%", panelTitle : state.title, enableTitle : true})
@@ -424,23 +427,53 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			ws.weave.path(toolName).remove();
 		}
 		
-	}
+	};
 
 	this.ColorColumn = function ()
 	{
 		// stub for compat;
-	}
+	};
 	
-	this.setColorGroup = function(dynamicColumnPath, groupName, columnInfo)
-	{
-		ws.weave.path(groupName).request('ColorColumn').setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-		dynamicColumnPath.vars({name: groupName}).exec("ColumnUtils.unlinkNestedColumns(this); globalName = name");
-	}
+	this.setColorGroup = function(toolName, groupName, columnInfo){
+		
+		var toolType = ws.weave.path(toolName).getType();
+		var dynamicColumnPath;
+		
+		console.log("tooltype", toolType);
+		
+		switch(toolType){
+			case("weave.visualization.tools::ScatterPlotTool"):
+					dynamicColumnPath = ws.weave.path(toolName).push(this.ScatterPlot_Path);
+					break;
+			case("weave.visualization.tools::MapTool"):
+					dynamicColumnPath = ws.weave.path(toolName).push(this.MapTool_Path);
+					break;
+			case("weave.visualization.tools::CompoundBarChartTool"):
+					dynamicColumnPath = ws.weave.path(toolName).push(this.BarchartTool_Path);
+					break;
+		
+		}
+		
+		console.log(dynamicColumnPath.getPath());
+		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
+		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
+	};
+	
+//	{
+//		var dynamicColumnPath = ws.weave.path(tool).pushPlotter().push('dynamicColorColumn');
+//		//ws.weave.path(groupName).request('ColorColumn').setColumn(columnInfo.metadata, columnInfo.dataSourceName);
+//		dynamicColumnPath.vars({name: groupName}).exec("ColumnUtils.unlinkNestedColumns(this); globalName = name");
+//		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
+//	};
 
+	this.getColorGroups = function(){
+		return	ws.weave.path().getValue('getNames(ColorColumn)');
+	};
+	
 	this.cleanupColorGroups = function()
 	{
 		return;
-	}
+	};
 
 	this.keyColumn = function(state){
 
