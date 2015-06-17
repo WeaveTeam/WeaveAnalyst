@@ -1,10 +1,39 @@
 <div style="width: 100%; padding-bottom" class="master-select2-container" ng-controller = "keyColumnCtrl">
-				Key Column: 
+		
+		<table style="width:100%">
+			<tr>	
+				<td>
+					Data Source : 
+				</td>
 				
-		<ui-select  ng-model="tool.keyColumn" droppable theme="select2" style="width: 100%;">
-	    	<ui-select-match allow-clear="true" placeholder="Choose Layer...">{{$select.selected.metadata.title}}</ui-select-match>
-			<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
-	       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
-	        </ui-select-choices>
-		</ui-select>
+				<td style="padding-left: 5px;">
+					<ui-select  ng-model="tool.keyColumn" droppable theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Choose Data Source...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+				
+		
+			<tr>	
+				<td>
+					Key Column :
+				</td>
+				
+				<td style="padding-left: 5px;">
+					<ui-select  ng-model="tool.keyColumn" droppable theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Choose Key Column...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+		</table>		
+		
+		
+		<input type="button" value="set" ng-click="setKeyColumn()"></input>
+		
 </div>

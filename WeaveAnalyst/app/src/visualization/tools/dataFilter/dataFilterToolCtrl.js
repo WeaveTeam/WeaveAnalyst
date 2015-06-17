@@ -19,7 +19,7 @@ AnalysisModule.controller("DataFilterToolCtrl", function($scope, WeaveService, q
 	
 	$scope.toggleFiterStyle = function() {
 		if($scope.tool.filterStyle == "Discrete values") {
-			$scope.tool.filterStyle = "Continuous Range";
+			$scope.tool.filterStyle = "Continuous range";
 		}
 		else
 			$scope.tool.filterStyle = "Discrete values";
