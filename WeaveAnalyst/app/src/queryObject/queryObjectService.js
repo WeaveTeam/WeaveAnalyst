@@ -241,6 +241,10 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 				KeyColumn : {
 					title : "KeyColumn",
 					template_url : 'src/visualization/tools/color/key_Column.tpl.html'
+				},
+				SummaryAnnotation : {
+					title : "SummaryAnnotation",
+					template_url : 'src/visualization/tools/summaryAnnotation/summary_annotation.tpl.html'
 				}
 			},
 			resultSet : [],
