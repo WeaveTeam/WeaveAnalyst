@@ -32,8 +32,8 @@
 			Data Table: {{ queryService.queryObject.dataTable }}
 		</div>
 		
-		<div class= "buttonBarContainer" style="float:right;width:50%">
-			<div class = "btn-group" role="group" style="margin-left: 45%; width: 100%; height: 100%" ng-controller= "buttonBarController">
+		<div class= "buttonBarContainer">
+			<div class = "btn-group" role="group" style="width: 100%; height: 100%" ng-controller= "buttonBarController">
 						
 				<button class='btn btn-default wa_buttonBar' title = "Download Query Object">
 					<span class = "fa fa-download" ng-click = "exportQuery()"></span>
@@ -71,14 +71,12 @@
 				</button>
 			
 			 
-			<br>
-			<div style = "float:left; margin-left : 8px; width: 50%"  
-			ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone}" >
-								<i ng-if = "queryService.queryObject.properties.queryDone" class="fa fa-check-circle fa-lg"  
-								   title= "A green signal indiactes the query has been executed successfully"></i>
-								<i ng-if = "!queryService.queryObject.properties.queryDone" class="fa fa-exclamation-triangle fa-lg"></i>
-							<font size = "2" color= "white">{{queryService.queryObject.properties.queryStatus}}</font>
-							</div>
+				<br>
+				<div style = "float:left; margin-left : 8px; width: 50%" ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone}" >
+					<i ng-if = "queryService.queryObject.properties.queryDone" class="fa fa-check-circle fa-lg" title= "A green signal indiactes the query has been executed successfully"></i>
+					<i ng-if = "!queryService.queryObject.properties.queryDone" class="fa fa-exclamation-triangle fa-lg"></i>
+					<font size = "2" color= "white">{{queryService.queryObject.properties.queryStatus}}</font>
+				</div>
 			</div>
 		</div>
 			

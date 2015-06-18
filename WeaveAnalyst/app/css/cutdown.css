@@ -638,18 +638,6 @@ accordion .panel-heading {
 	border-color: #d43f3a;
 }
 
-.queryUndone {
-	width : 100px;
-	height : 20px;
-	float:left;
-	background : #d9534f;
-}
-
-.queryDone{
-	width : 100px;
-	height : 20px;
-	background : #5bb75b;
-}
 /* the blue one */
 .validateB {
     padding-top: 5px;
@@ -938,10 +926,10 @@ select {
 	padding-left: 5px
 }
 
-.topAnalysisControl .buttonBarContainer{
-	width:80%;
+.topAnalysisControl .buttonBarContainer {
+	width: 450px;
 	height: 100%;
-	float:left;
+	float: right;
 }
 
 /* buttons*/
@@ -955,6 +943,21 @@ select {
 	height: 30px;
 	margin-top: 8px;
 }
+
+.queryUndone {
+	width : 100px;
+	height : 20px;
+	float:left;
+	background : #d9534f;
+}
+
+.queryDone {
+	float: left;
+	width : 240px;
+	height : 20px;
+	background : #5bb75b;
+}
+
 #states {
   fill: #335555;
 }
