@@ -16,9 +16,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	
 	this.columnNames = [];
-	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color"];
-	this.BarchartTool_Path = ["visualization", "children", "plotManager", "plotters", "plot", "colorColumn"];
-	this.MapTool_Path = ["visualization", "children", "plotManager", "plotters", "Albers_State_Layer", "color"];
+	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color", "internalDynamicColumn"];
+	this.BarchartTool_Path = ["children", "visualization", "plotManager", "plotters", "plot", "colorColumn", "internalDynamicColumn"];
+	this.MapTool_Path = ["children", "visualization", "plotManager", "plotters", "Albers_State_Layer", "color", "internalDynamicColumn"];
 	
 	/**
 	 * 
@@ -87,6 +87,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		 .libs("weave.ui.DraggablePanel")
 		 .exec("DraggablePanel.tileWindows()");
 	};
+	
 	
 	this.setWeaveWindow = function(window) {
 		var weave;
@@ -236,7 +237,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		var toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
 		if(state && state.enabled){
 			ws.weave.path(toolName).request('AttributeMenuTool')
-			.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
+			//.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
 			.call(setQueryColumns, {choices: state.columns});
 			
 			if(state.vizAttribute && state.selectedVizTool)
@@ -262,9 +263,10 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		
 		if(state && state.enabled){//if enabled
 			//create tool
+			//panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true,
 			ws.weave.path(toolName)
 			.request('CompoundBarChartTool')
-			.state({ panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true, showAllLabels : state.showAllLabels })
+			.state({  showAllLabels : state.showAllLabels })
 			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
 			.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
 			.pop()
@@ -305,7 +307,8 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 
 		if(state && state.enabled){//if enabled
 			//create tool
-			ws.weave.path(toolName).request('MapTool').state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
+			ws.weave.path(toolName).request('MapTool');
+			//.state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
 			
 			//STATE LAYER
 			if(state.stateGeometryLayer)
@@ -415,7 +418,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		if(state && state.enabled){//if enabled
 			//create tool
 			ws.weave.path(toolName).request('ScatterPlotTool')
-			.state({ panelTitle : state.title, enableTitle : true});
+			//.state({ panelTitle : state.title, enableTitle : true});
 			
 			if(state.X){
 				 ws.weave.path(toolName).request('ScatterPlotTool')
@@ -463,7 +466,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		if(state && state.enabled){//if enabled			
 			//create tool
 			ws.weave.path(toolName).request('AdvancedTableTool')
-			.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
+			//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
 			.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
 				return column.metadata;
 			}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
