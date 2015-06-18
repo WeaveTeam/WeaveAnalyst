@@ -328,14 +328,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				.push('line', 'color', 'defaultValue').state('0').pop()
 				.call(setQueryColumns, {geometryColumn: stateGeometry});
 				
-				if(state.useKeyTypeForCSV)
-				{
-					if(state.labelLayer)
-					{
-						ws.weave.setSessionState([state.labelLayer.dataSourceName], {"keyType" : stateGeometry.keyType});
-					}
-				}
-				
 			}
 			else{//to remove state layer
 				
@@ -377,9 +369,9 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				
 				ws.weave.path(toolName).request('MapTool')
 				.push('children', 'visualization', 'plotManager','plotters')
-				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
 				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
-				.call(setQueryColumns, {text : labelLayer});
+				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
+				.push('text').setColumn(labelLayer.metadata, labelLayer.dataSourceName);
 			}
 			
 			//LAYER ZOOM

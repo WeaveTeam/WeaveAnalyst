@@ -44,19 +44,6 @@
 			</tr>
 		
 		<tr>
-			<td>
-				<input   type="checkbox"
-						 ng-model="tool.useKeyTypeForCSV" 
-						 data-placeholder="Choose Label Column"
-						 ng-init="tool.useKeyTypeForCSV = true"/>
-			</td>
-			
-			<td style="padding-left: 5px;">
-				Use KeyType for CSV Data Source
-			</td>
-		</tr>
-			
-		<tr>
 			<td style="padding-left: 5px;">
 			Zoom 
 			</td>
@@ -76,7 +63,7 @@
 			<td style="padding-left: 5px;">
 				<ui-select ng-model="tool.labelLayer" droppable theme="select2" style="width: 100%;">
 			    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
-						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
 				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 				        </ui-select-choices>
 					</ui-select>
