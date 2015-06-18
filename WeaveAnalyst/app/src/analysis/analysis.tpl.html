@@ -72,9 +72,9 @@
 			
 			 
 				<br>
-				<div style = "float:left; margin-left : 8px; width: 50%" ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone}" >
+				<div style = "float:left; margin-left : 8px; width: 50%" ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone, 'queryDoneInit' : queryService.queryObject.properties.queryDone === undefined}" >
 					<i ng-if = "queryService.queryObject.properties.queryDone" class="fa fa-check-circle fa-lg" title= "A green signal indiactes the query has been executed successfully"></i>
-					<i ng-if = "!queryService.queryObject.properties.queryDone" class="fa fa-exclamation-triangle fa-lg"></i>
+					<i ng-if = "!queryService.queryObject.properties.queryDone && queryService.queryObject.properties.queryDone !== undefined" class="fa fa-exclamation-triangle fa-lg"></i>
 					<font size = "2" color= "white">{{queryService.queryObject.properties.queryStatus}}</font>
 				</div>
 			</div>
@@ -165,7 +165,8 @@
 									</td>
 		
 									<td>
-											<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
+											<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;"
+											ng-click = fetchColumnProvider(queryService.queryObject.scriptOptions[input.param])>
 									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
 												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType})">
 									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
@@ -297,9 +298,9 @@
 						        </ui-select-choices>
 							</ui-select>
 							<div style = "height: 40px" class = "btn-group" role = "group">
-								<button  class="btn btn-default" ng-click="addTool(selectedToolToAdd.value)"><i class="fa fa-plus-circle fa-lg" ></i> </button>
+								<button  class="btn btn-default" ng-click="addTool(selectedToolToAdd.value);"><i class="fa fa-plus-circle fa-lg" ></i> </button>
 								<!-- CLEAR button --> 
-<!-- 									<button class="btn btn-default" title = "Clear visualizations"> <span class = "fa fa-trash-o fa-lg" ng-click = "clearSessionState()"></span></button> -->
+<!-- 							<button class="btn btn-default" title = "Clear visualizations"> <span class = "fa fa-trash-o fa-lg" ng-click = "clearSessionState()"></span></button> -->
 								<button  class="btn btn-default" ng-click="WeaveService.tileWindows()">Tile</button>
 							</div>
 						</div>

@@ -70,7 +70,7 @@ angular.module('aws.project')
         				that.cache.columnstring = "";
         				var columns = singleObject.queryObject.scriptOptions;
         				for(var j in columns){
-        					var title = columns[j].title;
+        					var title = columns[j].metadata.title;
         					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
         				}
         				singleObject.columnstring = that.cache.columnstring.slice(0,-2);//getting rid of the last comma

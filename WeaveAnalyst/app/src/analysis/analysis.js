@@ -36,8 +36,20 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	}, function () {
 		if(WeaveService.weave) {
 			$scope.showToolMenu = true;
+			loadWeaveSessionState();
 		}
 	});
+	
+	function loadWeaveSessionState (){
+		if(WeaveService.checkWeaveReady()){
+			
+			if(queryService.queryObject.weaveSessionState) {
+				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
+			}
+		}else{
+			setTimeout(loadWeaveSessionState, 500, window);
+		}
+	};
 
 	$("#queryObjectPanel" ).draggable().resizable({
        handles: 'n, e, s, w'
@@ -211,38 +223,39 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	}, true);
 	
 	$scope.$watchCollection("queryService.cache.filteredColumns", function(columns) {
+		console.log("columns", columns);
 		if(columns) {
 			$('#columnsTree').dynatree(createColumnTree(columns));
 			$('#columnsTree').dynatree("getTree").reload();
 		}
 	});
 	
-	$scope.$watch(function() {
-		return [$scope.columnSearch, queryService.cache.columns];
-	}, function(newVal) {
-		var columnSearch = newVal[0];
-		var columns = newVal[1];
-		if(columns && columns.length) {
-			queryService.cache.filteredColumns = columns.filter(function(column) {
-				if(column) {
-					var columnTitle = column.metadata.title;
-					
-					if(columnTitle) {
-						if(columnSearch) {
-							var lwCase = columnTitle.toLowerCase();
-							if(lwCase.indexOf(columnSearch.toLowerCase()) > -1) {
-								return true;
-							} else {
-								return false;
-							}
-						} else {
-							return true;
-						}
-					}
-				}
-			});
-		}
-	}, true);
+//	$scope.$watch(function() {
+//		return [$scope.columnSearch, queryService.cache.columns];
+//	}, function(newVal) {
+//		var columnSearch = newVal[0];
+//		var columns = newVal[1];
+//		if(columns && columns.length) {
+//			queryService.cache.filteredColumns = columns.filter(function(column) {
+//				if(column) {
+//					var columnTitle = column.metadata.title;
+//					
+//					if(columnTitle) {
+//						if(columnSearch) {
+//							var lwCase = columnTitle.toLowerCase();
+//							if(lwCase.indexOf(columnSearch.toLowerCase()) > -1) {
+//								return true;
+//							} else {
+//								return false;
+//							}
+//						} else {
+//							return true;
+//						}
+//					}
+//				}
+//			});
+//		}
+//	}, true);
 
 	
 	$scope.$watch('WeaveService.weaveWindow.closed', function() {
@@ -444,28 +457,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 //		}
 //	 };
 	 //**********************************************************REMAPPING END**************************************
-	
-//	$scope.$watch("queryService.queryObject.dataTable", function(newVal, oldVal) {
-//		if($scope.queryService.queryObject.dataTable) {
-//			queryService.getDataColumnsEntitiesFromId(queryService.queryObject.dataTable.id, true);
-//		}
-//		
-//	}, true);
-	
-	//*************************watch for Weave in different Weave windows*********************************************
-//	$scope.$watch(function() {
-//		return WeaveService.weave;
-//	}, function() {
-//		if(WeaveService.checkWeaveReady()) 
-//		{
-//			//$scope.weaveReady = true;
-//			
-//			if(queryService.queryObject.weaveSessionState) {
-//				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
-//			}
-//		}
-//	});
-	
+
 	
 	//******************************managing weave and its session state**********************************************//
 	$scope.$watch(function() {
@@ -631,12 +623,28 @@ AnalysisModule.config(function($selectProvider) {
 
 
 //Script Options controller
-AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, $filter) {
+AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, $filter, WeaveService) {
 
 	// This sets the service variable to the queryService 
 	$scope.queryService = queryService;
 	
 	$scope.values = [];
+	
+	//we use the column to fetch the table (list of columns it belongs to)
+	$scope.fetchColumnProvider = function(input_column){
+		console.log("input", input_column);
+		if(input_column){
+			WeaveService.fetchNodePath(input_column).then(function(result_nodes){
+				queryService.cache.columns = result_nodes.map(function(one_Node) {
+					return {
+						dataSourceName : one_Node.getDataSourceName(),
+						metadata : one_Node.getColumnMetadata()
+					};
+				}); //end of map
+			});
+		}
+		
+	};
 	
 	$scope.setValue = function(originalValue, newValue)
 	{
@@ -686,20 +694,6 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 			$scope.queryService.cache.scriptMetadata = {};
 	};
 
-	//  clear script options when script changes
-	$scope.$watch(function() {
-		return queryService.queryObject.scriptSelected;
-                
-	}, function(newVal) {
-		
-			// this check is necessary because when angular changes tabs, it triggers changes
-			// for the script selected or data table even if the user may not have change them.
-			if(!angular.equals(newVal)) {
-				queryService.queryObject.scriptOptions = {};
-			}
-	}, true);
-	
-	
 	//handles the defaults appearing in the script options selection
 	$scope.$watch(function() {
 		return queryService.cache.scriptMetadata;

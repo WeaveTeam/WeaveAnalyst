@@ -568,6 +568,39 @@ accordion .panel-heading {
 .panel-heading.textLeft {
 	text-align: left !important;
 }
+.queryDoneInit {
+	width : 100px;
+	height : 20px;
+	float:left;
+	background: none;
+}
+
+.queryDone{
+	width : 100px;
+	height : 20px;
+	background : #5bb75b;
+}
+/* the blue one */
+.validateB {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size : 15px;
+    border-radius: 10px;
+    color: #fff;
+	background-color: #428bca;
+	border-color: #357ebd;
+}
+
+.unvalidatedUI{
+	border-radius: 5px;
+	border-color : #d43f3a;
+	background-color: #d9534f;	
+}
+
+.validatedUI{
+	border-radius: 5px;
+	background-color : #5bb75b
+}
 
 .panel-heading > h2 {
 	padding: 8px 0px 2px 5px;
