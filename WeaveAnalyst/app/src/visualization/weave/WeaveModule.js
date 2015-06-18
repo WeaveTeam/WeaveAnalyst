@@ -494,12 +494,40 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.SummaryAnnotation = function(state, summaryName) {
 		var toolName = summaryName || ws.generateUniqueName("SummaryBox");
 
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
+//		if (!ws.checkWeaveReady())
+//		{
+//			ws.setWeaveWindow(window);
+//			return;
+//		}
+//		
+//		
+//		if(state && state.enabled){//when auto-generation checked
+//			if(state.generated){//tool enabled
+//				if(ws.weave.path("WeaveAnalystDataSource").getType()){//if data-source exists
+//					script = "Script : " + ws.weave.path("WeaveAnalystDataSource").push('scriptName').getState();
+//					inputs = ws.weave.path("WeaveAnalystDataSource").push("inputs").getNames();
+//					
+//					for(var i =0; i < inputs.length; i++){
+//						inputString += inputs[i] + " , ";
+//					}
+//					if(i == inputs.length)
+//						inputString = inputString.substr(0, inputString.lastIndexOf(','));
+//					
+//					state.content = script + "\n" + inputString;
+//					ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+//				}
+//				else{//when no data-source
+//					ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+//				}
+//			}
+//			if else{//when auto-generation unchecked, remove content
+//				//state.content = "";
+//				ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+//			}
+//			
+//		}
+		
+		
 		if (state.enabled)
 		{
 			ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);	
