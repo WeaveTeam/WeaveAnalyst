@@ -3,14 +3,14 @@
 		<table style="width:100%">
 			<tr>	
 				<td>
-					Data Source : 
+					Data Source
 				</td>
 				
 				<td style="padding-left: 5px;">
-					<ui-select  ng-model="tool.keyColumn" droppable theme="select2" style="width: 100%;">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Data Source...">{{$select.selected.metadata.title}}</ui-select-match>
-						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
-				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+					<ui-select  ng-model="tool.dataSourceName" ng-click="getDataSources()" ng-change="getColumnNames()" droppable theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Choose Data Source...">{{$select.selected}}</ui-select-match>
+						<ui-select-choices repeat="dataSource in dataSources | filter : $select.search">
+				       		 <div ng-bind-html="dataSource | highlight: $select.search"></div>
 				        </ui-select-choices>
 					</ui-select>
 				</td>
@@ -19,14 +19,14 @@
 		
 			<tr>	
 				<td>
-					Key Column :
+					Key Column
 				</td>
 				
 				<td style="padding-left: 5px;">
-					<ui-select  ng-model="tool.keyColumn" droppable theme="select2" style="width: 100%;">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Key Column...">{{$select.selected.metadata.title}}</ui-select-match>
-						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
-				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+					<ui-select  ng-model="keyColumnName" droppable theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Choose Key Column...">{{$select.selected}}</ui-select-match>
+						<ui-select-choices repeat="columnName in columnNames | filter : $select.search">
+				       		 <div ng-bind-html="columnName | highlight: $select.search"></div>
 				        </ui-select-choices>
 					</ui-select>
 				</td>
@@ -34,16 +34,13 @@
 			
 			<tr>	
 				<td>
-					Key Type :
+					Key Type
 				</td>
 				
 				<td style="padding-left: 5px;">
-					<input type="text" ng-model="tool.keyType"></input>
+					<input type="text" ng-model="keyType"></input>
 				</td>
 			</tr>
 		</table>		
-		
-		
-		<input type="button" value="set" ng-click="setKeyColumn()"></input>
-		
+		<input type="button" value="set" ng-click="WeaveService.setKeyColumn(dataSourceName, keyColumnName, keyType)"></input>
 </div>

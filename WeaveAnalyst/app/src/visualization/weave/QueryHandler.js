@@ -219,7 +219,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
     				currentDataSource = WeaveService.generateUniqueName("WeaveAnalystDataSource");
 
     			var waDataSourcePath = weave.path(currentDataSource).request("WeaveAnalystDataSource").exec("getCallbackCollection(this).delayCallbacks()");
-				console.log(keyColumnName);
+
     			waDataSourcePath.push("outputKeyColumn").state(keyColumnName);
     			waDataSourcePath.push("outputKeyType").state(keyType);
     			
