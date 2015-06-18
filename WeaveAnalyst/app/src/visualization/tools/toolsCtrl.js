@@ -25,6 +25,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.MapTool(null, "");
 				queryService.queryObject.visualizations[toolName] = {
 					title : "",
+					toolName : toolName,
 					template_url : 'src/visualization/tools/mapChart/map_chart.tpl.html'
 				};
 				break;
@@ -32,6 +33,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.BarChartTool(null, "");
 				queryService.queryObject.visualizations[toolName] = {
 					title : "",
+					toolName : toolName,
 					template_url : 'src/visualization/tools/barChart/bar_chart.tpl.html'
 				};
 				break;
@@ -39,6 +41,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.ScatterPlotTool(null, "");
 				queryService.queryObject.visualizations[toolName] = { 
 					title : "",
+					toolName : toolName,
 					template_url : 'src/visualization/tools/scatterPlot/scatter_plot.tpl.html'
 				};
 				break;
@@ -46,6 +49,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.DataTableTool(null, "");
 				queryService.queryObject.visualizations[toolName] = {
 					title : "",
+					toolName : toolName,
 					template_url : 'src/visualization/tools/dataTable/data_table.tpl.html'
 				};
 				break;
@@ -53,6 +57,7 @@ AnalysisModule.controller("toolsCtrl", function($scope, $filter,queryService, We
 				var toolName = WeaveService.DataFilterTool(null, "");
 				queryService.queryObject.visualizations[toolName] = {
 					title : "",
+					toolName : toolName,
 					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
 				};
 				break;

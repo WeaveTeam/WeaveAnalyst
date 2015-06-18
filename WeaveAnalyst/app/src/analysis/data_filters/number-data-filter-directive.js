@@ -26,7 +26,7 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 		controller : function($scope, $element, $rootScope, $filter) {
 			
 			var filterName = $scope.$parent.filterName;
-			$scope.ngModel.sliderOptions = { range:true };
+			$scope.ngModel.sliderOptions = { range:true, min:0, max:100 };
 			
 			$scope.$watch('ngModel.column', function(column) {
 				if(column)
@@ -38,8 +38,9 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 						pathToFilters.push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))").addCallback(function() {
 							var min = this.getValue("EquationColumnLib.getMin(column);");
 							var max = this.getValue("EquationColumnLib.getMax(column);");
-							if(min && max)
+							if(min && max) {
 								$scope.sliderOptions = { range:true, min:min, max:max };
+							}
 							$rootScope.$safeApply();
 						});
 					}
@@ -48,6 +49,14 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 				}
 			}, true);
 
+			$scope.$watch('sliderOptions', function(newVal, oldVal) {
+				// reset the slider when the slider options change
+				if(angular.equals(newVal, oldVal))
+					return;
+				
+				$scope.ngModel.range = [Math.floor(1/3*(newVal.max-newVal.min) + newVal.min), Math.floor(2/3*(newVal.max-newVal.min) + newVal.min)];
+			}, true);
+			
 			$scope.$watchCollection('ngModel.range', function() {
 				if($scope.ngModel.range && $scope.ngModel.length == 2) {
 					var pathToFilters = WeaveService.getPathToFilters();

@@ -211,21 +211,25 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 			visualizations : {
 				MapTool : {
 					title : '',
+					toolName : "MapTool",
 					template_url : 'src/visualization/tools/mapChart/map_chart.tpl.html',
 					enabled : false
 				},
 				BarChartTool : {
 					title : '',
+					toolName : "BarChartTool",
 					template_url : 'src/visualization/tools/barChart/bar_chart.tpl.html',
 					enabled : false
 				},
 				DataTableTool : {
 					title : '',
+					toolName : "DataTableTool",
 					template_url : 'src/visualization/tools/dataTable/data_table.tpl.html',
 					enabled : false
 				},
 				ScatterPlotTool : {
 					title : '',
+					toolName : "ScatterPlotTool",
 					template_url : 'src/visualization/tools/scatterPlot/scatter_plot.tpl.html',
 					enabled : false
 				},

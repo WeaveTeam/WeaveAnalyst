@@ -18,7 +18,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.columnNames = [];
 	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color", "internalDynamicColumn"];
 	this.BarchartTool_Path = ["children", "visualization", "plotManager", "plotters", "plot", "colorColumn", "internalDynamicColumn"];
-	this.MapTool_Path = ["children", "visualization", "plotManager", "plotters", "Albers_State_Layer", "color", "internalDynamicColumn"];
+	this.MapTool_Path = ["children", "visualization", "plotManager", "plotters", "Albers_State_Layer", "fill", "color", "internalDynamicColumn"];
 	
 	/**
 	 * 
@@ -369,8 +369,8 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				
 				ws.weave.path(toolName).request('MapTool')
 				.push('children', 'visualization', 'plotManager','plotters')
-				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
 				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
+				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
 				.push('text').setColumn(labelLayer.metadata, labelLayer.dataSourceName);
 			}
 			
@@ -528,24 +528,51 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		return toolName;
 	};
 //		
-	this.SummaryAnnotation = function(state, summaryName) {
-		var toolName = summaryName || ws.generateUniqueName("SummaryBox");
+	this.SummaryAnnotation = function (state, summaryName) {
 
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
+	    var toolName = summaryName || ws.generateUniqueName("SummaryBox");
 
-		if (state.enabled)
-		{
-			ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);	
-		}
-		else
-		{
-			ws.weave.path(toolName).remove();
-		}
-		
+	    if (!ws.checkWeaveReady()) {
+
+	        ws.setWeaveWindow(window);
+
+	        return;
+
+	    }
+
+	    if (state && state.enabled) { //when auto-generation checked
+	        if (state.generated) { //content generation enabled
+	            //if data-source exists - contents come from WeaveAnalystDataSource
+	            if (ws.weave.path("WeaveAnalystDataSource").getType()) {
+	                var script;
+	                var inputs;
+	                var inputString = "Inputs : ";
+	                script = "Script : " + ws.weave.path("WeaveAnalystDataSource").push('scriptName').getState();
+	                inputs = ws.weave.path("WeaveAnalystDataSource").push("inputs").getNames();
+
+	                for (var i = 0; i < inputs.length; i++) {
+	                    inputString += inputs[i] + " , ";
+	                }
+
+	                if (i == inputs.length)
+	                    inputString = inputString.substr(0, inputString.lastIndexOf(','));
+
+	                state.content = script + "\n" + inputString;
+	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+
+	            } else { //when no data-source: contents come from UI inputs
+	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+	            }
+
+	        } else {
+	            ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+	        }
+	    } else {
+	        ws.weave.path(toolName).remove();
+	    }
+
+
+
 	};
 
 	this.ColorColumn = function ()
@@ -557,7 +584,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		
 		var toolType = ws.weave.path(toolName).getType();
 		var dynamicColumnPath;
-		
 		console.log("tooltype", toolType);
 		
 		switch(toolType){

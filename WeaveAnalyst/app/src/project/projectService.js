@@ -69,7 +69,9 @@ angular.module('aws.project')
         				
         				that.cache.columnstring = "";
         				var columns = singleObject.queryObject.scriptOptions;
+        				console.log("cols: ", columns);
         				for(var j in columns){
+        					console.log("j:", j);
         					var title = columns[j].metadata.title;
         					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
         				}

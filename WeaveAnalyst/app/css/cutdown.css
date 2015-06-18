@@ -527,81 +527,51 @@
  *
  *
  */
+ 
+.panel-group {
+	margin: 0;
+	padding: 5px;
+}
 
 .panel-default>.panel-heading {
-/* color: #333; */
-/* background-color: #5E5B5B; */
-border-color: #ddd;
-color: #D5D5D5;
-background-color: #4C4F53;
+	/* color: #333; */
+	/* background-color: #5E5B5B; */
+	border-color: #ddd;
+	color: #D5D5D5;
+	background-color: #4C4F53;
 }
 
 .panel {
-	padding: 0px;
+	float: left;
 	/*border: 1px solid #c9c9c9;*/
 	-webkit-box-shadow: inset 1px 1px 0px 0px rgba(222, 2222, 222, 0.1), 1px 1px 0px 0px rgba(255, 255, 255, 1);
 	box-shadow: inset 1px 1px 0px 0px rgba(222, 222, 222, 0.1), 1px 1px 0px 0px rgba(255, 255, 255, 1);
-	/*margin-bottom: 1px;*/
 	background: #fefefe;
+	margin: 10px;
+	width: 25%;
+	height: 20%;
+	min-width: 310px;
 }
 
 .panel-heading {
 	width: 100%;
 	background: #4C4F53;
 	color: #FFF;
-	border-color: #4C4F53 !important;
-	border-radius: 0;
-	line-height: normal;
-	box-shadow: inset 0 -2px 0 rgba(0,0,0,.05);
-	-webkit-box-shadow: inset 0 -2px 0 rgba(0,0,0,.05);
 	border: 1px solid #C2C2C2;
 	height: 30px;
-	padding: 0px;
-	display: inline-block;
+	padding: 0;
 }
 
-.panel-heading  .close-button {
-
-	min-width: 30px;
-	height: 28px;
-	position: relative;
-	font-family: Arial, Helvetica, sans-serif;
-	border-left: 1px solid rgba(0,0,0,.09);
-	float: right;
-	display: block;
-	color: white;
+accordion .panel-heading {
+	text-align: center;
+}
+.panel-heading.textCenter {
+	text-align: center !important;
+}
+.panel-heading.textLeft {
+	text-align: left !important;
 }
 
-/* the red one */
-.invalidateB {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    font-size : 15px;
-    border-radius: 10px;
-	color: #fff;
-	background-color: #d9534f;
-	border-color: #d43f3a;
-}
-
-.queryUndone {
-	width : 100px;
-	height : 20px;
-	float:left;
-	background : #d9534f;
-}
-
-.queryDoneInit {
-	width : 100px;
-	height : 20px;
-	float:left;
-	background: none;
-}
-
-.queryDone{
-	width : 100px;
-	height : 20px;
-	background : #5bb75b;
-}
 /* the blue one */
 .validateB {
     padding-top: 5px;
@@ -624,7 +594,6 @@ background-color: #4C4F53;
 	background-color : #5bb75b
 }
 
-
 .panel-heading > h2 {
 	padding: 8px 0px 2px 5px;
 	font-size: 14px;
@@ -633,15 +602,31 @@ background-color: #4C4F53;
 	display: inline-block;
 }
 
-.panel-heading  .close-button:hover {
-
+.panel-heading .close-button {
+	min-width: 30px;
+	height: 28px;
+	position: relative;
+	font-family: Arial, Helvetica, sans-serif;
+	border-left: 1px solid rgba(0,0,0,.09);
+	float: right;
+	display: block;
+	color: #FFF;
+}
+.panel-heading .close-button:hover {
 	color: #C0C0C0;
 }
 
+.panel-title {
+	width: 100%;
+	height: 30px;
+	line-height: 30px;
+}
+
 .panel-body {
-	min-height: 172px;
+	min-height: 310px;
 	/*border-bottom: 1px solid #ccc;*/
 	padding: 10px;
+	width: 100%;
 	height: 100%;
 	/*background: #fafafa;*/
 }
@@ -666,6 +651,40 @@ background-color: #4C4F53;
 	width: 30%;
 	display: table-cell;
 }
+
+/* the red one */
+.invalidateB {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size : 15px;
+    border-radius: 10px;
+	color: #fff;
+	background-color: #d9534f;
+	border-color: #d43f3a;
+}
+
+/* the blue one */
+.validateB {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size : 15px;
+    border-radius: 10px;
+    color: #fff;
+	background-color: #428bca;
+	border-color: #357ebd;
+}
+
+.unvalidatedUI{
+	border-radius: 5px;
+	border-color : #d43f3a;
+	background-color: #d9534f;	
+}
+
+.validatedUI{
+	border-radius: 5px;
+	background-color : #5bb75b
+}
+
 
 .masonry-brick {
 
@@ -876,7 +895,7 @@ select {
 /*Data Boxes*/
 
 .databox {
-
+	width: 310px;
 	height: 300px;
 	margin-left: 1px;
 	margin-right: 2px;
@@ -920,38 +939,57 @@ select {
 
 .topAnalysisControl {
 	width: 100%; 
-	position: fixed;
-	height: 5%;
+	height: 45px;
 	z-index: 20000;
 	background-color: #4C4F53;
 }
-.topAnalysisControl .queryRunStatus{
+.topAnalysisControl .queryRunStatus {
 	width:20%;
-	height: 100%;
+	height: 40px;
 	float:left;
 	padding-top: 5px;
 	padding-left: 5px
 }
 
-.topAnalysisControl .buttonBarContainer{
-	width:80%;
+.topAnalysisControl .buttonBarContainer {
+	width: 450px;
 	height: 100%;
-	float:left;
+	float: right;
 }
 
 /* buttons*/
 
 .wa_buttonBar {
-	
 	float : left;
 	type : button;
 	font-size: 20px;
 	padding: 2px 5px;
-	width : 5%;
+	width : 35px;
 	height: 30px;
-	margin-top: 10px;
-	margin-right : 5px"
+	margin-top: 8px;
 }
+
+.queryDoneInit {
+	float:left;
+	width : 1240px;
+	height : 20px;
+	background: none;
+}
+
+.queryUndone {
+	float:left;
+	width : 240px;
+	height : 20px;
+	background : #d9534f;
+}
+
+.queryDone {
+	float: left;
+	width : 240px;
+	height : 20px;
+	background : #5bb75b;
+}
+
 #states {
   fill: #335555;
 }

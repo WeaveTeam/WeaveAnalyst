@@ -26,73 +26,70 @@
 							</button>
 							
 			</div>
-						
 		</div>
 		
-		<div style="color:white; vertical-align: center; width:350px; float:left; height:100%;">
+		<div style="color:white; width:auto; float:left; height:100%; line-height:45px; padding: 0 10px;">
 			Data Table: {{ queryService.queryObject.dataTable }}
 		</div>
 		
-		<div class= "buttonBarContainer" style="float:right;width:50%">
-			<div class = "btn-group" role = "group" style = "margin-left: 45%; width: 100%; height: 100%"  
-			 ng-controller= "buttonBarController">
-							
-							<button class='btn btn-default wa_buttonBar' title = "Download Query Object"><span class = "fa fa-download" ng-click = "exportQuery()"></span></button>
-							
-							<label class='btn btn-default wa_buttonBar' title = "Upload Query Object"><span class = "fa fa-upload" ></span><input fileread="queryObjectUploaded.file" class='file-upload' type='file'/></label>
-							
-							<!-- SHOW?HIDE QUERY OBJECT EDITOR button -->
-							<button class="btn btn-default wa_buttonBar" title = "Show/Hide Query Object Editor"
-															ng-click = "queryService.queryObject.properties.hideQueryObjectPanel = !queryService.queryObject.properties.hideQueryObjectPanel"
-															ng-init="queryService.queryObject.properties.hideQueryObjectPanel = true">
-									 <span class = "fa fa-pencil-square-o"></span>
-							</button>
-							
-							<!-- CLEAR button --> 
-<!-- 							<button class="btn btn-default wa_buttonBar" title = "Clear Query Object" ng-click = "cleanQueryObject()"> <span class = "fa fa-refresh"></span></button> -->
-							
-							<!-- SAVE output visuals button -->	 
-							<button  class="btn btn-default wa_buttonBar"  title = "Save visualizations" ng-click="saveVisualizations()"> 
-							<span  class = "fa fa-floppy-o"></span> 
-							</button>
-					
-							<!-- Update button -->		
-							<button  class="btn btn-primary wa_buttonBar" title = "Update query"
-								ng-click="QueryHandlerService.run(queryService.queryObject, true)" 
-								popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
-								ng-Disabled = "!queryService.queryObject.properties.isQueryValid">
-								 <span class = "fa fa fa-refresh fa-lg"></span>
-							 </button>
-							 
-							<!-- Run button -->		
-							<button  class="btn btn-primary wa_buttonBar" title = "Run query"
-								ng-click="QueryHandlerService.run(queryService.queryObject)" 
-								popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
-								ng-Disabled = "!queryService.queryObject.properties.isQueryValid">
-								 <span class = "fa fa-play-circle fa-lg"></span>
-							 </button>
+		<div class= "buttonBarContainer">
+			<div class = "btn-group" role="group" style="width: 100%; height: 100%" ng-controller= "buttonBarController">
+						
+				<button class='btn btn-default wa_buttonBar' title = "Download Query Object">
+					<span class = "fa fa-download" ng-click = "exportQuery()"></span>
+				</button>
+				
+				<label class='btn btn-default wa_buttonBar' title = "Upload Query Object">
+					<span class = "fa fa-upload" ></span>
+					<input fileread="queryObjectUploaded.file" class='file-upload' type='file'/>
+				</label>
+				
+				<!-- SHOW?HIDE QUERY OBJECT EDITOR button -->
+				
+				<button class="btn btn-default wa_buttonBar" title="Show/Hide Query Object Editor" 
+						ng-click = "queryService.queryObject.properties.hideQueryObjectPanel = !queryService.queryObject.properties.hideQueryObjectPanel"
+						ng-init="queryService.queryObject.properties.hideQueryObjectPanel = true">
+					<span class = "fa fa-pencil-square-o"></span>
+				</button>
+				
+				<!-- CLEAR button -->
+				 
+				<!-- <button class="btn btn-default wa_buttonBar" title = "Clear Query Object" ng-click = "cleanQueryObject()"> <span class = "fa fa-refresh"></span></button> -->
+			
+				<!-- SAVE output visuals button -->	 
 
-							<br>
-							<div style = "float:left; margin-left : 8px; width: 50%"  
-								 ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone,
-								 			'queryDoneInit' : queryService.queryObject.properties.queryDone === undefined}" >
-								<i ng-if = "queryService.queryObject.properties.queryDone" 
-											class="fa fa-check-circle fa-lg"  
-								   title= "A green signal indiactes the query has been executed successfully"></i>
-								<i ng-if = "!queryService.queryObject.properties.queryDone && queryService.queryObject.properties.queryDone !== undefined" 
-											class="fa fa-exclamation-triangle fa-lg"></i>
-							<font size = "2" color= "white">{{queryService.queryObject.properties.queryStatus}}</font>
-							</div>
+				<button class="btn btn-default wa_buttonBar" title="Save visualizations" ng-click="saveVisualizations()"> 
+					<span  class = "fa fa-floppy-o"></span> 
+				</button>
+			
+				<!-- Update button -->		
+				<button  class="btn btn-primary wa_buttonBar" title = "Update query"
+					ng-click="QueryHandlerService.run(queryService.queryObject, true)" 
+					popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
+					ng-Disabled = "!queryService.queryObject.properties.isQueryValid">
+					 <span class = "fa fa fa-refresh fa-lg"></span>
+				 </button>
+				<!-- RUN button -->		
+				<button  class="btn btn-primary wa_buttonBar" title = "Run query"
+					ng-click="QueryHandlerService.run(queryService.queryObject)" 
+					popover="{{queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
+					ng-Disabled = "!queryService.queryObject.properties.isQueryValid">
+					 <span class = "fa fa-play-circle fa-lg"></span>
+				</button>
+			
+			 
+				<br>
+				<div style = "float:left; margin-left : 8px; width: 50%" ng-class="{'queryDone' : queryService.queryObject.properties.queryDone === true, 'queryUndone' : queryService.queryObject.properties.queryDone === false, 'queryDoneInit' : queryService.queryObject.properties.queryDone === undefined}" >
+					<i ng-if = "queryService.queryObject.properties.queryDone" class="fa fa-check-circle fa-lg" title= "A green signal indiactes the query has been executed successfully"></i>
+					<i ng-if = "!queryService.queryObject.properties.queryDone && queryService.queryObject.properties.queryDone !== undefined" class="fa fa-exclamation-triangle fa-lg"></i>
+					<font size = "2" color= "white">{{queryService.queryObject.properties.queryStatus}}</font>
 				</div>
 			</div>
+		</div>
 			
 		<!-- > -->	
 	</div>
 <!-- BUTTON CONTAINER END -->
-		
-		
-		<div style = "padding : 30px"></div>
-		
 		
 	<div style="height: 100%" class="container-fluid" style="padding: 5px;">
 		<div style="width:100%;">
@@ -294,67 +291,67 @@
 		
 <!-- VIZ TOOL WIDGETS -->	
 		<div ng-controller= "toolsCtrl">
-				<div class="row " style="height: 50%; clear:both" ng-if="!queryService.queryObject.properties.openInNewWindow">
-					<div class="databox" style="width: 25%;" ng-if="!showToolMenu">
-						
-					</div>
-					<div class="databox" style="width: 25%;" ng-if="showToolMenu">
+			<div class="row " style="height: 50%; clear:both" ng-if="!queryService.queryObject.properties.openInNewWindow">
+				<div class="databox" ng-if="!showToolMenu">
+					
+				</div>
+				<div class="databox" ng-if="showToolMenu">
+					<div>
 						<div>
-							<div>
-								<ui-select ng-model="selectedToolToAdd.value" theme="select2" style="width: 59%;">
-									<ui-select-match allow-clear="true" placeholder="Add Tool...">{{$select.selected}}</ui-select-match>
-									<ui-select-choices repeat="tool in tool_options | filter :  $select.search">
-							       		 <div ng-bind-html="tool | highlight: $select.search"></div>
-							        </ui-select-choices>
-								</ui-select>
-								<div style = "height: 40px" class = "btn-group" role = "group">
-									<button  class="btn btn-default" ng-click="addTool(selectedToolToAdd.value);"><i class="fa fa-plus-circle fa-lg" ></i> </button>
-									<!-- CLEAR button --> 
-<!-- 									<button class="btn btn-default" title = "Clear visualizations"> <span class = "fa fa-trash-o fa-lg" ng-click = "clearSessionState()"></span></button> -->
-									<button  class="btn btn-default" ng-click="WeaveService.tileWindows()">Tile</button>
-								</div>
+							<ui-select ng-model="selectedToolToAdd.value" theme="select2" style="width: 59%;">
+								<ui-select-match allow-clear="true" placeholder="Add Tool...">{{$select.selected}}</ui-select-match>
+								<ui-select-choices repeat="tool in tool_options | filter :  $select.search">
+						       		 <div ng-bind-html="tool | highlight: $select.search"></div>
+						        </ui-select-choices>
+							</ui-select>
+							<div style = "height: 40px" class = "btn-group" role = "group">
+								<button  class="btn btn-default" ng-click="addTool(selectedToolToAdd.value);"><i class="fa fa-plus-circle fa-lg" ></i> </button>
+								<!-- CLEAR button --> 
+<!-- 							<button class="btn btn-default" title = "Clear visualizations"> <span class = "fa fa-trash-o fa-lg" ng-click = "clearSessionState()"></span></button> -->
+								<button  class="btn btn-default" ng-click="WeaveService.tileWindows()">Tile</button>
 							</div>
-							
-							
-							<accordion close-others="true" class="tool-list"> 
-							
-								<accordion-group ng-repeat="(toolId, tool) in queryService.queryObject.visualizations" style="font-family: 'Open Sans', Arial, sans-serif; font-size: 14px;">
-									<accordion-heading>
-											{{tool.title || toolId}}
-											<!--hack to disable the close button on the first tools -->
- 											<a ng-show="fixed_ids.indexOf(toolId) < 0" href="javascript: void(0)"  
-												class="close-button" data-trigger="hover" placement="right" title="Remove"  
-												ng-click="removeTool(toolId)"> 
-												<i style="margin:8px 0px 2px 10px; font-size: 10px" class="glyphicon glyphicon-remove"></i> 
-											</a>
-									</accordion-heading>
-									<div ng-include="tool.template_url"></div>
-								</accordion-group>
-							</accordion>
 						</div>
-					</div>
-					<div id="flashContent" style="width: 70%; height: 800px; float:left;"></div>
-				</div>
-				
-				<!-- individual tool widgets when Weave is opened in a new window -->
-				<div class="row " style="height: 50%; clear:both" ng-show="queryService.queryObject.properties.openInNewWindow">
-					<div style="height:100%; width: 100%;">
-							<div style="width: 20%; float : left; margin-right : 20px" ng-repeat="tool in queryService.queryObject.visualizations" class="panel panel-default">
-									<div class="panel-heading">
-										<h2>{{tool.title}}</h2>
-											<a ng-show="$index > 5" href="javascript: void(0)"  
-												class="close-button" data-trigger="hover" placement="right" title="Remove"  
-												ng-click="removeTool($index)"> 
-												<i style="margin:8px 0px 2px 10px; font-size: 10px" class="glyphicon glyphicon-remove"></i> 
-											</a>			
-									</div>
-									<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i> {{widget_brick.description}}</h5>
-									<h6 style = "font-size: 13px" class="widget-description" ng-show = "tool.note"> {{widget_brick.note}} </h6>
-									<div class="" ng-include="tool.template_url"></div>
-							</div>
+						
+						
+						<accordion close-others="true" class="tool-list"> 
+						
+							<accordion-group ng-repeat="(toolId, tool) in queryService.queryObject.visualizations" style="font-family: 'Open Sans', Arial, sans-serif; font-size: 14px;">
+								<accordion-heading>
+										{{tool.title || toolId}}
+										<!--hack to disable the close button on the first tools -->
+											<a ng-show="fixed_ids.indexOf(toolId) < 0" href="javascript: void(0)"  
+											class="close-button" data-trigger="hover" placement="right" title="Remove"  
+											ng-click="removeTool(toolId)"> 
+											<i style="margin:8px 0px 2px 10px; font-size: 10px" class="glyphicon glyphicon-remove"></i> 
+										</a>
+								</accordion-heading>
+								<div ng-include="tool.template_url"></div>
+							</accordion-group>
+						</accordion>
 					</div>
 				</div>
-</div>
+				<div id="flashContent"></div>
+			</div>
+			
+			<!-- individual tool widgets when Weave is opened in a new window -->
+			<div class="row " style="height: 50%; clear:both" ng-show="queryService.queryObject.properties.openInNewWindow">
+				<div style="height:100%; width: 100%;">
+					<div ng-repeat="tool in queryService.queryObject.visualizations" class="panel panel-default">
+						<div class="panel-heading textCenter">
+							<h2>{{tool.title}}</h2>
+							<a ng-show="$index > 5" href="javascript: void(0)"  
+								class="close-button" data-trigger="hover" placement="right" title="Remove"  
+								ng-click="removeTool($index)"> 
+								<i style="margin:8px 0px 2px 10px; font-size: 10px" class="glyphicon glyphicon-remove"></i> 
+							</a>			
+						</div>
+						<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i> {{widget_brick.description}}</h5>
+						<h6 style = "font-size: 13px" class="widget-description" ng-show = "tool.note"> {{widget_brick.note}} </h6>
+						<div class="" ng-include="tool.template_url"></div>
+					</div>
+				</div>
+			</div>
+		</div>
 
 <!-- QUERY OBJECT PANEL -->						
 	<div id="queryObjectPanel" class="databox" style="width: 50%; height: 400px; position: relative; top: -1059px; left: 496px; z-index:1" 
