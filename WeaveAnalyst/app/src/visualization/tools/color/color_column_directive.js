@@ -8,14 +8,14 @@ AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function facto
 			templateUrl: 'src/visualization/tools/color/color_Column_new.html',
 			controller : function($scope, WeaveService){
 
-				$scope.color = {column : "", group : ""};
+				$scope.tool.color = {column : "", group : ""};
 				$scope.colorGroup = {};
 				
 				$scope.setColorGroup = function(){
 					
-					if($scope.color.group && $scope.color.column){
+					if($scope.tool.color.group && $scope.tool.color.column){
 						
-						WeaveService.setColorGroup($scope.tool.title, $scope.color.group, $scope.color.column);
+						WeaveService.setColorGroup($scope.tool.title, $scope.tool.color.group, $scope.tool.color.column);
 					}
 				};
 				
