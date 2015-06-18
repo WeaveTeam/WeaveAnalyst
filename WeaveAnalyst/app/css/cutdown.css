@@ -547,7 +547,7 @@
 	margin: 10px;
 	width: 25%;
 	height: 20%;
-	min-width: 290px;
+	min-width: 310px;
 }
 
 .panel-heading {
@@ -568,18 +568,7 @@ accordion .panel-heading {
 .panel-heading.textLeft {
 	text-align: left !important;
 }
-.queryDoneInit {
-	width : 100px;
-	height : 20px;
-	float:left;
-	background: none;
-}
 
-.queryDone{
-	width : 100px;
-	height : 20px;
-	background : #5bb75b;
-}
 /* the blue one */
 .validateB {
     padding-top: 5px;
@@ -631,7 +620,7 @@ accordion .panel-heading {
 }
 
 .panel-body {
-	min-height: 260px;
+	min-height: 310px;
 	/*border-bottom: 1px solid #ccc;*/
 	padding: 10px;
 	width: 100%;
@@ -903,7 +892,7 @@ select {
 /*Data Boxes*/
 
 .databox {
-
+	width: 310px;
 	height: 300px;
 	margin-left: 1px;
 	margin-right: 2px;
@@ -977,10 +966,17 @@ select {
 	margin-top: 8px;
 }
 
-.queryUndone {
-	width : 100px;
-	height : 20px;
+.queryDoneInit {
 	float:left;
+	width : 1240px;
+	height : 20px;
+	background: none;
+}
+
+.queryUndone {
+	float:left;
+	width : 240px;
+	height : 20px;
 	background : #d9534f;
 }
 
