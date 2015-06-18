@@ -587,6 +587,13 @@ background-color: #4C4F53;
 	background : #d9534f;
 }
 
+.queryDoneInit {
+	width : 100px;
+	height : 20px;
+	float:left;
+	background: none;
+}
+
 .queryDone{
 	width : 100px;
 	height : 20px;
