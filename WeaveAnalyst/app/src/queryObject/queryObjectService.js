@@ -202,6 +202,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 			scriptOptions : {},
 			scriptSelected : "",
 			properties : {
+				queryDone : undefined,
 				linkIndicator : false,
 				validationStatus : "Run Query",
 				isQueryValid : true
