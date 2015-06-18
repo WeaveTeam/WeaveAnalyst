@@ -29,10 +29,6 @@ AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function facto
 				
 				$scope.getColorGroups();
 				
-//				$scope.setColorColumn = function(){
-//					console.log("colorColumn", $scope.color.colorColumn);
-//					WeaveService.ColorColumn($scope.color.colorColumn, $scope.tool);
-//				};
 			},
 			link: function(scope, elem, attrs){
 				
