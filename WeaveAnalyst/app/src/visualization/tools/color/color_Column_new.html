@@ -1,27 +1,35 @@
 <div>
 <table>
 	<tr>
+
 		<td>
-			<input type="checkbox" ng-model = "diffColor" ng-init= "diffColor = false" /> Use different  color column
-		</td>
-		
-		
-		
+		Color Group
+		</td>	
 		<td>
-			<ui-select ng-if = "diffColor" droppable ng-model="color.colorColumn" theme="select2" style="width: 100%;" ng-change = "setColorColumn()">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
-							<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
-					       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
-					        </ui-select-choices>
+			<ui-select ng-model="tool.color.group" theme="select2" tagging style="width: 160px;" ng-change = "setColorGroup()" ng-click="getColorGroups()">
+									    		<ui-select-match placeholder="Select column...">{{$select.selected}}</ui-select-match>
+												<ui-select-choices repeat="choice in colorGroups | filter : $select.search">
+													{{choice}}
+									        	</ui-select-choices>
 			</ui-select>
 			
-<!-- 			<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;"> -->
-<!-- 									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match> -->
-<!-- 												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType})"> -->
-<!-- 									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div> -->
-<!-- 									        	</ui-select-choices> -->
-<!-- 											</ui-select> -->
-		</td>
+		</td>	
+		
+		</tr>		
+		
+		<tr>
+			<td>
+			Color 
+			</td>	
+			<td>
+				<ui-select  droppable ng-model="tool.color.column" theme="select2" style="width: 100%;" ng-change = "setColorGroup()">
+					    	<ui-select-match  placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+								<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+						       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+						        </ui-select-choices>
+				</ui-select>
+				
+			</td>
 	</tr>
 </table>
 </div>

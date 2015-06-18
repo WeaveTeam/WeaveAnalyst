@@ -25,18 +25,17 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 		},
 		controller : function($scope, $element, $rootScope, $filter) {
 			
-			var pathToFilters = ["scriptKeyFilter", "filters"];
-			
 			var filterName = $scope.$parent.filterName;
 			$scope.ngModel.sliderOptions = { range:true };
 			
 			$scope.$watch('ngModel.column', function(column) {
-				var weave = WeaveService.weave;
 				if(column)
 				{
-					if(weave && WeaveService.checkWeaveReady()) {
-						weave.path(pathToFilters).push(filterName, "column").setColumn(column.metadata, column.dataSourceName);
-						weave.path(pathToFilters).push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))").addCallback(function() {
+					var pathToFilters = WeaveService.getPathToFilters();
+					
+					if(pathToFilters) {
+						pathToFilters.push(filterName).request("NumberDataFilter").push("column").setColumn(column.metadata, column.dataSourceName);
+						pathToFilters.push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))").addCallback(function() {
 							var min = this.getValue("EquationColumnLib.getMin(column);");
 							var max = this.getValue("EquationColumnLib.getMax(column);");
 							if(min && max)
@@ -51,12 +50,14 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 
 			$scope.$watchCollection('ngModel.range', function() {
 				if($scope.ngModel.range && $scope.ngModel.length == 2) {
-					weave.path(pathToFilters).push(filterName, "min").state($scope.ngModel.range[0]);
-					weave.path(pathToFilters).push(filterName, "max").state($scope.ngModel.range[1]);
+					var pathToFilters = WeaveService.getPathToFilters();
+					
+					if(pathToFilters) {
+						pathToFilters.push(filterName).request("NumberDataFilter").push("min").state($scope.ngModel.range[0]);
+						pathToFilters.push(filterName).request("NumberDataFilter").push("max").state($scope.ngModel.range[1]);
+					}
 				}
 			});
-			
-			
 		}
 	};
 });

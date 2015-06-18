@@ -8,12 +8,32 @@ AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function facto
 			templateUrl: 'src/visualization/tools/color/color_Column_new.html',
 			controller : function($scope, WeaveService){
 
-				$scope.color = {colorColumn : ""};
+				$scope.tool.color = {column : "", group : ""};
+				$scope.colorGroup = {};
 				
-				$scope.setColorColumn = function(){
-					console.log("colorColumn", $scope.color.colorColumn);
-					WeaveService.ColorColumn($scope.color.colorColumn, $scope.tool);
+				$scope.setColorGroup = function(){
+					
+					if($scope.tool.color.group && $scope.tool.color.column){
+						
+						WeaveService.setColorGroup($scope.tool.title, $scope.tool.color.group, $scope.tool.color.column);
+					}
 				};
+				
+				$scope.getColorGroups = function(){
+					if(WeaveService.checkWeaveReady()){
+						$scope.colorGroups = WeaveService.getColorGroups();
+					}
+					else{
+						setTimeout($scope.getColorGroups, 50, window);
+					}
+				};
+				
+				$scope.getColorGroups();
+				
+//				$scope.setColorColumn = function(){
+//					console.log("colorColumn", $scope.color.colorColumn);
+//					WeaveService.ColorColumn($scope.color.colorColumn, $scope.tool);
+//				};
 			},
 			link: function(scope, elem, attrs){
 				

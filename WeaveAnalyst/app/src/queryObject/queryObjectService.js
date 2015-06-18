@@ -202,6 +202,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 			scriptOptions : {},
 			scriptSelected : "",
 			properties : {
+				queryDone : undefined,
 				linkIndicator : false,
 				validationStatus : "Run Query",
 				isQueryValid : false
@@ -244,6 +245,10 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 				DataFilterTool : {
 					title : "", 
 					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
+				},
+				SummaryAnnotation : {
+					title : "SummaryAnnotation",
+					template_url : 'src/visualization/tools/summaryAnnotation/summary_annotation.tpl.html'
 				}
 			},
 			resultSet : [],
