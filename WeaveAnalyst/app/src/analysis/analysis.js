@@ -36,8 +36,20 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	}, function () {
 		if(WeaveService.weave) {
 			$scope.showToolMenu = true;
+			loadWeaveSessionState();
 		}
 	});
+	
+	function loadWeaveSessionState (){
+		if(WeaveService.checkWeaveReady()){
+			
+			if(queryService.queryObject.weaveSessionState) {
+				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
+			}
+		}else{
+			setTimeout(loadWeaveSessionState, 500, window);
+		}
+	};
 
 	$("#queryObjectPanel" ).draggable().resizable({
        handles: 'n, e, s, w'
