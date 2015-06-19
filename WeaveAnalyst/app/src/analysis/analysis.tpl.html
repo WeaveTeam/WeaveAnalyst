@@ -4,11 +4,13 @@
 	<div class = "topAnalysisControl">
 		<div class= "queryRunStatus">
 			<div style = "display :table" ng-model = "service.isValidated">
-		</div> 
+
+			</div> 
 							   
 			<div ng-class="{'unvalidatedUI' : !queryService.queryObject.dataTable, 'validatedUI' : queryService.queryObject.dataTable}"
 							 title = "Red flags indicate required selections for query validation">
 
+							
 							<button style="width : 100%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy()" class="btn btn-primary new-project-button">
 									<span style="color:white">Show Data Sources</span>
 							</button>
@@ -85,6 +87,9 @@
 			
 <!--SPINNER  -->			
 			<span us-spinner spinner-key="roundtrip-spinner"></span>
+				
+				
+				
 				
 <!--Calculations -->
 				<div class="databox" style="width: 50%">
@@ -207,7 +212,14 @@
 					  	</div>
 					
 					</div>	
-
+						
+						
+					</div><!-- end of scripts control -->
+				</div> <!-- end of calculations control -->
+				
+				
+				
+	
 <!-- FILTERS -->	
 				
 				<div ng-controller="dataFilterCtrl">
@@ -318,7 +330,7 @@
 				</div>
 			</div>
 	</div>
-<!-- COLUMN SELECTOR HIERARCHY PANEL -->		
+<!-- COLUMN SELECTOP HEIRARCHY PANEL -->
 <div id="hierarchyPanel" class="databox" style="width: 50%; height: 400px; position: absolute; top: 200px; left: 300px; z-index:1" 
 	ng-show="queryService.queryObject.properties.showHierarchy">
 	<div class=" header panel-heading" style="margin-bottom: 0px">
