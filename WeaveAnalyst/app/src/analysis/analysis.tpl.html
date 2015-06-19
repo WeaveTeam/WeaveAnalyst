@@ -221,7 +221,7 @@
 				
 	
 <!-- FILTERS -->	
-				
+			<div ng-if="showToolMenu">
 				<div ng-controller="dataFilterCtrl">
 					<div ng-include src="'src/analysis/data_filters/data_filters.html'"></div>
 					<!--Geography filter -->
@@ -233,6 +233,7 @@
 					<!-- two columns filter -->
 					<number-data-filter ng-repeat="(filterName, filter) in queryService.queryObject.rangeFilters" columns="queryService.cache.columns" ng-model="queryService.queryObject.rangeFilters[filterName]"></tree-filter>
 				</div>
+			</div>	
 				
 				
 			</div>

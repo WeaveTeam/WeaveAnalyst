@@ -26,14 +26,14 @@
 	
 	<br><br>
 		<!-- multi select picker -->
- 	<div ng-if="ngModel.selectedFilterStyle == 'checklist'" style="height:70%; overflow-y: scroll">
+ 	<div ng-if="ngModel.selectedFilterStyle == 'checklist' && filterOptions" style="height:70%; overflow-y: scroll">
 		<div ng-repeat="option in filterOptions">
 			<input type="checkbox" ng-model="ngModel.checklistModel[option.value]" style="padding-top: 10%"> {{option.label}} </input>
 		</div>
  	</div>
 
 	<!-- combo box picker -->
-	<div ng-if="ngModel.selectedFilterStyle == 'combobox'" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
+	<div ng-if="ngModel.selectedFilterStyle == 'combobox' && filterOptions" style="display: inline-block; overflow: hidden; width: 100%; height: 100%">
 		<br><br>
 		<ui-select ng-model="ngModel.comboboxModel" multiple theme="select2" style="width: 100%;">
    			<ui-select-match allow-clear="true" placeholder="Select column to filter...">{{$item.label}}</ui-select-match>
