@@ -4,23 +4,11 @@
 	<div class = "topAnalysisControl">
 		<div class= "queryRunStatus">
 			<div style = "display :table" ng-model = "service.isValidated">
-<!-- 							 <div style = "display : table-cell; border-radius:5px;"  -->
-<!-- 							 ng-class="{'queryDone' : queryService.queryObject.properties.queryDone, 'queryUndone' : !queryService.queryObject.properties.queryDone}" -->
-<!-- 							 title= "A green signal indiactes the query has been executed successfully"> -->
-<!-- 							 </div> -->
-<!-- 							 <div style= "display : table-cell; padding-left : 5px"><font color= "white">{{queryService.queryObject.properties.queryStatus}}</font></div> -->
-			</div> 
+		</div> 
 							   
 			<div ng-class="{'unvalidatedUI' : !queryService.queryObject.dataTable, 'validatedUI' : queryService.queryObject.dataTable}"
 							 title = "Red flags indicate required selections for query validation">
-						
-<!-- 							<ui-select ng-model="queryService.queryObject.dataTable" theme="select2" style="width: 97%;"> -->
-<!-- 							    <ui-select-match allow-clear="true" placeholder="Select a data table...">{{$select.selected.title}}</ui-select-match> -->
-<!-- 								<ui-select-choices repeat="dataTable in queryService.cache.dataTableList | filter : { title : $select.search }"> -->
-<!--  							       		 <div ng-bind-html="dataTable.title | highlight: $select.search"></div> -->
-<!--  							        </ui-select-choices> -->
-<!-- 							</ui-select> -->
-							
+
 							<button style="width : 100%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy()" class="btn btn-primary new-project-button">
 									<span style="color:white">Show Data Sources</span>
 							</button>
@@ -97,39 +85,6 @@
 			
 <!--SPINNER  -->			
 			<span us-spinner spinner-key="roundtrip-spinner"></span>
-			<!-- indicator -->
-<!-- 				<div class="databox" style="width: 20%"> -->
-<!-- 					<div id="indicator" class=" header panel-heading"> -->
-<!-- 						<h2>Indicator</h2> -->
-<!-- 					</div> -->
-<!-- 					<div class="body" style="width: 100%"> -->
-						
-<!-- 						<br/> -->
-<!-- 						<input type="checkbox" -->
-<!-- 							ng-model="queryService.queryObject.properties.displayAsQuestions"> -->
-<!-- 						Display As Questions</input> -->
-
-<!-- 						<div style="width: 100%;" title = "Red flags indicate required selections for query validation" -->
-<!-- 											 ng-class="{'unvalidatedUI' : !queryService.queryObject.Indicator, 'validatedUI' : queryService.queryObject.Indicator}"> -->
-				
-<!-- 											<ui-select ng-model="queryService.queryObject.Indicator" theme="select2" style="width: 97%;"> -->
-<!-- 										    	<ui-select-match allow-clear="true" placeholder="Select Indicator...">{{$select.selected.title}}</ui-select-match> -->
-<!-- 												<ui-select-choices repeat="indicator in queryService.cache.columns | filter : { columnType : 'indicator', title : $select.search }"> -->
-<!-- 										       		 <b ng-bind-html="indicator.title | highlight: $select.search"></b> -->
-<!-- 										       		 <small> -->
-<!-- 										       		 	{{indicator.description}} -->
-<!-- 										       		 </small> -->
-<!-- 										        </ui-select-choices> -->
-<!-- 											</ui-select> -->
-<!-- 						</div> -->
-										
-<!-- 						<br> {{IndicDescription}}  -->
- 
-<!-- 					</div> -->
-<!-- 				</div> -->
-				
-				
-				
 				
 <!--Calculations -->
 				<div class="databox" style="width: 50%">
@@ -252,23 +207,7 @@
 					  	</div>
 					
 					</div>	
-<!-- reidentification prevention -->
-<!-- 						Masking Reidentification -->
-<!-- 						<div class="input-group"> -->
-<!-- 						      <span class="input-group-addon"> -->
-<!-- 						        <input type="checkbox" ng-model="service.queryObject.Reidentification.idPrevention" > -->
-<!-- 						      </span> -->
-<!-- 						      <input type="text" style="z-index: 0" form-control"  ng-model = "service.queryObject.Reidentification.threshold"  -->
-<!-- 						      		 ng-Disabled="!service.queryObject.Reidentification.idPrevention"> -->
-<!-- 					    </div> -->
-						
-						
-					</div><!-- end of scripts control -->
-				</div> <!-- end of calculations control -->
-				
-				
-				
-	
+
 <!-- FILTERS -->	
 				
 				<div ng-controller="dataFilterCtrl">
@@ -379,7 +318,7 @@
 				</div>
 			</div>
 	</div>
-	
+<!-- COLUMN SELECTOR HIERARCHY PANEL -->		
 <div id="hierarchyPanel" class="databox" style="width: 50%; height: 400px; position: absolute; top: 200px; left: 300px; z-index:1" 
 	ng-show="queryService.queryObject.properties.showHierarchy">
 	<div class=" header panel-heading" style="margin-bottom: 0px">
