@@ -622,7 +622,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 
 	this.setKeyColumn = function(dataSourceName, keyColumnName, keyType){
 
-		console.log(dataSourceName, keyColumnName, keyType);
 		if (!ws.checkWeaveReady())
 		{
 			ws.setWeaveWindow(window);

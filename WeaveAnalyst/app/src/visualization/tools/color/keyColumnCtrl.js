@@ -16,10 +16,11 @@ AnalysisModule.controller("keyColumnCtrl", function($scope, WeaveService){
 	};
 	
 	$scope.getKeyType = function () {
-		$scope.tool.keyType = $scope.tool.columnMetadata.keyType;
+		$scope.tool.keyType = $scope.tool.columnMetadata ? $scope.tool.columnMetadata.keyType : "";
 	};
 	
 	$scope.setKeyColumn = function() {
+		
 		WeaveService.setKeyColumn($scope.tool.dataSourceName, $scope.tool.columnMetadata.title, $scope.tool.keyType);
 		// refresh the list of columns so that they include the newly set keyType
 		$scope.getListOfColumnMetadata();
