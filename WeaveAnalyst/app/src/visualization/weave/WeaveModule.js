@@ -622,6 +622,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 
 	this.setKeyColumn = function(dataSourceName, keyColumnName, keyType){
 
+		console.log(dataSourceName, keyColumnName, keyType);
 		if (!ws.checkWeaveReady())
 		{
 			ws.setWeaveWindow(window);
@@ -633,17 +634,17 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			var type = ws.weave.path(dataSourceName).getType();
 			if(type == "weave.data.DataSources::CSVDataSource") {
 				if(keyColumnName) {
-					ws.weave.path(dataSourceName, "KeyColName").state(keyColumnName);
+					ws.weave.path(dataSourceName, "keyColName").state(keyColumnName);
 				}
 				if(keyType) {
 					ws.weave.path(dataSourceName, "keyType").state(keyType);
 				}
 			} else if (type == "weave.data.DataSources::WeaveAnalystDataSource") {
 				if(keyColumnName) {
-					ws.weave.path(dataSourceName, "ouputKeyColumn").state(keyColumnName);
+					ws.weave.path(dataSourceName, "outputKeyColumn").state(keyColumnName);
 				}
 				if(keyType) {
-					ws.weave.path(dataSourceName, "keyType").state(keyType);
+					ws.weave.path(dataSourceName, "outputKeyType").state(keyType);
 				}
 			}
 			//capture session state

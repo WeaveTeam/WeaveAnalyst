@@ -9,11 +9,19 @@ AnalysisModule.controller("keyColumnCtrl", function($scope, WeaveService){
 		}
 	}; 
 	
-	$scope.getColumnNames = function () {
+	$scope.getListOfColumnMetadata = function () {
 		if($scope.tool.dataSourceName && WeaveService.checkWeaveReady()) {
-			$scope.columnNames = WeaveService.weave.path($scope.tool.dataSourceName).getValue('getHierarchyRoot().getChildren().map(c => c.getColumnMetadata().title)');
-			console.log($scope.columnNames);
+			$scope.columnsMetadata = WeaveService.weave.path($scope.tool.dataSourceName).getValue('getHierarchyRoot().getChildren().map(c => c.getColumnMetadata())');
 		}
 	};
 	
+	$scope.getKeyType = function () {
+		$scope.tool.keyType = $scope.tool.columnMetadata.keyType;
+	};
+	
+	$scope.setKeyColumn = function() {
+		WeaveService.setKeyColumn($scope.tool.dataSourceName, $scope.tool.columnMetadata.title, $scope.tool.keyType);
+		// refresh the list of columns so that they include the newly set keyType
+		$scope.getListOfColumnMetadata();
+	};
 });
