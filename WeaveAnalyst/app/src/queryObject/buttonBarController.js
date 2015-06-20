@@ -73,7 +73,7 @@ QueryObject.controller("buttonBarController", function($scope, $modal, queryServ
 					idPrevention :false,
 					threshold : 0
 				},
-				scriptOptions : {},
+				scriptOptions :null,
 				scriptSelected : "",
 				properties : {
 					linkIndicator : false,
