@@ -76,6 +76,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	$scope.filterColumn = AnalysisService.filterColumn;
 	
+	//WATCHING WEAVE LOADING
 	$scope.$watch(function() {
 		return WeaveService.weave;
 	}, function () {
@@ -84,7 +85,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			loadWeaveSessionState();
 		}
 	});
-	
+	//sets session state every time tab is changed
 	function loadWeaveSessionState (){
 		if(WeaveService.checkWeaveReady()){
 			
@@ -95,6 +96,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 			setTimeout(loadWeaveSessionState, 500, window);
 		}
 	};
+	//
 
 	$("#queryObjectPanel" ).draggable().resizable({
        handles: 'n, e, s, w'
@@ -178,6 +180,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 
 						if(leaves.length) {
 							queryService.queryObject.dataTable = node.data.weaveNode.getLabel();
+							$scope.validateQuery();
 							// console.log(node.data.weaveNode.findPath(leaves[0].getDataSourceName(), leaves[0].getColumnMetadata()));
 							queryService.cache.columns = leaves.map(function(wNode) {
 								return {
@@ -570,45 +573,63 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	};
 
-	/************** watches for query validation******************/
-	$scope.$watchCollection(function() {
-		return [queryService.queryObject.scriptSelected,
-		        queryService.queryObject.scripOptions,
-		        queryService.cache.scriptMetadata
-		        ];
-	}, function () {
+	/**************  query validation******************/
+	//TODO validation status is a redundant variable, remove it after June 24th because UI color red/green indicates status
+	$scope.validateQuery = function(){
+		var isQueryValid = true;
+		var validationStatus= "Query is valid.";
+		//validate datatable
+		if(!queryService.queryObject.dataTable){
+			validationStatus = "Input data has not been selected";
+			isQueryValid = false;//setting false
+			setQueryObjectParams();
+			return;
+		}
+		
+		//validate script
 		//if script has not been selected
 		if(queryService.queryObject.scriptSelected == null || queryService.queryObject.scriptSelected == "")
 		{
-			queryService.queryObject.properties.validationStatus = "Script has not been selected.";
-			queryService.queryObject.properties.isQueryValid = false;
+			validationStatus = "Script has not been selected.";
+			isQueryValid = false;
+			setQueryObjectParams();//setting false
+			return;
 		}
-		//this leaves checking the scriptOptions
-		else if (queryService.cache.scriptMetadata) 
-		{
+		
+		
+		//validate options
+		if(queryService.queryObject.scriptOptions){//if they exist validate them
+			var g = 0;
+			var counter = Object.keys(queryService.queryObject.scriptOptions).length;
+			for(var f in queryService.queryObject.scriptOptions) {
+				if(!queryService.queryObject.scriptOptions[f]) {
+					validationStatus = "'" + f + "'" + " has not been selected";
+					isQueryValid = false;
+					setQueryObjectParams();//setting false
+					return;
+				}
+				else
+					g++;
+			}
+		}
+		else{
+			validationStatus = "Script - Options has not been set.";
+			isQueryValid = false;
+			setQueryObjectParams();//setting false
+			return;
 			
-			$scope.$watch(function() {
-				return queryService.queryObject.scriptOptions;
-			}, function () {
-				var g = 0;
-				var counter = Object.keys(queryService.queryObject.scriptOptions).length;
-				for(var f in queryService.queryObject.scriptOptions) {
-					if(!queryService.queryObject.scriptOptions[f]) {
-						queryService.queryObject.properties.validationStatus = "'" + f + "'" + " has not been selected";
-						queryService.queryObject.properties.isQueryValid = false;
-	
-						break;
-					}
-					else
-						g++;
-				}
-				if(g == counter) {
-					queryService.queryObject.properties.validationStatus = "Query is valid";
-					queryService.queryObject.properties.isQueryValid = true;
-				}
-			}, true);
 		}
-	}, true);
+		
+		setQueryObjectParams();//to set true status
+		
+		function setQueryObjectParams (){//closure function, do not move
+			
+			queryService.queryObject.properties.validationStatus = validationStatus;
+			queryService.queryObject.properties.isQueryValid = isQueryValid;
+		};
+		
+	};
+	
 	/************** watches for query validation******************/
 	
 });
@@ -685,13 +706,14 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 		if(scriptSelected)
 			$scope.queryService.getScriptMetadata(scriptSelected, true);
 		else
-			$scope.queryService.cache.scriptMetadata = {};
+			$scope.queryService.cache.scriptMetadata = null;
 	});
 	
 	//clears script options when script clear button is hit
 	$scope.clearScriptOptions = function() {
-		queryService.queryObject.scriptOptions = {};
+		queryService.queryObject.scriptOptions = null;
 	};
+	
 	
 	//handles the defaults appearing in the script options selection
 	$scope.$watch(function() {
@@ -699,25 +721,38 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 	}, function(scriptMetadata) {
 		
 			var columns = queryService.cache.columns;
-			
+			var scriptOptions= queryService.queryObject.scriptOptions;
 			if(scriptMetadata && columns) {
+				if(!queryService.queryObject.scriptOptions){
+					queryService.queryObject.scriptOptions = {};
+				}
 				if(scriptMetadata.hasOwnProperty("inputs")) {
-					for(var i in scriptMetadata.inputs) {
+					for(var i in scriptMetadata.inputs) {//
 						var input = scriptMetadata.inputs[i];
 						if(input.type == "column") {
-							for(var j in columns) {
+							for(var j in columns) {//loop thru columns to find match for defaults
 								var column = columns[j];
-								if(input.hasOwnProperty("defaults")) {
-									if(column.metadata.title == input['defaults']) {
-										$scope.queryService.queryObject.scriptOptions[input.param] = column;
+								if(input.hasOwnProperty("defaults")) {//check if input has default property
+									if(column.metadata.title == input['defaults']) {//if match is found
+										$scope.queryService.queryObject.scriptOptions[input.param] = column;//assign column
 										break;
 									}
 								}
+								else{//if no default is specified
+									$scope.queryService.queryObject.scriptOptions[input.param] = null;//empty object without default value filled in
+								}
 							}
-						} else if(input.type == "value" || input.type == "options") {
+						} 
+						else if(input.type == "value" || input.type == "options") {
 							$scope.queryService.queryObject.scriptOptions[input.param] = input['defaults'];
 						}
-					}
+					}//scrip options dynamically created from sciptmetadata
+					
+					//TEMP FIX DOING THIS IS BAD //TODO FIX AFTER JUNE 24th
+					$scope.$watch(function(){
+						return queryService.queryObject.scriptOptions;
+					}, $scope.validateQuery, true);
+					//TEMP FIX END
 				}
 		}
 	}, true);

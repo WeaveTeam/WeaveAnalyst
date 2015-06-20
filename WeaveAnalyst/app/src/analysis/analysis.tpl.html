@@ -11,7 +11,7 @@
 							 title = "Red flags indicate required selections for query validation">
 
 							
-							<button style="width : 100%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy()" class="btn btn-primary new-project-button">
+							<button style="width : 90%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy()" class="btn btn-primary new-project-button">
 									<span style="color:white">Show Data Sources</span>
 							</button>
 							
@@ -111,13 +111,13 @@
 								title = "Red flags indicate required selections for query validation">
 								
 									<ui-select ng-model="queryService.queryObject.scriptSelected" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
-							    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{($select.selected).substr(0, ($select.selected).lastIndexOf('.'))}}</ui-select-match>
+							    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
 										<ui-select-choices repeat="script in queryService.cache.scriptList | filter : $select.search">
 <!-- 							       			 <div ng-bind-html="script | highlight: $select.search"></div> -->
-							       			 {{script.substr(0, script.lastIndexOf('.'))}}
+							       			 {{script}}
 							        	</ui-select-choices>
 									</ui-select>
-								</div>
+							</div>
 							<div style = "float:left; margin-left: 10px" ><i class="fa fa-info-circle fa-lg" 
 							title = "1.This selects a script (computation) to be executed on the data. 2.This must be followed by selection of script input parameters." ></i></div>
 						</div>
@@ -132,13 +132,17 @@
 									</td>
 		
 									<td>
-											<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;"
+									<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !queryService.queryObject.scriptOptions[input.param], 'validatedUI' : queryService.queryObject.scriptOptions[input.param]}"
+										title = "Red flags indicate required selections for query validation">
+											<ui-select ng-if="input.type == 'column'" droppable ng-model="queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width:95%;"
 											ng-click = fetchColumnProvider(queryService.queryObject.scriptOptions[input.param])>
 									    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
 												<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType})">
 									       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 									        	</ui-select-choices>
 											</ui-select>
+									</div>
+								
 											
 											
 											<!-- Remapping -->
@@ -330,7 +334,7 @@
 				</div>
 			</div>
 	</div>
-<!-- COLUMN SELECTOP HEIRARCHY PANEL -->
+<!-- COLUMN SELECTOR HEIRARCHY PANEL -->
 <div id="hierarchyPanel" class="databox" style="width: 50%; height: 400px; position: absolute; top: 200px; left: 300px; z-index:1" 
 	ng-show="queryService.queryObject.properties.showHierarchy">
 	<div class=" header panel-heading" style="margin-bottom: 0px">

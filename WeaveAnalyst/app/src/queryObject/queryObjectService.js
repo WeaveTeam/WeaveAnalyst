@@ -199,12 +199,12 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 				idPrevention :false,
 				threshold : 0
 			},
-			scriptOptions : {},
+			scriptOptions : null,
 			scriptSelected : "",
 			properties : {
 				queryDone : undefined,
 				linkIndicator : false,
-				validationStatus : "Run Query",
+				validationStatus : "",
 				isQueryValid : false
 			},
 			// titles are blank so they can be set to weave defaults
