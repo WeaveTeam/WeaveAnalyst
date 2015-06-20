@@ -216,23 +216,39 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 			}
 			
 			//retrieve the weave tree node THIS STEP SHOULD BE DONE ONLY ONCE
-			 $scope.weaveTree = new weave.WeaveTreeNode();
+			 $rootScope.weaveTree = new weave.WeaveTreeNode();
 		}else{
 			setTimeout(loadWeaveSessionState, 500, window);
 		}
 	};
 	//we use the column to fetch the table (list of columns it belongs to)
 	$scope.fetchColumnProvider = function(input_column){
-		console.log("input", input_column);
-		if(input_column){
-			WeaveService.fetchNodePath(input_column).then(function(result_nodes){
-				queryService.cache.columns = result_nodes.map(function(one_Node) {
-					return {
-						dataSourceName : one_Node.getDataSourceName(),
-						metadata : one_Node.getColumnMetadata()
-					};
-				}); //end of map
+		if(queryService.cache.columns.length == 0){
+			queryService.queryObject.properties.showHierarchy = true;
+			queryService.refreshHierarchy();
+		}
+		
+		if(input_column){//if column exists
+			//if columns datatable is diff from current datatable receive new list
+			WeaveService.fetchNodePath(input_column, false).then(function(parentLabel){//1. retrieve parent of node get its label
+				if(parentLabel != queryService.queryObject.dataTable){//2. check for match 
+					WeaveService.fetchNodePath(input_column, true).then(function(result_nodes){
+						queryService.cache.columns = result_nodes.map(function(one_Node) {
+							return {
+								dataSourceName : one_Node.getDataSourceName(),
+								metadata : one_Node.getColumnMetadata()
+							};
+						}); //end of map
+					});
+				}
+				
+				else{
+					return; //else use query cache columns
+				}
 			});
+		}
+		else{//if no column selected
+			return;
 		}
 		
 	};

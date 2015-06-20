@@ -36,7 +36,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	//TODO move this to app.js
 	//fetches the path of the given node in the weave tree
-	this.fetchNodePath = function(input_node){
+	this.fetchNodePath = function(input_node, childrenFlag){
 		var deferred = $q.defer();
 		
 		//if(ws.cache.previousNodeId == input_node.metadata.weaveEntityId){
@@ -60,13 +60,18 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 							}
 							else{
 								indx = (nodePath.length) - 2;
-								//console.log(nodePath[indx].getChildren());
-								var children = nodePath[indx].getChildren();
-								//ws.cache.columnReference = children;//caching children
-								//ws.cache.previousNodeId = input_node.metadata.weaveEntityId;//caching previously used node id
-								rootScope.$safeApply(function() {
-				    				deferred.resolve(children);
-				    			});
+								if(childrenFlag){//retrieve children if children requested
+									var children = nodePath[indx].getChildren();
+									rootScope.$safeApply(function() {
+					    				deferred.resolve(children);
+					    			});
+								}
+								else{//retrieve label
+									var label = nodePath[indx].getLabel();
+									rootScope.$safeApply(function() {
+					    				deferred.resolve(label);
+					    			});
+								}
 							}
 								
 						}
@@ -81,7 +86,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		//}
 		
 	};
-	
+
 	
 	this.getPathToFilters = function() {
 		if(!ws.checkWeaveReady())
