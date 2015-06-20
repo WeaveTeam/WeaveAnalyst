@@ -207,7 +207,20 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 		}
 			
 	});
-	
+	//sets session state every time tab is changed
+	$scope.loadWeaveSessionState = function(){
+		if(WeaveService.checkWeaveReady()){
+			
+			if(queryService.queryObject.weaveSessionState) {
+				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
+			}
+			
+			//retrieve the weave tree node THIS STEP SHOULD BE DONE ONLY ONCE
+			 $scope.weaveTree = new weave.WeaveTreeNode();
+		}else{
+			setTimeout(loadWeaveSessionState, 500, window);
+		}
+	};
 	//we use the column to fetch the table (list of columns it belongs to)
 	$scope.fetchColumnProvider = function(input_column){
 		console.log("input", input_column);

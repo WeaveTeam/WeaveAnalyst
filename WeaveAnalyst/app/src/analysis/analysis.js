@@ -82,20 +82,10 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	}, function () {
 		if(WeaveService.weave) {
 			$scope.showToolMenu = true;
-			loadWeaveSessionState();
+			$scope.loadWeaveSessionState();
 		}
 	});
-	//sets session state every time tab is changed
-	function loadWeaveSessionState (){
-		if(WeaveService.checkWeaveReady()){
-			
-			if(queryService.queryObject.weaveSessionState) {
-				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
-			}
-		}else{
-			setTimeout(loadWeaveSessionState, 500, window);
-		}
-	};
+	
 	//
 
 	$("#queryObjectPanel" ).draggable().resizable({
@@ -142,8 +132,8 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		
 		if( weave && WeaveService.checkWeaveReady()){
 			
-			var weaveTreeNode = new weave.WeaveTreeNode();
-			
+			//var weaveTreeNode = new weave.WeaveTreeNode();
+			var weaveTreeNode = $scope.weaveTree;
 			weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 			
 			queryService.cache.hierarchy = {

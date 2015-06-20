@@ -33,6 +33,8 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			return null;
 		return ws.weave.path(path || []).getValue('generateUniqueName')(className);
 	};
+	
+	//TODO move this to app.js
 	//fetches the path of the given node in the weave tree
 	this.fetchNodePath = function(input_node){
 		var deferred = $q.defer();
@@ -46,7 +48,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			
 			if(ws.weave && ws.checkWeaveReady()){
 					
-					var w = new ws.weave.WeaveTreeNode();
+					var w = rootScope.weaveTree;
 					var weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 					var indx = 0;
 					
@@ -230,7 +232,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 				//2. set it
 				ws.weave.path(originalTool).request('AttributeMenuTool').state({selectedAttribute : selectedColumn});
 				
-			}''
+			};
 	};
 	
 	this.AttributeMenuTool = function(state, aToolName){
@@ -416,7 +418,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 
 		if(state && state.enabled){//if enabled
 			//create tool
-			ws.weave.path(toolName).request('ScatterPlotTool')
+			ws.weave.path(toolName).request('ScatterPlotTool');
 			//.state({ panelTitle : state.title, enableTitle : true});
 			
 			if(state.X){
