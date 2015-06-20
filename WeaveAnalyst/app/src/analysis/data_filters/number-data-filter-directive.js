@@ -31,20 +31,51 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 			
 			pathToFilters.push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))")
 			  .addCallback(function() {
-				  var min = this.getValue("EquationColumnLib.getMin(column);");
-				  var max = this.getValue("EquationColumnLib.getMax(column);");
+     			  var column = $scope.ngModel.column;
+     			  var min;
+     			  var max;
 
-				   if(this.getValue("linkableObjectIsBusy(this)"))
-					  return;
-				   	
-					if(isFinite(min) && isFinite(max) && $scope.sliderOptions == "") {
-						$scope.sliderOptions = { min:min, max:max };
-						if($scope.ngModel.min == "" && $scope.ngModel.max == "") {
-							$scope.ngModel.min = min;
-							$scope.ngModel.max = max;
+				  if(column) {
+					  
+					 // if there is metadata, just use the metadata 
+					 if(column.metadata &&
+					   column.metadata.aws_metadata && 
+					   angular.fromJson(column.metadata.aws_metadata).varRange) {
+
+						var varRange = angular.fromJson(column.metadata.aws_metadata).varRange;
+						
+						if(Array.isArray(varRange) && varRange.length == 2) {
+							min = varRange[0];
+							max = varRange[1];
+						} else {
+							// parse the array string into an array
+							varRange = tryParseJSON(varRange);
+							console.log(varRange);
+							if(Array.isArray(varRange) && varRange.length == 2) {
+								min = varRange[0];
+								max = varRange[1];
+							}
 						}
-						$rootScope.$safeApply();
-					}
+					 }
+					 
+					 // otherwise compute the range from the column
+					 else {
+						min = this.getValue("EquationColumnLib.getMin(column);");
+						max = this.getValue("EquationColumnLib.getMax(column);");
+						if(this.getValue("linkableObjectIsBusy(this)"))
+							return;
+					 }
+
+					 if(isFinite(min) && isFinite(max) && $scope.sliderOptions == "") {
+						 $scope.sliderOptions = { min:min, max:max };
+						 if($scope.ngModel.min == "" && $scope.ngModel.max == "") {
+							 $scope.ngModel.min = min;
+							 $scope.ngModel.max = max;
+						 }
+					 }
+					 
+				    $scope.$apply();
+				  }
 			});
 			
 			$scope.$watch('ngModel.column', function(column) {

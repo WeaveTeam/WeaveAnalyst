@@ -39,29 +39,30 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 			pathToFilters.push(filterName).request("StringDataFilter").addCallback(function() {
 				var column = $scope.ngModel.column;
 				
-				if(column && 
-				   column.metadata &&
-				   column.metadata.aws_metadata && 
-				   angular.fromJson(column.metadata.aws_metadata).varValues) {
-
-					var aws_metadata = angular.fromJson(column.metadata.aws_metadata);
-
-					if(aws_metadata.varValues) {
-						$scope.filterOptions = aws_metadata.varValues || [];
-						$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
+				if(column) {
+					// if the column has metadata, just use the metadata
+					if(column.metadata &&
+					   column.metadata.aws_metadata && 
+					   angular.fromJson(column.metadata.aws_metadata).varValues) {
+						
+						var varValues = angular.fromJson(column.metadata.aws_metadata).varValues;
+						$scope.filterOptions = varValues || [];
+						
+					} 
+					// otherwise use the column values
+					else {
+						var choices = this.getValue("StringDataFilterEditor.getChoices(column)") || [];
+						if(this.getValue("linkableObjectIsBusy(this)"))
+							return;
+						
+						$scope.filterOptions = choices.map(function(option){
+							return { value : option, label : option };
+						});
 					}
-				} else {
-					var choices = this.getValue("StringDataFilterEditor.getChoices(column)") || [];
-					if(this.getValue("linkableObjectIsBusy(this)"))
-						  return;
 					
-					$scope.filterOptions = choices.map(function(option){
-						return { value : option, label : option };
-					});
 					$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
+					$scope.$apply();
 				}
-					
-				$rootScope.$safeApply();
 			});
 			
 			$scope.$watch('ngModel.selectedFilterStyle', function(selectedFilterStyle) {
