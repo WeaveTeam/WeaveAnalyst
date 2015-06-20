@@ -247,7 +247,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				waDataSourcePath.push("inputKeyFilter").state(WeaveService.getPathToFilters().pop().getPath());
 				waDataSourcePath.push("scriptName").state(queryObject.scriptSelected);
 				waDataSourcePath.exec("getCallbackCollection(this).resumeCallbacks(); hierarchyRefresh.triggerCallbacks();");
-				queryService.refreshHierarchy(WeaveService.weave);
+				queryService.refreshHierarchy();
 			}
     	}
     };
