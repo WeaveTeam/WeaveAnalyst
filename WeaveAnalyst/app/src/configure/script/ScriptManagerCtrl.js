@@ -208,7 +208,7 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		  // every time editScript is turnOff, we should save the changes.
 		  if(!$scope.editDesc) {
 			  $scope.EditDoneDesc = "Edit";
-				if($scope.scriptMetadata.description && $scope.selectedScript) {
+				if($scope.selectedScript) {
 					saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata));
 				}
 	  		} else {
@@ -222,7 +222,7 @@ scriptModule.controller("ScriptManagerCtrl", function($scope, $modal, WeaveServi
 		  // every time editKey is turnOff, we should save the changes.
 		  if(!$scope.editKey) {
 			  $scope.EditDoneKey = "Edit";
-				if($scope.scriptMetadata.description && $scope.selectedScript) {
+				if($scope.selectedScript) {
 					saveScriptMetadata($scope.selectedScript, angular.toJson($scope.scriptMetadata));
 				}
 	  		} else {
