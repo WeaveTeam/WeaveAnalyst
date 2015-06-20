@@ -207,4 +207,20 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 		}
 			
 	});
+	
+	//we use the column to fetch the table (list of columns it belongs to)
+	$scope.fetchColumnProvider = function(input_column){
+		console.log("input", input_column);
+		if(input_column){
+			WeaveService.fetchNodePath(input_column).then(function(result_nodes){
+				queryService.cache.columns = result_nodes.map(function(one_Node) {
+					return {
+						dataSourceName : one_Node.getDataSourceName(),
+						metadata : one_Node.getColumnMetadata()
+					};
+				}); //end of map
+			});
+		}
+		
+	};
 });
