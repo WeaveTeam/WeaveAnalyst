@@ -33,6 +33,38 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 					return "combobox";
 			};
 			
+			
+			var pathToFilters = WeaveService.getPathToFilters();
+			
+			pathToFilters.push(filterName).request("StringDataFilter").addCallback(function() {
+				var column = $scope.ngModel.column;
+				
+				if(column) {
+					// if the column has metadata, just use the metadata
+					if(column.metadata &&
+					   column.metadata.aws_metadata && 
+					   angular.fromJson(column.metadata.aws_metadata).varValues) {
+						
+						var varValues = angular.fromJson(column.metadata.aws_metadata).varValues;
+						$scope.filterOptions = varValues || [];
+						
+					} 
+					// otherwise use the column values
+					else {
+						var choices = this.getValue("StringDataFilterEditor.getChoices(column)") || [];
+						if(this.getValue("linkableObjectIsBusy(this)"))
+							return;
+						
+						$scope.filterOptions = choices.map(function(option){
+							return { value : option, label : option };
+						});
+					}
+					
+					$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
+					$scope.$apply();
+				}
+			});
+			
 			$scope.$watch('ngModel.selectedFilterStyle', function(selectedFilterStyle) {
 				if(selectedFilterStyle == "checklist")
 				{
@@ -44,29 +76,13 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 			});
 			
 			$scope.$watch('ngModel.column', function(column) {
-				
+				$scope.filterOptions = '';
 				if(column)
 				{
 					var pathToFilters = WeaveService.getPathToFilters();
+					
 					if(pathToFilters) {
 						pathToFilters.push(filterName).request("StringDataFilter").push("column").setColumn(column.metadata, column.dataSourceName);
-						if(column.metadata && column.metadata.aws_metadata && angular.fromJson(column.metadata.aws_metadata).varValues) {
-							var aws_metadata = angular.fromJson(column.metadata.aws_metadata);
-							if(aws_metadata.varValues) {
-								$scope.filterOptions = aws_metadata.varValues || [];
-								$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
-							} 
-						} else {
-							var callback = function() {
-								var options = this.getValue("StringDataFilterEditor.getChoices(column)");
-								$scope.filterOptions = options.map(function(option){
-									return { value : option, label : option };
-								});
-								$scope.$apply();
-							};
-							pathToFilters.push(filterName).request("StringDataFilter").addCallback(callback);
-							
-						}
 					}
 				} else {
 					$scope.ngModel.stringValues = [];

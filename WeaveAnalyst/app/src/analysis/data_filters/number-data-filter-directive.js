@@ -26,47 +26,90 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 		controller : function($scope, $element, $rootScope, $filter) {
 			
 			var filterName = $scope.$parent.filterName;
-			$scope.ngModel.sliderOptions = { range:true, min:0, max:100 };
+			
+			var pathToFilters = WeaveService.getPathToFilters();
+			
+			pathToFilters.push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))")
+			  .addCallback(function() {
+     			  var column = $scope.ngModel.column;
+     			  var min;
+     			  var max;
+
+				  if(column) {
+					  
+					 // if there is metadata, just use the metadata 
+					 if(column.metadata &&
+					   column.metadata.aws_metadata && 
+					   angular.fromJson(column.metadata.aws_metadata).varRange) {
+
+						var varRange = angular.fromJson(column.metadata.aws_metadata).varRange;
+						
+						if(Array.isArray(varRange) && varRange.length == 2) {
+							min = varRange[0];
+							max = varRange[1];
+						} else {
+							// parse the array string into an array
+							varRange = tryParseJSON(varRange);
+							console.log(varRange);
+							if(Array.isArray(varRange) && varRange.length == 2) {
+								min = varRange[0];
+								max = varRange[1];
+							}
+						}
+					 }
+					 
+					 // otherwise compute the range from the column
+					 else {
+						min = this.getValue("EquationColumnLib.getMin(column);");
+						max = this.getValue("EquationColumnLib.getMax(column);");
+						if(this.getValue("linkableObjectIsBusy(this)"))
+							return;
+					 }
+
+					 if(isFinite(min) && isFinite(max) && $scope.sliderOptions == "") {
+						 $scope.sliderOptions = { min:min, max:max };
+						 if($scope.ngModel.min == "" && $scope.ngModel.max == "") {
+							 $scope.ngModel.min = min;
+							 $scope.ngModel.max = max;
+						 }
+					 }
+					 
+				    $scope.$apply();
+				  }
+			});
 			
 			$scope.$watch('ngModel.column', function(column) {
+				$scope.sliderOptions = "";
 				if(column)
 				{
 					var pathToFilters = WeaveService.getPathToFilters();
 					
 					if(pathToFilters) {
 						pathToFilters.push(filterName).request("NumberDataFilter").push("column").setColumn(column.metadata, column.dataSourceName);
-						pathToFilters.push(filterName).exec("registerLinkableChild(this, WeaveAPI.StatisticsCache.getColumnStatistics(column))").addCallback(function() {
-							var min = this.getValue("EquationColumnLib.getMin(column);");
-							var max = this.getValue("EquationColumnLib.getMax(column);");
-							if(min && max) {
-								$scope.sliderOptions = { range:true, min:min, max:max };
-							}
-							$rootScope.$safeApply();
-						});
 					}
-				} else {
-					$scope.ngModel.range = [];	
 				}
-			}, true);
-
-			$scope.$watch('sliderOptions', function(newVal, oldVal) {
-				// reset the slider when the slider options change
-				if(angular.equals(newVal, oldVal))
-					return;
-				
-				$scope.ngModel.range = [Math.floor(1/3*(newVal.max-newVal.min) + newVal.min), Math.floor(2/3*(newVal.max-newVal.min) + newVal.min)];
 			}, true);
 			
-			$scope.$watchCollection('ngModel.range', function() {
-				if($scope.ngModel.range && $scope.ngModel.length == 2) {
-					var pathToFilters = WeaveService.getPathToFilters();
+			// this code gets triggered only if the user change the column
+			// for example it will not get triggered when uploading a queryObject
+			$scope.resetSliderValues = function() {
+				$scope.ngModel.min = "";
+				$scope.ngModel.max = "";
+			};
+
+			$scope.$watch(function() {
+				return [$scope.ngModel.min,$scope.ngModel.max];
+			}, function() {
+
+				if($scope.ngModel.min && $scope.ngModel.max) {
 					
+					var pathToFilters = WeaveService.getPathToFilters();
 					if(pathToFilters) {
-						pathToFilters.push(filterName).request("NumberDataFilter").push("min").state($scope.ngModel.range[0]);
-						pathToFilters.push(filterName).request("NumberDataFilter").push("max").state($scope.ngModel.range[1]);
+						pathToFilters.push(filterName).request("NumberDataFilter").push("min").state($scope.ngModel.min);
+						pathToFilters.push(filterName).request("NumberDataFilter").push("max").state($scope.ngModel.max);
 					}
 				}
-			});
+			}, true);
 		}
 	};
 });

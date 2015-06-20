@@ -7,7 +7,7 @@ var app = angular.module('aws', [//'aws.router', // for app structure (can be cl
                                  'angularSpinner',
                                  'mgcrea.ngStrap',
                                  'ui.select',
-                                 'ui-rangeSlider',
+                                 'ui.slider',
                                  'ui.bootstrap',
                                  'ui.sortable', // Shweta Needs, comes from angular-strap???
                                  //'ngRoute',
