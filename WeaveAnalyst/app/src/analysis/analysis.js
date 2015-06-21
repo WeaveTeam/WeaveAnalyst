@@ -590,9 +590,10 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		//validate options
 		if(queryService.queryObject.scriptOptions){//if they exist validate them
 			var g = 0;
-			var counter = Object.keys(queryService.cache.scriptMetadata).length;
-			for(var f in queryService.queryObject.scriptOptions) {
-				if(!queryService.queryObject.scriptOptions[f]) {
+			var counter = Object.keys(queryService.cache.scriptMetadata.inputs).length;
+			for(var f = 0; f < counter; f++) {
+				var tempObj = queryService.cache.scriptMetadata.inputs[f];
+				if(!queryService.queryObject.scriptOptions[tempObj.param]) {
 					validationStatus = "'" + f + "'" + " has not been selected";
 					isQueryValid = false;
 					setQueryObjectParams();//setting false
@@ -697,13 +698,29 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 			var columns = queryService.cache.columns;
 			var scriptOptions= queryService.queryObject.scriptOptions;
 			if(scriptMetadata && columns) {
-				if(!queryService.queryObject.scriptOptions){
+				if(!queryService.queryObject.scriptOptions){//create scriptoptions object so that properties can be added dynamically later
 					queryService.queryObject.scriptOptions = {};
 				}
 				if(scriptMetadata.hasOwnProperty("inputs")) {
 					for(var i in scriptMetadata.inputs) {//
 						var input = scriptMetadata.inputs[i];
-						
+						if(input.type == "column") {
+							for(var j in columns) {//loop thru columns to find match for defaults
+								var column = columns[j];
+								if(input.hasOwnProperty("defaults")) {//check if input has default property
+									if(column.metadata.title == input['defaults']) {//if match is found
+										$scope.queryService.queryObject.scriptOptions[input.param] = column;//assign column
+										break;
+									}
+								}
+								else{//if no default is specified
+									$scope.queryService.queryObject.scriptOptions[input.param] = null;//empty object without default value filled in
+								}
+							}
+						} 
+						else if(input.type == "value" || input.type == "options") {
+							$scope.queryService.queryObject.scriptOptions[input.param] = input['defaults'];
+						}
 					}
 					
 					//TEMP FIX DOING THIS IS BAD //TODO FIX AFTER JUNE 24th
@@ -721,20 +738,3 @@ AnalysisModule.controller("ScriptsSettingsCtrl", function($scope, queryService, 
 
 
 
-if(input.type == "column") {
-	for(var j in columns) {//loop thru columns to find match for defaults
-		var column = columns[j];
-		if(input.hasOwnProperty("defaults")) {//check if input has default property
-			if(column.metadata.title == input['defaults']) {//if match is found
-				$scope.queryService.queryObject.scriptOptions[input.param] = column;//assign column
-				break;
-			}
-		}
-		else{//if no default is specified
-			$scope.queryService.queryObject.scriptOptions[input.param] = null;//empty object without default value filled in
-		}
-	}
-} 
-else if(input.type == "value" || input.type == "options") {
-	$scope.queryService.queryObject.scriptOptions[input.param] = input['defaults'];
-}

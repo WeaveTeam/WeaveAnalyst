@@ -20,7 +20,7 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 		require : 'ngModel',
 		scope : {
 			columns : '=',
-			ngModel : '=',
+			ngModel : '='
 		},
 		controller : function($scope, $filter) {
 			
