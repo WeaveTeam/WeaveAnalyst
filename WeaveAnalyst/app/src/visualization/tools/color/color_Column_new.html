@@ -21,7 +21,7 @@
 			Color 
 			</td>	
 			<td>
-				<ui-select  droppable ng-model="tool.color.column" theme="select2" style="width: 100%;" ng-change = "setColorGroup()">
+				<ui-select  droppable ng-model="tool.color.column" theme="select2" style="width: 100%;" ng-change = "setColorGroup()" ng-click = fetchColumnProvider()>
 					    	<ui-select-match  placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
 								<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
 						       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>

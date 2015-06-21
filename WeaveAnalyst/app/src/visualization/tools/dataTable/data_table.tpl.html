@@ -16,7 +16,7 @@
 		<input type="button" value="{{addRemoveAllLabel}}" ng-click="addRemoveAll()" style="float:right"></input>
 		<br><br>
 		<div class="portlet-content">
-			<ui-select  ng-model="tool.columns" droppable multiple theme="select2" style="width: 100%;">
+			<ui-select  ng-model="tool.columns" droppable multiple theme="select2" style="width: 100%;" ng-click = fetchColumnProvider()>
 		    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$item.metadata.title}}</ui-select-match>
 						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
 				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
