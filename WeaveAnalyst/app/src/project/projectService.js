@@ -83,7 +83,7 @@ angular.module('aws.project')
                 var column, selection, key;
                 var filterStrings = [];
                 var geoFilterOptions = singleObject.queryObject.GeographyFilter;
-                if (geoFilterOptions)
+                if (geoFilterOptions.geometrySelected)
                 {
                   var filterString = "";
 
