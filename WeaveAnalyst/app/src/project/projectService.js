@@ -52,21 +52,23 @@ angular.module('aws.project')
         			var countOfJsons = AWSQueryObjectCollection.length;
         			for(var i = 0; i < countOfJsons; i++)
         			{
+                var currentQueryObject = AWSQueryObjectCollection[i];
         				var singleObject= {};
-        				singleObject.queryObject = JSON.parse(AWSQueryObjectCollection[i].finalQueryObject);
-        				singleObject.queryObjectName = AWSQueryObjectCollection[i].queryObjectName;
-        				singleObject.projectDescription = AWSQueryObjectCollection[i].projectDescription;
-        				that.cache.projectDescription = AWSQueryObjectCollection[i].projectDescription;
-        				if(angular.isUndefined(AWSQueryObjectCollection[i].thumbnail)){
+        				singleObject.queryObject = JSON.parse(currentQueryObject.finalQueryObject);
+        				singleObject.queryObjectName = currentQueryObject.queryObjectName;
+        				singleObject.projectDescription = currentQueryObject.projectDescription;
+        				that.cache.projectDescription = currentQueryObject.projectDescription;
+        				if(angular.isUndefined(currentQueryObject.thumbnail)){
         					singleObject.thumbnail = undefined;
         					console.log("This queryObject does not contain any stored visualizations");
         				}
         				else{
         					
-        					singleObject.thumbnail = "data:image/png;base64," + AWSQueryObjectCollection[i].thumbnail;
+        					singleObject.thumbnail = "data:image/png;base64," + currentQueryObject.thumbnail;
         				}
         				
         				
+                /* Build column string */
         				that.cache.columnstring = "";
         				var columns = singleObject.queryObject.scriptOptions;
         				console.log("cols: ", columns);
@@ -76,7 +78,46 @@ angular.module('aws.project')
         					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
         				}
         				singleObject.columnstring = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
-        				that.cache.returnedQueryObjects[i] = singleObject;
+        				
+
+                /* Build filter string */
+                var column, selection, key;
+                var filterStrings = [];
+                var geoFilterOptions = singleObject.GeographyFilter;
+                if (geoFilterOptions)
+                {
+                  var filterString = "";
+
+                  if (geoFilterOptions.countyColumn)
+                  {
+                    selection = geoFilterOptions.selectedCounties;
+                    column = geoFilterOptions.countyColumn;
+                  }
+                  else if (geoFilterOptions.stateColumn)
+                  {
+                    selection = geoFilterOptions.selectedStates;
+                    column = geoFilterOptions.stateColumn;
+                  }
+                  
+                  if (column && selection)
+                  {
+                    var selectionStrings = [];
+                    for (key in selection)
+                    {
+                      selectionStrings.push(selection[key].title || key);
+                    }
+                    filterStrings.push(column.metadata.title + ":" + selectionStrings.join(","));
+                  }
+                }
+                if (singleObject.rangeFilters)
+                {
+                  column = singleObject.rangeFilters.filter.column;
+                  selectionStrings = [rangeFilters.min, rangeFilters.max];
+                  filterStrings.push(column.metadata.title + ":" + selectionStrings.join("-"));
+                }
+                singleObject.filterString = filterStrings.join("; ");
+
+                that.cache.returnedQueryObjects[i] = singleObject;
         			}
         			
     			}else{
