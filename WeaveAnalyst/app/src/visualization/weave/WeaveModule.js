@@ -610,13 +610,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
 		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
 	};
-	
-//	{
-//		var dynamicColumnPath = ws.weave.path(tool).pushPlotter().push('dynamicColorColumn');
-//		//ws.weave.path(groupName).request('ColorColumn').setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-//		dynamicColumnPath.vars({name: groupName}).exec("ColumnUtils.unlinkNestedColumns(this); globalName = name");
-//		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-//	};
 
 	this.getColorGroups = function(){
 		return	ws.weave.path().getValue('getNames(ColorColumn)');
