@@ -36,7 +36,8 @@
 }
 
 .erroLog-modal .modal-dialog{
-  width: 1000px;
+	width: 1000px;
+	margin: 200px auto;
 }
 
 #loading-image {
@@ -331,13 +332,13 @@
 }
 
 .tool-bar {
-
 	width: 100%;
 	height: 170px;
+	/*
 	border-top: 1px solid #C0C6CA;
 	border-bottom: 1px solid #C0C6CA;
-	overflow-y: scroll;
-	margin-bottom: 4px;
+	*/
+	overflow: visible;
 }
 
 .tool-bar .tool-list {
@@ -897,10 +898,8 @@ select {
 .databox {
 	width: 310px;
 	height: 300px;
-	margin-left: 1px;
-	margin-right: 2px;
 	float: left;
-	margin-top: 2px;
+	margin: 3px;
 	padding: 3px;
 }
 
@@ -916,9 +915,8 @@ select {
 }
 
 .body {
-
 	width: 100%;
-	height: 100%;
+	height: calc(100% - 30px);
 	padding: 5px 5px;
 	background-color: #ffffff;
 	border-color: rgba(255, 255, 255, 0.2);
@@ -940,6 +938,7 @@ select {
 .topAnalysisControl {
 	width: 100%; 
 	height: 45px;
+	position: fixed;
 	z-index: 20000;
 	background-color: #4C4F53;
 }
