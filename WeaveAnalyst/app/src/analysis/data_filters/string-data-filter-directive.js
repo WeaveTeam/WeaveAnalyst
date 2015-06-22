@@ -46,6 +46,7 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 					   angular.fromJson(column.metadata.aws_metadata).varValues) {
 						
 						var varValues = angular.fromJson(column.metadata.aws_metadata).varValues;
+						console.log(varValues);
 						$scope.filterOptions = varValues || [];
 						
 					} 
@@ -88,6 +89,12 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 					$scope.ngModel.stringValues = [];
 					$scope.ngModel.comboboxModel = [];
 					$scope.ngModel.checklistModel = {};
+					
+					var pathToFilters = WeaveService.getPathToFilters();
+					
+					if(pathToFilters) {
+						pathToFilters.push(filterName).request("StringDataFilter").push("column", null).remove();
+					}
 				}
 			});
 			

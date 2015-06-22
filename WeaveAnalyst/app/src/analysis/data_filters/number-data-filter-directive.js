@@ -74,7 +74,7 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 						 }
 					 }
 					 
-				    $scope.$apply();
+				    $rootScope.$safeApply();
 				  }
 			});
 			
@@ -86,6 +86,12 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 					
 					if(pathToFilters) {
 						pathToFilters.push(filterName).request("NumberDataFilter").push("column").setColumn(column.metadata, column.dataSourceName);
+					}
+				} else {
+					var pathToFilters = WeaveService.getPathToFilters();
+					
+					if(pathToFilters) {
+						pathToFilters.push(filterName).request("NumberDataFilter").push("column", null).remove();
 					}
 				}
 			}, true);
