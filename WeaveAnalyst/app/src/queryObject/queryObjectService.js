@@ -238,10 +238,10 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 //					template_url : 'src/visualization/tools/attributeMenu/attribute_Menu.tpl.html',
 //					enabled: false
 //				},
-				ColorColumn : {
-					title : "",
-					template_url : 'src/visualization/tools/color/color_Column.tpl.html'
-				},
+//				ColorColumn : {
+//					title : "",
+//					template_url : 'src/visualization/tools/color/color_Column.tpl.html'
+//				},
 				KeyColumn : {
 					title : "",
 					template_url : 'src/visualization/tools/color/key_Column.tpl.html'
