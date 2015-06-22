@@ -29,7 +29,7 @@ this.d3_viz = {};
 		this.cache = {
 				stateTopoGeometries : [],
 				countyTopoGeometries : [],
-				selectedStates : [],
+				selectedStates : {},
 				selectedCounties : {},
 				US: []
 		};
@@ -197,8 +197,8 @@ this.d3_viz = {};
 			console.log("d", d);
 			//if it is selected for the first time
 			if(!(d.id in this.cache.selectedStates)){
+				//this.cache.selectedStates[d.id] = { title: d.properties.name };
 				this.cache.selectedStates[d.id] = { title: d.properties.name };
-				//this.cache.selectedStates[d.id] = { localName: d.properties.fips, keyType : "US State FIPS Code"  };
 			}
 			//if already selected; remove it
 			else{
