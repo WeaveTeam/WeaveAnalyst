@@ -81,6 +81,8 @@
 		<!-- > -->	
 	</div>
 <!-- BUTTON CONTAINER END -->
+
+	<div style="position: relative; height:45px;" />
 		
 	<div style="height: 100%" class="container-fluid" style="padding: 5px;">
 		<div style="width:100%;">
@@ -120,12 +122,12 @@
 									</ui-select>
 							</div>
 							<div style = "float:left; margin-left: 10px" ><i class="fa fa-info-circle fa-lg" 
-							title = "1.This selects a script (computation) to be executed on the data. 2.This must be followed by selection of script input parameters." ></i></div>
+							title = "1.This selects a script (computation) to be executed on the data. &#10;2.This must be followed by selection of script input parameters." ></i></div>
 						</div>
 					
 						<br><br>
 						
-<!-- Script options -->	<div style = "width: 100%; height:200px; overflow:visible" class= "tool-bar">
+<!-- Script options -->	<div class="tool-bar">
 							<table style="width:100%">
 								<tr ng-repeat="input in queryService.cache.scriptMetadata.inputs">
 									<td align="right" width=10%>
@@ -191,7 +193,7 @@
 							{{ description }}
 						</div>
 						
-					  	<div  style="overflow-y: scroll; height:200px;margin-top:15px">
+					  	<div  style="overflow: auto; height:170px; margin-top:15px">
 					  			
 					      <table border="border: 1px solid #0000FF"  ng-show="varValues.length">
 								<tr> 
