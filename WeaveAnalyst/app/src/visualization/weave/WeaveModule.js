@@ -552,19 +552,54 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	            //if data-source exists - contents come from WeaveAnalystDataSource
 	            if (ws.weave.path("WeaveAnalystDataSource").getType()) {
 	                var script;
-	                var inputs;
-	                var inputString = "Inputs : ";
-	                script = "Script : " + ws.weave.path("WeaveAnalystDataSource").push('scriptName').getState();
-	                inputs = ws.weave.path("WeaveAnalystDataSource").push("inputs").getNames();
-
-	                for (var i = 0; i < inputs.length; i++) {
-	                    inputString += inputs[i] + " , ";
+	                var inputStrings = [];
+	                var finalInputString;
+	                var filterString;
+	                script = "Script : " + queryService.queryObject.scriptSelected;
+	               
+	                //TODO replace all this concatenation code using function same code used in project service
+	                var options = queryService.queryObject.scriptOptions;
+	                for(input in options){
+	                	inputStrings.push(options[input].metadata.title);
 	                }
 
-	                if (i == inputs.length)
-	                    inputString = inputString.substr(0, inputString.lastIndexOf(','));
+	                finalInputString = "Inputs :" + inputStrings.join(", ");
+	                
+	                var filterStrings = [];
+	                var geoFilterOptions = queryService.queryObject.GeographyFilter;
+	                if (geoFilterOptions.geometrySelected)
+	                {
+	                  var filterString = "";
 
-	                state.content = script + "\n" + inputString;
+	                  if (geoFilterOptions.countyColumn)
+	                  {
+	                    selection = geoFilterOptions.selectedCounties;
+	                    column = geoFilterOptions.countyColumn;
+	                  }
+	                  else if (geoFilterOptions.stateColumn)
+	                  {
+	                    selection = geoFilterOptions.selectedStates;
+	                    column = geoFilterOptions.stateColumn;
+	                  }
+	                  
+	                  if (column && selection)
+	                  {
+	                    var selectionStrings = [];
+	                    for (key in selection)
+	                    {
+	                      selectionStrings.push(selection[key].title || key);
+	                    }
+	                    filterStrings.push(column.metadata.title + ": " + selectionStrings.join(", "));
+	                  }
+	                }
+	                if (queryService.queryObject.rangeFilters.filter)
+	                {
+	                  column = queryService.queryObject.rangeFilters.filter.column;
+	                  selectionStrings = [queryService.queryObject.rangeFilters.filter.min, queryService.queryObject.rangeFilters.filter.max];
+	                  filterStrings.push(column.metadata.title + ":" + selectionStrings.join("-"));
+	                }
+	                filterString = "Filters :" +  filterStrings.join(", ");
+	                state.content = script + "\n" + finalInputString + "\n" + filterString;
 	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
 
 	            } else { //when no data-source: contents come from UI inputs
@@ -610,13 +645,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
 		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
 	};
-	
-//	{
-//		var dynamicColumnPath = ws.weave.path(tool).pushPlotter().push('dynamicColorColumn');
-//		//ws.weave.path(groupName).request('ColorColumn').setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-//		dynamicColumnPath.vars({name: groupName}).exec("ColumnUtils.unlinkNestedColumns(this); globalName = name");
-//		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-//	};
 
 	this.getColorGroups = function(){
 		return	ws.weave.path().getValue('getNames(ColorColumn)');

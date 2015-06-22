@@ -71,11 +71,9 @@ angular.module('aws.project')
                 /* Build column string */
         				that.cache.columnstring = "";
         				var columns = singleObject.queryObject.scriptOptions;
-        				console.log("cols: ", columns);
         				for(var j in columns){
-        					console.log("j:", j);
         					var title = columns[j].metadata.title;
-        					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
+        					that.cache.columnstring= that.cache.columnstring.concat(title) + ", ";
         				}
         				singleObject.columnstring = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
         				
@@ -83,10 +81,10 @@ angular.module('aws.project')
                 /* Build filter string */
                 var column, selection, key;
                 var filterStrings = [];
-                var geoFilterOptions = singleObject.GeographyFilter;
-                if (geoFilterOptions)
+                var geoFilterOptions = singleObject.queryObject.GeographyFilter;
+                if (geoFilterOptions.geometrySelected)
                 {
-                  var filterString = "";
+                  var filterString = null;
 
                   if (geoFilterOptions.countyColumn)
                   {
@@ -106,13 +104,13 @@ angular.module('aws.project')
                     {
                       selectionStrings.push(selection[key].title || key);
                     }
-                    filterStrings.push(column.metadata.title + ":" + selectionStrings.join(","));
+                    filterStrings.push(column.metadata.title + ": " + selectionStrings.join(", "));
                   }
                 }
-                if (singleObject.rangeFilters)
+                if (singleObject.queryObject.rangeFilters.filter)
                 {
-                  column = singleObject.rangeFilters.filter.column;
-                  selectionStrings = [rangeFilters.min, rangeFilters.max];
+                  column = singleObject.queryObject.rangeFilters.filter.column;
+                  selectionStrings = [singleObject.queryObject.rangeFilters.filter.min, singleObject.queryObject.rangeFilters.filter.max];
                   filterStrings.push(column.metadata.title + ":" + selectionStrings.join("-"));
                 }
                 singleObject.filterString = filterStrings.join("; ");

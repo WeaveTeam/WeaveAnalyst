@@ -50,7 +50,6 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 						} else {
 							// parse the array string into an array
 							varRange = tryParseJSON(varRange);
-							console.log(varRange);
 							if(Array.isArray(varRange) && varRange.length == 2) {
 								min = varRange[0];
 								max = varRange[1];
@@ -74,7 +73,7 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 						 }
 					 }
 					 
-				    $rootScope.$safeApply();
+				    $scope.$safeApply();
 				  }
 			});
 			

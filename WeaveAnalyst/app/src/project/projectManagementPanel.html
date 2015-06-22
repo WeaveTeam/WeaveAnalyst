@@ -52,10 +52,10 @@
 												<span class="prj-txt-lbl">Date: </span>
 												<span class="prj-txt-val">{{item.queryObject.date}}</span>
 											</li>
-											<li>
-												<span class="prj-txt-lbl">Datatable: </span>
-												<span class="prj-txt-val">{{item.queryObject.dataTable.title}}</span>
-											</li>
+<!-- 											<li> -->
+<!-- 												<span class="prj-txt-lbl">Datatable: </span> -->
+<!-- 												<span class="prj-txt-val">{{item.queryObject.dataTable.title}}</span> -->
+<!-- 											</li> -->
 											<li>
 												<span class="prj-txt-lbl">Script: </span>
 												<span class="prj-txt-val">{{item.queryObject.scriptSelected}}</span>
@@ -63,6 +63,10 @@
 											<li>
 												<span class="prj-txt-lbl">Columns: </span>
 												<span class="prj-txt-val">{{item.columnstring}}</span>
+											</li>
+											<li>
+												<span class="prj-txt-lbl">Filters :</span>
+												<span class="prj-txt-val">{{item.filterString ? item.filterString:'None'}}</span>
 											</li>
 										</ul>
 									</div>
