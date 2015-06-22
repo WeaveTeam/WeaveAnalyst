@@ -13,24 +13,23 @@
 				<div title= "Select State Geography Column">
 					<ui-select ng-if = "queryService.queryObject.GeographyFilter.geometrySelected == 'State'" 
 							   ng-model="queryService.queryObject.GeographyFilter.stateColumn" theme="select2" style="width: 97%;"
-							   ng-change = "renderLayer()">
-					    		<ui-select-match  placeholder="Select geography">{{$select.selected.title}}</ui-select-match>
-								<ui-select-choices repeat="column in queryService.cache.columns | filter : { title : $select.search, columnType : 'geography' }">
-					       			 <div ng-bind-html="column.title | highlight: $select.search"></div>
+							   ng-click = fetchColumnProvider()>
+					    		<ui-select-match  placeholder="Select geography">{{$select.selected.metadata.title}}</ui-select-match>
+								<ui-select-choices repeat="column in queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : 'geography' })">
+					       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 					        	</ui-select-choices>
 					</ui-select>
-				</div>
-				
-				
+				</div>				
 				
 				<input type="radio" ng-model = "queryService.queryObject.GeographyFilter.geometrySelected" value = "County" >US Counties</input>
 				<br>
 				<div title= "Select County Geography Column">
 					<ui-select ng-if = "queryService.queryObject.GeographyFilter.geometrySelected == 'County'" 
-							   ng-model="queryService.queryObject.GeographyFilter.nestedStateColumn" theme="select2" style="width: 97%;">
-					    		<ui-select-match placeholder="Select geography">{{$select.selected.title}}</ui-select-match>
-								<ui-select-choices repeat="column in queryService.cache.columns | filter : { title : $select.search, columnType : 'geography' }">
-					       			 <div ng-bind-html="column.title | highlight: $select.search"></div>
+							   ng-model="queryService.queryObject.GeographyFilter.nestedStateColumn" theme="select2" style="width: 97%;"
+							   ng-click = fetchColumnProvider()>
+					    		<ui-select-match placeholder="Select geography">{{$select.selected.metadata.title}}</ui-select-match>
+								<ui-select-choices repeat="column in queryService.cache.columns | filterColumn({title : $select.search, columnType : 'geography' })">
+					       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 					        	</ui-select-choices>
 					</ui-select>
 				</div>
@@ -39,10 +38,10 @@
 				<div title= "Select County Geography Column">
 					<ui-select ng-if = "queryService.queryObject.GeographyFilter.geometrySelected == 'County'" 
 							   ng-model="queryService.queryObject.GeographyFilter.countyColumn" theme="select2" style="width: 97%;" 
-							   ng-change = "renderLayer()">
-					    		<ui-select-match placeholder="Select geography">{{$select.selected.title}}</ui-select-match>
-								<ui-select-choices repeat="column in queryService.cache.columns | filter : { title : $select.search, columnType : 'geography' }">
-					       			 <div ng-bind-html="column.title | highlight: $select.search"></div>
+							   ng-click = fetchColumnProvider()>
+					    		<ui-select-match placeholder="Select geography">{{$select.selected.metadata.title}}</ui-select-match>
+								<ui-select-choices repeat="column in queryService.cache.columns | filterColumn({title : $select.search, columnType : 'geography' })">
+					       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
 					        	</ui-select-choices>
 					</ui-select>
 				</div>

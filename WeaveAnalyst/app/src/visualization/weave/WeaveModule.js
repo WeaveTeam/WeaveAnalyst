@@ -91,7 +91,7 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	this.getPathToFilters = function() {
 		if(!ws.checkWeaveReady())
 			return;
-		return ws.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");
+		return ws.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");//references the Linkableashmap 'filters' in a keyFilter
 	};
 	
 	this.tileWindows = function() {

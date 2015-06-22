@@ -250,6 +250,5 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 		else{//if no column selected
 			return;
 		}
-		
 	};
 });

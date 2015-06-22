@@ -137,64 +137,96 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
     /**
      * this function handles geography filters
      **/
+//    this.handleGeographyFilters = function(incoming_qo){
+//    	var geoQuery = {};
+//    	geoQuery.or = [];
+// 
+//    	if(incoming_qo.GeographyFilter.stateColumn.id)
+//    		incoming_qo.GeographyFilter.selectedStates = d3Service.mapT.cache.selectedStates;
+//    	if(incoming_qo.GeographyFilter.countyColumn.id)
+//    		incoming_qo.GeographyFilter.selectedCounties = d3Service.mapT.cache.selectedCounties;
+//
+//		
+//		
+//			//state filter
+//			if(!incoming_qo.GeographyFilter.countyColumn)
+//			{
+//				var states = [];
+//				for(var state in incoming_qo.GeographyFilter.selectedStates)
+//				{
+//					states.push(state);
+//				}
+//				
+//				
+//				geoQuery = 	{
+//								  cond : { 
+//									  		f : incoming_qo.GeographyFilter.stateColumn.id, 
+//									  		v : states
+//								  		 }
+//							};
+//											
+//				
+//				
+//				nestedFilterRequest.and.push(geoQuery);
+//			}
+//			// state + county filter
+//			else
+//			{
+//				for(var key in incoming_qo.GeographyFilter.selectedCounties)
+//				{
+//					geoQuery.or.push({ and : [
+//												{
+//													  cond : { 
+//														  		f : incoming_qo.GeographyFilter.nestedStateColumn.id, 
+//														  		v : key
+//													  		 }
+//												},
+//												{
+//													  cond: {
+//														  		f : incoming_qo.GeographyFilter.countyColumn.id,
+//														  		v : Object.keys(incoming_qo.GeographyFilter.selectedCounties[key].counties)
+//													  		}
+//												}
+//												]});
+//				}
+//				if(geoQuery.or.length) {
+//					nestedFilterRequest.and.push(geoQuery);
+//				}
+//			}
+//			
+//				
+//    };
+    
     this.handleGeographyFilters = function(incoming_qo){
-    	var geoQuery = {};
-    	geoQuery.or = [];
- 
-    	if(incoming_qo.GeographyFilter.stateColumn.id)
+    	var geoColumn;
+    	if(incoming_qo.GeographyFilter.stateColumn){
     		incoming_qo.GeographyFilter.selectedStates = d3Service.mapT.cache.selectedStates;
-    	if(incoming_qo.GeographyFilter.countyColumn.id)
+    		geoColumn = incoming_qo.GeographyFilter.stateColumn;
+    		
+    		var selectedGeokeys = [];
+    		//create key [] for subset keys in weave
+    		for(geoKey in incoming_qo.GeographyFilter.selectedStates){
+    			selectedGeokeys.push(geoKey);
+    		}
+    		
+    	}
+    	if(incoming_qo.GeographyFilter.countyColumn){
     		incoming_qo.GeographyFilter.selectedCounties = d3Service.mapT.cache.selectedCounties;
-
-		
-		
-			//state filter
-			if(!incoming_qo.GeographyFilter.countyColumn)
-			{
-				var states = [];
-				for(var state in incoming_qo.GeographyFilter.selectedStates)
-				{
-					states.push(state);
-				}
-				
-				
-				geoQuery = 	{
-								  cond : { 
-									  		f : incoming_qo.GeographyFilter.stateColumn.id, 
-									  		v : states
-								  		 }
-							};
-											
-				
-				
-				nestedFilterRequest.and.push(geoQuery);
-			}
-			// state + county filter
-			else
-			{
-				for(var key in incoming_qo.GeographyFilter.selectedCounties)
-				{
-					geoQuery.or.push({ and : [
-												{
-													  cond : { 
-														  		f : incoming_qo.GeographyFilter.nestedStateColumn.id, 
-														  		v : key
-													  		 }
-												},
-												{
-													  cond: {
-														  		f : incoming_qo.GeographyFilter.countyColumn.id,
-														  		v : Object.keys(incoming_qo.GeographyFilter.selectedCounties[key].counties)
-													  		}
-												}
-												]});
-				}
-				if(geoQuery.or.length) {
-					nestedFilterRequest.and.push(geoQuery);
-				}
-			}
+    		geoColumn = incoming_qo.GeographyFilter.countyColumn;
+    	}
+    	
+    	if(geoColumn)
+		{
+			var pathToFilters = WeaveService.getPathToFilters();//path to the linkable hashmap
 			
+			if(pathToFilters) {
+				pathToFilters.push("GeoFilter").request("StringDataFilter")
+				.push("column")
+				.setColumn(geoColumn.metadata, geoColumn.dataSourceName).pop()
+				.push("stringValues").state(selectedGeokeys);
 				
+			}
+		}
     };
     
 
@@ -203,7 +235,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
     		if(WeaveService.weave)
 			{
     			var currentDataSource = "";
-    			var scriptMetadata = queryService.getScriptMetadata(queryObject.scriptSelected);
+    			var scriptMetadata = queryService.getScriptMetadata(queryObject.scriptSelected);//use cached scriptmetadata TODO
     			var keyColumnName = "";
     			var keyType = "";
     			
@@ -211,6 +243,12 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
     				keyColumnName = scriptMetadata.keyColumnName;
     				keyType = scriptMetadata.keyType;
     			}
+    			
+    			//handling the geo filter
+    			if(queryObject.GeographyFilter.geometrySelected)
+    				{
+    					this.handleGeographyFilters(queryObject);
+    				}
     			
     			var sources = weave.path().getValue('getNames(WeaveAnalystDataSource)');
     			if (update && sources.length)
@@ -249,7 +287,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				waDataSourcePath.exec("getCallbackCollection(this).resumeCallbacks(); hierarchyRefresh.triggerCallbacks();");
 				queryService.refreshHierarchy();
 				queryService.queryObject.dataTable = currentDataSource;
-				queryService.cache.columns = [];
+				queryService.cache.columns = [];//HACK TODO handle this better
 			}
     	}
     };

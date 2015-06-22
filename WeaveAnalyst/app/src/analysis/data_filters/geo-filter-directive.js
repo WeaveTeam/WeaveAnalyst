@@ -37,9 +37,10 @@ AnalysisModule.directive('geoFilter', ['queryService', 'd3Service',  function fa
 						function(){
 					
 						if($scope.queryService.queryObject.GeographyFilter.geometrySelected){
+							console.log("gc", $scope.queryService.queryObject.GeographyFilter.geometrySelected);
 						//d3Service.renderLayer(dom_element_to_append_to, $scope.topoJsonPath, $scope.queryService.queryObject.GeographyFilter.geometrySelected);
-						d3Service.renderMap($scope.queryService);
-					}
+							d3Service.renderMap($scope.queryService);
+							}
 					if($scope.queryService.queryObject.GeographyFilter.geometrySelected == 'State')
 						$scope.queryService.queryObject.GeographyFilter.countyColumn = "";
 					else

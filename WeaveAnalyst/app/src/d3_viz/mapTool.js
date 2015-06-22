@@ -29,7 +29,7 @@ this.d3_viz = {};
 		this.cache = {
 				stateTopoGeometries : [],
 				countyTopoGeometries : [],
-				selectedStates : {},
+				selectedStates : [],
 				selectedCounties : {},
 				US: []
 		};
@@ -156,11 +156,16 @@ this.d3_viz = {};
 	p.loadStateLayer = function(fileName){
 		d3.csv(fileName, function(state_fips){
 			for(i in state_fips){
-				var fips = parseFloat(state_fips[i].US_STATE_FIPS_CODE);
+				var fips = state_fips[i].US_STATE_FIPS_CODE;
+				//zero padding of single digits
+				if(fips < 10){//not good find alternative
+					fips = "0" + fips;
+				}
 				for(j in this.cache.stateTopoGeometries.features){
-					var id = this.cache.stateTopoGeometries.features[j].id;
+					var id = this.cache.stateTopoGeometries.features[j].id;// id from topojson
 					if(fips == id){
 						this.cache.stateTopoGeometries.features[j].properties.name = state_fips[i].NAME10;
+						this.cache.stateTopoGeometries.features[j].properties.fips = fips;
 						break;
 					}
 				}//j loop
@@ -193,6 +198,7 @@ this.d3_viz = {};
 			//if it is selected for the first time
 			if(!(d.id in this.cache.selectedStates)){
 				this.cache.selectedStates[d.id] = { title: d.properties.name };
+				//this.cache.selectedStates[d.id] = { localName: d.properties.fips, keyType : "US State FIPS Code"  };
 			}
 			//if already selected; remove it
 			else{
@@ -343,9 +349,6 @@ this.d3_viz = {};
 				this._centered = null;
 		  
 			}
-
-//			  f.selectAll("path")
-//			      .classed("active", centered && function(d) { return d === centered; });
 
 			this._stateGrp.transition()
 			      .duration(750)
