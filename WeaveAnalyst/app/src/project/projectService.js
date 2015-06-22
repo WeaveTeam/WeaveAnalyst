@@ -71,7 +71,6 @@ angular.module('aws.project')
                 /* Build column string */
         				that.cache.columnstring = "";
         				var columns = singleObject.queryObject.scriptOptions;
-        				console.log("cols: ", columns);
         				for(var j in columns){
         					var title = columns[j].metadata.title;
         					that.cache.columnstring= that.cache.columnstring.concat(title) + ", ";
@@ -85,7 +84,7 @@ angular.module('aws.project')
                 var geoFilterOptions = singleObject.queryObject.GeographyFilter;
                 if (geoFilterOptions.geometrySelected)
                 {
-                  var filterString = "";
+                  var filterString = null;
 
                   if (geoFilterOptions.countyColumn)
                   {
