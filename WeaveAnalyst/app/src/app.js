@@ -44,12 +44,17 @@ app.run(['$rootScope', function($rootScope){
 	
 	$parseProvider.unwrapPromises(true);
 	
-	$urlRouterProvider.otherwise('/index');
+	$urlRouterProvider.otherwise('/projects');
 	
 	$stateProvider
 		.state('index', {
-			url : '/index'
-		})
+	    	url:'/projects',
+	    	templateUrl : 'src/project/projectManagementPanel.html',
+	    	controller : 'ProjectManagementCtrl',
+	    	data: {
+	    		activetab : 'project'
+	    	}
+	    })
 		.state('metadata', {
 			url:'/metadata',
 			templateUrl : 'src/configure/metadata/metadataManager.html',
@@ -216,13 +221,26 @@ app.controller('AWSController', function($scope,$rootScope, $state, authenticati
 			}
 			
 			//retrieve the weave tree node THIS STEP SHOULD BE DONE ONLY ONCE
-			 $rootScope.weaveTree = new weave.WeaveTreeNode();
+			 $rootScope.weaveTree = new WeaveService.weave.WeaveTreeNode();
 		}else{
-			setTimeout(loadWeaveSessionState, 500, window);
+			setTimeout($scope.loadWeaveSessionState, 500, window);
 		}
 	};
+	
+	
+	$scope.setHierarchyPanelCSS = function() {
+		$("#hierarchyPanel").css({
+			top: $(document).scrollTop() + ($(window).height() * .3),
+			left: $(window).width() * .25
+		});
+	};
+	
+	
 	//we use the column to fetch the table (list of columns it belongs to)
 	$scope.fetchColumnProvider = function(input_column){
+		
+		$scope.setHierarchyPanelCSS();
+		
 		if(queryService.cache.columns.length == 0){
 			queryService.queryObject.properties.showHierarchy = true;
 			queryService.refreshHierarchy();
