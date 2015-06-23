@@ -244,13 +244,16 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
 //				},
 				KeyColumn : {
 					title : "",
+					toolName : "KeyColumn",
 					template_url : 'src/visualization/tools/color/key_Column.tpl.html'
 				},
 				DataFilterTool : {
 					title : "", 
+					toolName : "DataFilter",
 					template_url : 'src/visualization/tools/dataFilter/data_filter_tool.tpl.html'
 				},
 				SummaryAnnotation : {
+					toolName : "SummaryAnnotation",
 					title : "SummaryAnnotation",
 					template_url : 'src/visualization/tools/summaryAnnotation/summary_annotation.tpl.html'
 				}

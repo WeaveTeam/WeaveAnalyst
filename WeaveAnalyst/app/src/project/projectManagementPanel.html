@@ -11,7 +11,7 @@
 				<div class="widget-selectors">
 <!-- Project List -->	
 						<ui-select ng-model="projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
-					    	<ui-select-match allow-clear="true" placeholder="Choose Indicator...">{{$select.selected}}</ui-select-match>
+					    	<ui-select-match allow-clear="true" placeholder="Choose Project">{{$select.selected}}</ui-select-match>
 							<ui-select-choices repeat="project in projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
 					       		 <div ng-bind-html="project | highlight: $select.search"></div>
 					        </ui-select-choices>
