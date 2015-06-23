@@ -231,6 +231,8 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
     
 
     this.run = function(queryObject, update) {
+    	$("html, body").animate({scrollTop: $(document).height()}, 100);
+    	
     	if(queryObject.properties.isQueryValid) {
     		if(WeaveService.weave)
 			{
@@ -286,7 +288,7 @@ qh_module.service('QueryHandlerService', ['$q', '$rootScope','queryService','Wea
 				waDataSourcePath.push("scriptName").state(queryObject.scriptSelected);
 				waDataSourcePath.exec("getCallbackCollection(this).resumeCallbacks(); hierarchyRefresh.triggerCallbacks();");
 				queryService.refreshHierarchy();
-				queryService.queryObject.dataTable = currentDataSource;
+				//queryService.queryObject.dataTable = currentDataSource;
 				queryService.cache.columns = [];//HACK TODO handle this better
 			}
     	}
