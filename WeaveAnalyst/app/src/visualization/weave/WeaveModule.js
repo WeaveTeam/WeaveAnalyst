@@ -382,21 +382,27 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			}
 			
 			//LAYER ZOOM
-			if(state.zoomLevel)
-				{
-					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
-					
-					//for demo
-					if(state.zoomLevel > 3 && state.countyGeometryLayer)
-					{
-						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
+			//HACK for demo
+//			if(state.zoomLevel)
+//				{
+//					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
+//					
+//					//for demo
+//					if(state.zoomLevel > 3 && state.countyGeometryLayer)
+//					{
+//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
+//			
+//					}
+//					else{
+//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
+//					}
+//					//for demo end
+//				}
 			
-					}
-					else{
-						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
-					}
-					//for demo end
-				}
+			//
+			if(state.zoomLevel){
+					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
+			}
 			
 			
 			//capture session state
