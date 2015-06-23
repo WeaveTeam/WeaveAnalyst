@@ -86,6 +86,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	});
 	
+	$(window).resize(function() {
+		$("#weave").css({
+			height: $(window).height() - ($("#header").height() + $(".topAnalysisControl").height()) 
+		});
+	});
+	$(window).trigger("resize");
 
 	$("#queryObjectPanel" ).draggable().resizable({
        handles: 'n, e, s, w'
@@ -94,20 +100,21 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 	
 	/*********************** BEGIN Data Source Panel *******************************************/
 	$("#hierarchyPanel" ).draggable().resizable({
-       handles: 'n, e, s, w'
+//       handles: 'n, e, s, w'
+		handles: 'n, e, s, w, se'
     });
 	
 	
 	$scope.hierarchyClass = {
 			width : "48%",
-			height: "100%",
+			height: "calc(100% - 50px)",
 			marginRight: "2%",
 			float:"left"
 	};
 	
 	$scope.columnsClass = {
 			width : "48%",
-			height: "100%",
+			height: "calc(100% - 50px)",
 			marginRight: "2%",
 			float:"left"
 	};
@@ -117,10 +124,12 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		if($scope.showColumns) {
 			$scope.hierarchyClass.width = "48%";
 			$scope.columnsClass.width = "48%";
+			$scope.columnsClass.marginRight = "2%"
 			
 		} else {
 			$scope.hierarchyClass.width = "96%";
 			$scope.columnsClass.width = "0%";
+			$scope.columnsClass.marginRight = "0%"
 		}
 	});
 	
@@ -442,7 +451,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 		}
 	});
 	 // starting position for the queryObject panel
-	 $("#queryObjectPanel" ).css({'top' : -1059, 'left' : 315});
+	 $("#queryObjectPanel" ).css({'top' : '-1059px', 'left' : '315px'});
 	
 	 
 	 //************************** query object editor end**********************************

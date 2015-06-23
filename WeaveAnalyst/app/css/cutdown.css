@@ -341,11 +341,11 @@
 	overflow: visible;
 }
 
-.tool-bar .tool-list {
+.tool-list {
 	padding-left: 0px;
 }
 
-.tool-bar .tool-list > li {
+.tool-list > li {
 
 	margin-bottom: 0;
 	border-bottom: 1px solid #c9c9c9;
@@ -354,7 +354,7 @@
 	display: block;
 }
 
-.tool-bar .tool-list > li > a {
+.tool-list > li > a {
 
 	text-decoration: none;
 	display: inline-block;
@@ -362,7 +362,7 @@
 	color: #777777;
 }
 
-.tool-bar .tool-list > li {
+.tool-list > li {
 	background: #ffffff;
 	background: -moz-linear-gradient(top, #ffffff 0%, #f5f5f5 100%);
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#f5f5f5));
@@ -896,7 +896,7 @@ select {
 /*Data Boxes*/
 
 .databox {
-	width: 310px;
+	width: 320px;
 	height: 300px;
 	float: left;
 	margin: 3px;
