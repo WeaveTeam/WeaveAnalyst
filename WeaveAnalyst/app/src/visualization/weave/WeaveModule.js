@@ -356,8 +356,11 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 			
 				//TODO change following
 				//done for handling albers projection What about other projection?
-				ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
-				ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
+				if(state.stateGeometryLayer){
+					
+					ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
+				}
+				//ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
 			}
 			else{//to remove county layer
 				
