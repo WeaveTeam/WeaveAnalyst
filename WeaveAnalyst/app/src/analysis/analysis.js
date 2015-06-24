@@ -528,7 +528,7 @@ AnalysisModule.controller('AnalysisCtrl', function($scope, $filter, queryService
 				
 			}
 		} else {
-			WeaveService.setWeaveWindow($window.open("/weave.html?",
+			WeaveService.setWeaveWindow($window.open("../weave.html?",
 							"abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes"));
 		}
 	});

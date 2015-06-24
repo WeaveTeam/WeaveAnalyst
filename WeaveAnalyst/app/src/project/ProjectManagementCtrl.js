@@ -101,7 +101,7 @@ angular.module('aws.project', [])
 				
 		   		 if (!newWeave || newWeave.closed) {
 						newWeave = window
-								.open("/weave.html?",
+								.open("../weave.html?",
 										"abc",
 										"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
 					}
