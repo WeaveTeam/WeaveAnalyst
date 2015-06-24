@@ -90,13 +90,9 @@ angular.module('aws.project', [])
 //	});
 	
 	//called when the thumb-nail is clicked
-	/**
-	 *@param given a query object
-	 *@returns it returns the weave visualizations for it.
-	 */
-	$scope.returnSessionState = function(queryObject){
-		projectService.returnSessionState(queryObject).then(function(weaveSessionState){
-			var newWeave;
+	var newWeave;
+	$scope.openSessionState = function(queryObject){
+		projectService.getSessionState(queryObject).then(function(weaveSessionState){
 			if(!(angular.isUndefined(weaveSessionState))){
 				
 		   		 if (!newWeave || newWeave.closed) {
