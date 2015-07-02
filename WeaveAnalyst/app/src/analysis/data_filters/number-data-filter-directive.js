@@ -72,8 +72,13 @@ AnalysisModule.directive('numberDataFilter', function(WeaveService) {
 							 $scope.ngModel.max = max;
 						 }
 					 }
+					 //$scope.$apply();
+					 try {
+						 $scope.$apply();
+					 } catch (e) {
+						 
+					 }
 					 
-				    $scope.$safeApply();
 				  }
 			});
 			

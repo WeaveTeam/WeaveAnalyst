@@ -62,7 +62,10 @@ AnalysisModule.directive('stringDataFilter', function(WeaveService) {
 					}
 					
 					$scope.ngModel.selectedFilterStyle = getFilterType($scope.filterOptions.length);
-					$scope.$apply();
+					try {
+						$scope.$apply();
+					} catch (e) {
+					}
 				}
 			});
 			

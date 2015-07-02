@@ -188,7 +188,7 @@ angular.module('aws.project')
     /**
      * this function returns the session state corresponding to the thumbnail of a query object that was clicked
      */
-    this.returnSessionState = function(queryObject){
+    this.getSessionState = function(queryObject){
    	 var deferred = $q.defer();
    	 queryObject = angular.toJson(queryObject);
    	 //console.log("stringified queryObject", queryObject);
