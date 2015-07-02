@@ -1,20 +1,30 @@
 /**
  * 
  */
-AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function factory(WeaveService){
+AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function factory(WeaveService, queryService){
 	
 	var directiveDefnObj= {
-			restrict: 'E',
+			restrict: 'A',
 			templateUrl: 'src/visualization/tools/color/color_Column_new.html',
-			controller : function($scope, WeaveService){
+			scope:{
+				
+			},
+
+			controller : function($scope, WeaveService, queryService){
+				$scope.queryService = queryService;
+				$scope.geometryLayers = {};
 
 				$scope.colorGroup = {};
+				$scope.color = {};
 				
-				$scope.setColorGroup = function(){
+				$scope.setColorGroup = function(layer){
 					
-					if($scope.tool.color.group && $scope.tool.color.column){
+					if(layer.group && layer.column){
 						
-						WeaveService.setColorGroup($scope.tool.toolName, $scope.tool.color.group, $scope.tool.color.column);
+						WeaveService.setColorGroup($scope.toolname, 
+													$scope.plotname,
+												   layer.group,
+												   layer.column);
 					}
 				};
 				
@@ -32,6 +42,13 @@ AnalysisModule.directive('colorColumnSelector', ['WeaveService',  function facto
 			},
 			link: function(scope, elem, attrs){
 				
+				//scope.plotname =  scope.$eval(attrs["plotname"]);
+				scope.plotname = attrs["plotname"];
+				
+				
+				scope.geometryLayers[scope.plotname] = {group :"Select group...", column:null};
+				
+				scope.toolname = attrs["toolname"];
 								
 			}//end of link function
 	};

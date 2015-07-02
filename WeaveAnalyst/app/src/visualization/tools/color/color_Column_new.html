@@ -1,12 +1,11 @@
-
+<table ng-repeat = "layer in geometryLayers">
 	<tr>
-
 		<td>
 		Color Group
 		</td>	
 		<td>
-			<ui-select ng-model="tool.color.group" theme="select2" tagging style="width: 160px;" ng-change = "setColorGroup()" ng-click="getColorGroups()">
-									    		<ui-select-match placeholder="Select column...">{{$select.selected}}</ui-select-match>
+			<ui-select ng-model="layer.group" theme="select2" tagging style="width: 160px;" ng-change = "setColorGroup(layer)" ng-click="getColorGroups()">
+									    		<ui-select-match placeholder="Select group...">{{$select.selected}}</ui-select-match>
 												<ui-select-choices repeat="choice in colorGroups | filter : $select.search">
 													{{choice}}
 									        	</ui-select-choices>
@@ -21,7 +20,7 @@
 			Color 
 			</td>	
 			<td>
-				<ui-select  droppable ng-model="tool.color.column" theme="select2" style="width: 100%;" ng-change = "setColorGroup()" ng-click = fetchColumnProvider()>
+				<ui-select  ng-model="layer.column"  tagging theme="select2" style="width: 100%;" ng-change = "setColorGroup(layer)" ng-click = fetchColumnProvider()>
 					    	<ui-select-match  placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
 								<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
 						       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
@@ -29,4 +28,5 @@
 				</ui-select>
 				
 			</td>
-	</tr>
+		</tr>
+</table>

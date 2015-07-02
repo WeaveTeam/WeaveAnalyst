@@ -16,9 +16,6 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 	
 	
 	this.columnNames = [];
-	this.ScatterPlot_Path = ["children", "visualization", "plotManager", "plotters", "plot", "fill", "color", "internalDynamicColumn"];
-	this.BarchartTool_Path = ["children", "visualization", "plotManager", "plotters", "plot", "colorColumn", "internalDynamicColumn"];
-	this.MapTool_Path = ["children", "visualization", "plotManager", "plotters", "Albers_State_Layer", "fill", "color", "internalDynamicColumn"];
 	
 	/**
 	 * 
@@ -631,23 +628,21 @@ AnalysisModule.service("WeaveService", ['$q','$rootScope','runQueryService', 'da
 		// stub for compat;
 	};
 	
-	this.setColorGroup = function(toolName, groupName, columnInfo){
+	this.setColorGroup = function(toolName, plotName, groupName, columnInfo){
 		
-		var toolType = ws.weave.path(toolName).getType();
+		var plotterPath = ws.weave.path(toolName).pushPlotter(plotName);
+		var plotType = plotterPath.getType();
+		if (!plotName) plotName = "plot";
 		var dynamicColumnPath;
-		console.log("tooltype", toolType);
+		console.log("tooltype", plotType);
 		
-		switch(toolType){
-			case("weave.visualization.tools::ScatterPlotTool"):
-					dynamicColumnPath = ws.weave.path(toolName).push(this.ScatterPlot_Path);
-					break;
-			case("weave.visualization.tools::MapTool"):
-					dynamicColumnPath = ws.weave.path(toolName).push(this.MapTool_Path);
-					break;
-			case("weave.visualization.tools::CompoundBarChartTool"):
-					dynamicColumnPath = ws.weave.path(toolName).push(this.BarchartTool_Path);
-					break;
-		
+		if (plotType == "weave.visualization.plotters::CompoundBarChartPlotter")
+		{
+			dynamicColumnPath = plotterPath.push("colorColumn", "internalDynamicColumn");
+		}
+		else
+		{
+			dynamicColumnPath = plotterPath.push("fill", "color", "internalDynamicColumn");
 		}
 		
 		console.log(dynamicColumnPath.getPath());
