@@ -112,14 +112,10 @@
 	    									[scriptName], 
 	    									function(result){
 								    			that.cache.scriptMetadata = result;
-								    			rootScope.$safeApply(function() {
 								    				deferred.resolve(that.cache.scriptMetadata);
-								    			});
 	    									},
 	    									function(error){
-	    										rootScope.$safeApply(function(error) {
 	    											deferred.reject(error);
-	    										});
 	    									});
 	    	}
 	        return deferred.promise;

@@ -9,89 +9,15 @@
 (function (){
 	angular.module("weaveAnalyst.queryObject", []);
 
-	//using value recipes so that these tools could be used elsewhere as well TODO: make them into directives
-	angular.module("weaveAnalyst.queryObject").value('indicator_tool', {
-													title : 'Indicator',
-													template_url : 'src/analysis/indicator/indicator.tpl.html',
-													description : 'Choose an Indicator for the Analysis',
-													category : 'indicatorfilter'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('geoFilter_tool',{
-											title : 'Geography Filter',
-											template_url : 'src/analysis/data_filters/geographyFilter.tpl.html',
-											description : 'Filter data by States and Counties',
-											category : 'datafilter'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('timeFilter_tool', {
-												title : 'Time Period Filter',
-												template_url : 'src/analysis/data_filters/time_period.tpl.html',
-												description : 'Filter data by Time Period',
-												category : 'datafilter'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('byVariableFilter_tool', {
-														title : 'By Variable Filter',
-														template_url : 'src/analysis/data_filters/by_variable.tpl.html',
-														description : 'Filter data by Variables',
-														category : 'datafilter'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('BarChartTool',{
-											id : 'BarChartTool',
-											title : 'Bar Chart Tool',
-											template_url : 'src/visualization/tools/barChart/bar_chart.tpl.html'
-
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('MapTool', {
-										id : 'MapTool',
-										title : 'Map Tool',
-										template_url : 'src/visualization/tools/mapChart/map_chart.tpl.html'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('ScatterPlotTool', {
-												id : 'ScatterPlotTool',
-												title : 'Scatter Plot Tool',
-												template_url : 'src/visualization/tools/scatterPlot/scatter_plot.tpl.html',
-												description : 'Display a Scatter Plot in Weave'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('DataTableTool', {
-												id : 'DataTableTool',
-												title : 'Data Table Tool',
-												template_url : 'src/visualization/tools/dataTable/data_table.tpl.html',
-												description : 'Display a Data Table in Weave'
-	});
-
-	angular.module("weaveAnalyst.queryObject").value('color_Column', {	
-												id : 'color_Column',
-												title : 'Color Column',
-												template_url : 'src/visualization/tools/color/color_Column.tpl.html',
-												description : 'Set the color column in Weave'
-	});
-
-
-	angular.module("weaveAnalyst.queryObject").value('key_Column', {
-											id : 'Key_Column', 
-											title : 'Key Column',
-											template_url : 'src/visualization/tools/color/key_Column.tpl.html',
-											description : 'Set the key column in Weave'
-	});
-
-
 	//////////////////////
 	//SERVICE
 	//////////////////////
 	angular.module("weaveAnalyst.queryObject").service("queryService", queryService);;
 	queryService.$inject = ['$q', '$rootScope', 'runQueryService',
-                            'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL',
-                            'BarChartTool', 'MapTool', 'DataTableTool', 'ScatterPlotTool', 'color_Column', 'key_Column','WeaveDataSource'];
+                            'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL','WeaveDataSource'];
 	
 	function queryService ($q, scope, runQueryService, 
-   		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationServiceURL,
-   		 				   BarChartTool, MapTool, DataTableTool, ScatterPlotTool, color_Column, key_Column, WeaveDataSource)
+   		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationService, WeaveDataSource)
 	{
 		
 		var that = this; // point to this for async responses
@@ -250,14 +176,10 @@
 									
 								}
 							});
-							scope.$safeApply(function() {
 								deferred.resolve(that.cache.columns);
-							});
 						},
 						function(error) {
-							scope.$safeApply(function() {
 								deffered.reject(error);
-							});
 						});
 					});
 					
@@ -277,14 +199,10 @@
 					runQueryService.queryRequest(dataServiceURL, "getEntitiesById", [idsArray], function (dataEntityArray){
 						that.cache.dataColumnEntities = dataEntityArray;
 						
-						scope.$safeApply(function() {
 							deferred.resolve(dataEntityArray);
-						});
 					},
 					function(error) {
-						scope.$safeApply(function() {
 							deferred.reject(error);
-						});
 					});
 				}
 			}
@@ -320,13 +238,9 @@
 							dataSourceName : WeaveDataSource
 						};
 					});
-					scope.$safeApply(function() {
 						deferred.resolve(that.cache.geometryColumns);
-					});
 				}, function(error) {
-					scope.$safeApply(function() {
 						deferred.reject(error);
-					});
 				});
 			});
 
@@ -345,13 +259,9 @@
 	    	} else {
 	    		runQueryService.queryRequest(dataServiceURL, 'getDataTableList', null, function(EntityHierarchyInfoArray){
 	    			that.cache.dataTableList = EntityHierarchyInfoArray;
-	    			scope.$safeApply(function() {
-	    				deferred.resolve(that.cache.dataTableList);
-	    			});
+    				deferred.resolve(that.cache.dataTableList);
 	    		 }, function(error){
-	    			 scope.$safeApply(function() {
-	    				 deferred.reject(error);
-	    			 });
+    				 deferred.reject(error);
 	    		 });
 	    	}
 	        return deferred.promise;
@@ -363,13 +273,9 @@
 	        
 	    	runQueryService.queryRequest(adminServiceURL, 'updateEntity', [user, password, entityId, diff], function(){
 	            
-	        	scope.$safeApply(function(){
 	                deferred.resolve();
-	            });
 	        }, function(error) {
-	        	scope.$safeApply(function() {
 	        		deferred.reject(error);
-	        	});
 	        });
 	        return deferred.promise;
 	    };
@@ -380,9 +286,7 @@
 
 	        	var callback = function(result)
 	        	{
-	         		scope.$safeApply(function(){
 	                   deferred.resolve(result);
-	         		});
 	        	};
 
 	         	if (Array.isArray(varValues))
@@ -402,9 +306,7 @@
 	         			callback(result);
 	     			},
 	     			function(error) {
-	     				scope.$safeApply(function() {
 	     					deferred.reject(error);
-	     				});
 	     			}
 	     		);
 		        return deferred.promise;

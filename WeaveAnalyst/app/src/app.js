@@ -33,20 +33,20 @@
 	                                'weaveAnalyst.directives.popover-with-tpl']);
 	
 	
-	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
-		$rootScope.$safeApply = function(fn, $scope) {
-				if($scope == undefined){
-					$scope = $rootScope;
-				}
-				fn = fn || function() {};
-				if ( !$scope.$$phase ) {
-	        	$scope.$apply( fn );
-	    	}
-	    	else {
-	        	fn();
-	    	}
-		};
-	}]);
+//	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
+//		$rootScope.$safeApply = function(fn, $scope) {
+//				if($scope == undefined){
+//					$scope = $rootScope;
+//				}
+//				fn = fn || function() {};
+//				if ( !$scope.$$phase ) {
+//	        	$scope.$apply( fn );
+//	    	}
+//	    	else {
+//	        	fn();
+//	    	}
+//		};
+//	}]);
 	angular.module('weaveAnalyst').config(function($stateProvider, $urlRouterProvider) {
 	
 	//$parseProvider.unwrapPromises(true);
@@ -55,7 +55,12 @@
 	
 	$stateProvider
 		.state('index', {
-			url : '/index'
+			url:'/projects',//projects is the entry point into the app
+	    	templateUrl : 'src/project/projectManagementPanel.html',
+	    	controller : 'ProjectManagementCtrl',
+	    	data: {
+	    		activetab : 'project'
+	    	}
 		})
 		.state('metadata', {
 			url:'/metadata',

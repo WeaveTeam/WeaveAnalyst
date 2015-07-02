@@ -31,7 +31,7 @@
 	 
 		 that.setGridData = function(data) {
 			  that.gridData = data;
-			  rootScope.$safeApply();
+			 // rootScope.$safeApply();
 		 };
 		 
 		 

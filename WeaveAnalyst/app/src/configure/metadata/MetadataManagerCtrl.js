@@ -216,7 +216,8 @@
 			}, function(n, o) {
 			if(mFCtrl.metadataUploaded.file.content){
 				
-				/****/mFCtrl.selectedDataTableId = $scope.mDataCtrl.selectedDataTableId;/****/ //this is how you access parent controller instance properties
+				/****///this is how you access parent controller instance properties
+				mFCtrl.selectedDataTableId = $scope.mDataCtrl.selectedDataTableId;
 				
 		        	  //metadata file(.csv) uploaded by the user is converted to update the columns
 		           var metadataArray = queryService.CSVToArray(mFCtrl.metadataUploaded.file.content);

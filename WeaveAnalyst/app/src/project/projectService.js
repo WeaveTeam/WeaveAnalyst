@@ -30,9 +30,7 @@
 			
 			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
 	        
-				rootScope.$safeApply(function() {
-					deferred.resolve(result);
-				});
+			deferred.resolve(result);
 				
 			});
 			return deferred.promise;
@@ -46,9 +44,7 @@
 			
 			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
 	        
-				rootScope.$safeApply(function() {
-					deferred.resolve(result);
-				});
+			deferred.resolve(result);
 				
 			});
 			return deferred.promise;
@@ -65,9 +61,7 @@
 	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
 				that.cache.listOfProjectsFromDatabase = result;
 	        
-				rootScope.$safeApply(function() {
-					deferred.resolve(result);
-				});
+				deferred.resolve(result);
 			
 			});
 	    	
@@ -118,9 +112,7 @@
 	    				that.cache.userName = "";
 	    			}
 	    		
-	    			rootScope.$safeApply(function() {
-		                deferred.resolve(AWSQueryObjectCollection);
-		            });
+	                deferred.resolve(AWSQueryObjectCollection);
 	        	
 	        });
 	    	
@@ -191,9 +183,7 @@
 	    		
 	   		 that.cache.weaveSessionState = result;
 	   		 
-	   		 	rootScope.$safeApply(function() {
-	                deferred.resolve(result);
-	            });
+            deferred.resolve(result);
 	        	
 	        });
 	    		
@@ -225,9 +215,7 @@
 	      	 
 	      	 that.cache.deleteProjectStatus = 0;//reset 
 	       	
-	      	 rootScope.$safeApply(function() {
-	               deferred.resolve(result);
-	           });
+	      	 deferred.resolve(result);
 	       	
 	       });
 	       
@@ -258,9 +246,7 @@
 		       		
 		       		that.cache.project.selected = "";
 		       	}
-		       	rootScope.$safeApply(function() {
-		               deferred.resolve(result);
-		           });
+               deferred.resolve(result);
 		       	
 		       });
 		       
@@ -288,9 +274,7 @@
 	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
 	       	}
 	       	
-	       	rootScope.$safeApply(function() {
-	               deferred.resolve(result);
-	           });
+           deferred.resolve(result);
 	       	
 	       });
 	       
