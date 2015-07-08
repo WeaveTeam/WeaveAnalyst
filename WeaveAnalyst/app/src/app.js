@@ -142,10 +142,10 @@
 	weaveAnalystController.$inject = ['$state','authenticationService'];
 	function weaveAnalystController ($state,authenticationService){//treating controllers as a constructor
 		
-		var vm = this;
+		var wa_main = this;
 		
-		vm.state = $state;
-		vm.authenticationService = authenticationService;
+		wa_main.state = $state;
+		wa_main.authenticationService = authenticationService;
 	};
 	
 	
