@@ -1,0 +1,130 @@
+<!--Calculations -->
+<div class="databox" style="width: 50%">
+	
+	<div class="header panel-heading">
+		<h2>Calculations</h2>
+	</div>
+	
+	<div class="body">
+		<div style = "width:55%; height: 100%; float:left;">
+			<div class="btn-group">
+     					<label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'R'" uncheckable>R</label>
+     					<label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'STATA'" uncheckable>Stata</label>
+<!--        					    <label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'PYTHON'" uncheckable>Python</label> -->
+			</div>
+			<br/>
+			<!-- Script Select-->		
+			<div style = "width: 100%; margin-top: 5px">
+										<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !scriptCtrl.queryService.queryObject.scriptSelected, 'validatedUI' : scriptCtrl.queryService.queryObject.scriptSelected}"
+											title = "Red flags indicate required selections for query validation">
+											
+												<ui-select ng-model="scriptCtrl.queryService.queryObject.scriptSelected" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
+										    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
+													<ui-select-choices repeat="script in scriptCtrl.analysisService.cache.scriptList | filter : $select.search">
+						<!-- 							       			 <div ng-bind-html="script | highlight: $select.search"></div> -->
+										       			 {{script}}
+										        	</ui-select-choices>
+												</ui-select>
+										</div>
+										<div style = "float:left; margin-left: 10px" ><i class="fa fa-info-circle fa-lg" 
+										title = "1.This selects a script (computation) to be executed on the data. &#10;2.This must be followed by selection of script input parameters." ></i></div>
+			</div><!-- script select ends -->
+		
+			<br><br>
+			<!-- Script options -->	
+			<div class="tool-bar">
+						<table style="width:100%">
+							<tr ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
+								<td align="right" width=10%>
+									<div class="label-p">{{input.param}}:</div>
+								</td>
+		
+								<td>
+								<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !scriptCtrl.queryService.queryObject.scriptOptions[input.param], 'validatedUI' : scriptCtrl.queryService.queryObject.scriptOptions[input.param]}"
+									title = "Red flags indicate required selections for query validation">
+										<ui-select ng-if="input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width:95%;"
+										ng-click = fetchColumnProvider(scriptCtrl.queryService.queryObject.scriptOptions[input.param])>
+								    		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
+											<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : filterColumn({title : $select.search, columnType : input.columnType})">
+								       			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+								        	</ui-select-choices>
+										</ui-select>
+								</div>
+							
+										
+										
+										<!-- Remapping -->
+										<a href="javascript: void(0)" 
+											ng-click="showColumnInfo(scriptCtrl.queryService.queryObject.scriptOptions[input.param], input.param)"
+										> 
+											<i  ng-if="input.type == 'column'" 
+												style = "padding-left: 3px; padding-top:5px;" 
+												class="fa fa-pencil-square-o fa-lg"
+											></i>
+										</a>
+										
+										<!-- Handling options type -->
+										<ui-select ng-if="input.type == 'options'" ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
+										    <ui-select-match allow-clear="true" placeholder="Select option...">{{$select.selected}}</ui-select-match>
+										    <ui-select-choices repeat="option in input.options | filter: $select.search">
+									      	      <div ng-bind-html="option | highlight: $select.search"></div>
+										    </ui-select-choices>
+									    </ui-select>
+									    
+										<!-- Handling boolean type -->
+										<input type="checkbox" ng-if="input.type == 'boolean'" ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]"></input>
+										
+										<!-- handling values type -->
+										<input style="width: 80%" ng-if="input.type == 'value'" ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]">
+										
+										<!-- Handling multiple column types -->
+										<ui-select ng-if="input.type == 'multiColumns'" multiple droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style="width: 80%;">
+										    <ui-select-match placeholder="Select Columns...">{{$item.metadata.title}}</ui-select-match>
+										    <ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter: filterColumn({title : $select.search, columnType : input.columnType})">
+									      	      <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+										    </ui-select-choices>
+									    </ui-select>
+										<br>
+								</td>
+							</tr>
+						</table>
+				</div><!-- sCRIPT OPTIONS END -->
+	</div>
+	
+		<div style = "width:45%;height: 100%; float:left;">
+			<!-- REMAPPING -->
+			
+			<div style="height : 30px; margin-top:30px">
+				{{ description }}
+			</div>
+			
+		  	<div  style="overflow: auto; height:170px; margin-top:15px">
+		  			
+			      <table border="border: 1px solid #0000FF"  ng-show="varValues.length">
+						<tr> 
+							<td  align="center">
+								Value
+							</td>
+							<td  align="center">
+								Label
+							</td>
+							<td   align="center">
+								New Value
+							</td>
+						 </tr>
+						<tr ng-repeat="varValue in varValues">
+							<td width= "10%" style="padding-left: 5px; padding-right: 5px"> {{varValue.value}} </td> 
+							<td width= "40%" style="padding-left: 5px" > {{varValue.label}} </td>
+							<td width= "50%"> <input style ="width : 100%"
+												ng-model="values[$index]"
+												ng-change="setValue(varValue.value, values[$index])"> 
+												</input> </td>
+						</tr>
+					</table>
+		  	</div>
+		
+		</div>	
+			
+			
+		</div><!-- end of scripts control -->
+</div> <!-- end of calculations control -->

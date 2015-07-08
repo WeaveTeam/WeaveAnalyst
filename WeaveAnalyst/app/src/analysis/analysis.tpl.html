@@ -9,7 +9,6 @@
 				<button style="width : 95%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy(); setHierarchyPanelCSS();" class="btn btn-primary new-project-button">
 						<span style="color:white">Change Data Sources</span>
 				</button>
-							
 			</div>
 		</div>
 		
@@ -18,7 +17,20 @@
 		</div>
 		
 		<qo-Buttons></qo-Buttons>
-		
 	</div>
+	
+	<div style="position: relative; height:45px;" />
+		
+	<div style="height: 100%" class="container-fluid" style="padding: 5px;">
+		<div class="row" style="height: 30%; clear: both"><!-- top slab that contains script controls and filters -->
+			<!-- Scripts -->
+			
+			<script-Controls></script-Controls>
+			
+			<!-- Filters -->	
+		</div>
+	</div>	
+	<div style = "padding : 20px"></div>
+
 
 
