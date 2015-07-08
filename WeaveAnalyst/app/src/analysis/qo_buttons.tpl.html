@@ -1,17 +1,18 @@
 <div class= "buttonBar">
 <div class = "btn-group" role="group" style="width: 100%; height: 100%">
 			
+	<!-- export -->		
 	<button class='btn btn-default wa_buttonBar' title = "Download Query Object">
 		<span class = "fa fa-download" ng-click = "qo_btnsCtrl.export_Query()"></span>
 	</button>
 	
+	<!-- import -->
 	<label class='btn btn-default wa_buttonBar' title = "Upload Query Object">
 		<span class = "fa fa-upload" ></span>
 		<input fileread="qo_btnsCtrl.queryObjectUploaded.file" class='file-upload' type='file'/>
 	</label>
 	
 	<!-- SHOW?HIDE QUERY OBJECT EDITOR button -->
-	
 	<button class="btn btn-default wa_buttonBar" title="Show/Hide Query Object Editor" 
 			ng-click = "qo_btnsCtrl.queryService.queryObject.properties.hideQueryObjectPanel = !qo_btnsCtrl.queryService.queryObject.properties.hideQueryObjectPanel"
 			ng-init="qo_btnsCtrl.queryService.queryObject.properties.hideQueryObjectPanel = true">
@@ -24,18 +25,18 @@
 	<!-- <button class="btn btn-default wa_buttonBar" title = "Clear Query Object" ng-click = "cleanQueryObject()"> <span class = "fa fa-refresh"></span></button> -->
 
 	<!-- SAVE output visuals button -->	 
-
 	<button class="btn btn-default wa_buttonBar" title="Save visualizations" ng-click="qo_btnsCtrl.save_Visualizations()"> 
 		<span  class = "fa fa-floppy-o"></span> 
 	</button>
 
-	<!-- Update button -->		
+	<!-- Run Update button -->		
 	<button  class="btn btn-primary wa_buttonBar" title = "Update query"
 		ng-click="qo_btnsCtrl.run_update()" 
 		popover="{{qo_btnsCtrl.queryService.queryObject.properties.validationStatus}}" popover-trigger="mouseenter"  popover-placement="bottom"
 		ng-Disabled = "!qo_btnsCtrl.queryService.queryObject.properties.isQueryValid">
 		 <span class = "fa fa fa-refresh fa-lg"></span>
 	 </button>
+	 
 	<!-- RUN button -->		
 	<button  class="btn btn-primary wa_buttonBar" title = "Run query"
 		ng-click="qo_btnsCtrl.run()" 
@@ -43,9 +44,9 @@
 		ng-Disabled = "!qo_btnsCtrl.queryService.queryObject.properties.isQueryValid">
 		 <span class = "fa fa-play-circle fa-lg"></span>
 	</button>
-
  
 	<br>
+	<!-- query status -->
 	<div style = "float:left; margin-left : 8px; width: 50%" 
 		ng-class="{'queryDone' : qo_btnsCtrl.queryService.queryObject.properties.queryDone === true, 
 				   'queryUndone' : qo_btnsCtrl.queryService.queryObject.properties.queryDone === false, 
