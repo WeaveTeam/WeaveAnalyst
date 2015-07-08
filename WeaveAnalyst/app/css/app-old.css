@@ -1,54 +1,8 @@
-/* app css stylesheet */
-/*body {
-	padding-top: 20px;
-}
-
-h1 {
-	border-bottom: 1px solid gray;
-}
-
-pre {
-	font-size: 11px;
-	line-height: 13px;
-}
-/*
-#Log {
-	/* display:inline-block; *
-}
-
-#container {
-	width: 98%;
-	height: 98%;
-	position: relative;
-	margin-left: 20px;
-	margin-right: auto;
-	margin-top: auto;
-	margin-bottom: auto;
-	/* border:solid;*
-	display: inline-block;
-}*/
-
-/* #header {
-	width: 100%;
-	height: 8%;
-	position: relative;
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: auto;
-	margin-bottom: 5px;
-	float: left;
-	border:solid;
-} */
-
-/*#leftPanel {
-	width: 15%;
-	height: 90%;
-	position: relative;
-	float: left;
-}*/
-
 #weave {
 	display:inline-block;
+	float: right;
+	width: calc(100% - 350px);
+	height: 950px;
 }
 
 #weavePanel{
@@ -90,39 +44,7 @@ pre {
 	margin-left: 20px;
 }
 
-/*div.portlet {
-	margin: 3px;
-	padding: 1px;
-	float: left;
-	height: 100px;
-	width: 100%;
-}*/
 
-/*.portlet { margin: 0 1em 1em 0; }*/
-
-/*
-.portlet-minimized {
-	height: auto !important;
-}
-*/
-/*.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }*/
-
-/*
-.portlet-header .ui-icon {
-	float: right;
-}
-
-.portlet-content { 
-	padding-right: 10px;
-	padding-left: 7px;
-	padding-bottom: 5px;
-	padding-top: 3px; 
-}
-
-.portlet-minimized .portlet-content {
-	display: none !important;
-}
-*/
 .ui-sortable-placeholder {
 	border: 1px black;
 	visibility: visible !important;
@@ -134,65 +56,6 @@ pre {
 .ui-sortable-placeholder * {
 	visibility: hidden;
 }
-/*
-.panel {
-	vertical-align: top;
-	margin-bottom: 20px;
-}
-
-.panel-title-margins {
-	margin-left: 7px;
-}
-
-.centered-button {
-	margin-left: 108px;
-	margin-top: 20px;
-	margin-bottom: 20px;
-}
-
-select {
-	margin: 5px 3px 3px 0px;
-	width: 100%;
-}
-
-ol {
-	margin: 0px 0px 0px 0px;
-}
-input[type="checkbox"] {
-	margin: -2px 0 0;
-}
-#feedback {
-	font-size: .5em;
-}
-
-.ui-selecting {
-	background: #FECA40;
-}
-
-.ui-selected {
-	background: #F39814;
-	color: white;
-}
-
-#selectable {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
-	width: 60%;
-}
-
-#selectable li {
-	margin: 0px;
-	padding: 0em;
-	font-size: .7em;
-	height: 10px;
-}
-
-#busyIndicator {
-	height: 20px;
-	width: 20px;
-}
-*/
 .animate-enter {
  -webkit-transition: height 1s linear all; /* Safari/Chrome */
  -moz-transition: 1s linear all; /* Firefox */
