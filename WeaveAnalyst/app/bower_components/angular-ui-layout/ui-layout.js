@@ -489,8 +489,8 @@ angular.module('ui.layout', [])
         var prevChevronClass = ctrl.isUsingColumnFlow ? chevronLeft : chevronUp;
         var afterChevronClass = ctrl.isUsingColumnFlow ? chevronRight : chevronDown;
 
-        prevChevron.addClass(prevChevronClass);
-        afterChevron.addClass(afterChevronClass);
+//        prevChevron.addClass(prevChevronClass);
+//        afterChevron.addClass(afterChevronClass);
 
         prevButton.on('click', function() {
           var prevSplitbarBeforeButton, prevSplitbarAfterButton;
