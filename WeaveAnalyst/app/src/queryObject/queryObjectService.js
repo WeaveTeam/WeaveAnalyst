@@ -50,7 +50,8 @@
 				properties : {
 					linkIndicator : false,
 					validationStatus : "test",
-					isQueryValid : false
+					isQueryValid : false,
+					hideQueryObjectPanel : true
 				},
 				filterArray : [],
 				treeFilterArray : [],
