@@ -6,6 +6,7 @@
 
 	angular.module('weaveAnalyst',['ui.router',
 	                               'ui.grid',
+	                               'ui.layout',
 	                               'ui.select',
 	                               'mk.editablespan',
 	                               'ngAnimate',

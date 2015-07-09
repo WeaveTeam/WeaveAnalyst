@@ -1,36 +1,34 @@
-<!--Controlled by AnalysisCtrl  -->
-<div style="height: 100%">
 
-	<div class = "topAnalysisBar">
-		<div class= "dataSource">		   
-			<div ng-class="{'unvalidatedUI' : !queryService.queryObject.dataTable, 'validatedUI' : queryService.queryObject.dataTable}"
-							 title = "Red flags indicate required selections for query validation">
-							
-				<button style="width : 95%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy(); setHierarchyPanelCSS();" class="btn btn-primary new-project-button">
-						<span style="color:white">Change Data Sources</span>
-				</button>
-			</div>
+		<div class = "topAnalysisBar">
+				<div class= "dataSource">		   
+					<div ng-class="{'unvalidatedUI' : !queryService.queryObject.dataTable, 'validatedUI' : queryService.queryObject.dataTable}"
+									 title = "Red flags indicate required selections for query validation">
+									
+						<button style="width : 95%;" type="button" ng-click="queryService.queryObject.properties.showHierarchy = true; queryService.refreshHierarchy(); setHierarchyPanelCSS();" class="btn btn-primary new-project-button">
+								<span style="color:white">Change Data Sources</span>
+						</button>
+					</div>
+				</div>
+				
+				<div style="color:white; width:auto; float:left; height:100%; line-height:45px; padding: 0 10px;">
+					Data Table: {{ queryService.queryObject.dataTable }}
+				</div>
+				
+				<qo-Buttons></qo-Buttons>
 		</div>
-		
-		<div style="color:white; width:auto; float:left; height:100%; line-height:45px; padding: 0 10px;">
-			Data Table: {{ queryService.queryObject.dataTable }}
-		</div>
-		
-		<qo-Buttons></qo-Buttons>
-	</div>
+
 	
-	<div style="position: relative; height:45px;" />
-		
-	<div style="height: 100%" class="container-fluid" style="padding: 5px;">
-		<div class="row" style="height: 30%; clear: both"><!-- top slab that contains script controls and filters -->
-			<!-- Scripts -->
-			
-			<script-Controls></script-Controls>
-			
-			<!-- Filters -->	
-		</div>
-	</div>	
-	<div style = "padding : 20px"></div>
+		<div style="position: relative; height:45px;" />
+	
 
-
-
+		<div ui-layout style = "width:100%; height:100%" >
+		       <div ui-layout-container> 
+		        <div ui-layout="{flow : 'column'}" >
+		          <div ui-layout-container class=" css-back" ></div>
+		          <div ui-layout-container class=" css-back" ></div>
+		        </div>
+		      </div>
+		    
+		      <div ui-layout-container class=" css-back" ></div>
+		  </div>
+  
