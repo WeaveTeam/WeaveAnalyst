@@ -35,6 +35,8 @@
 		scriptCtrl.analysisService = analysisService;
 		
 		scriptCtrl.getScriptMetadata = getScriptMetadata;
+		scriptCtrl.autoFillDefaults = autoFillDefaults;
+		scriptCtrl.validateQuery = validateQuery;
 		scriptCtrl.toggleButton = toggleButton;
 		
 		scriptCtrl.values = [];
@@ -45,12 +47,111 @@
 		//clears scrip options when script clear button is hit
 		function getScriptMetadata (scriptSelected, forceUpdate){
 			if(scriptCtrl.queryService.queryObject.scriptSelected)
-				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate);
+				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
+				then(scriptCtrl.autoFillDefaults);
 			else
 				scriptCtrl.analysisService.cache.scriptMetadata = {};
 		};
 		
+		//this function checks if the script inputs have any user specified defaults in the script input metadata
+		function autoFillDefaults (){
+			var sc_metadata = scriptCtrl.analysisService.cache.scriptMetadata;
+			
+			if(sc_metadata){
+				var columns = scriptCtrl.queryService.cache.columns;
+				var scriptOptions= scriptCtrl.queryService.queryObject.scriptOptions;
+				
+				if(sc_metadata && columns) {
+					if(!scriptOptions)//create scriptoptions object so that properties can be added dynamically later
+						scriptOptions = {};
+					
+					if(sc_metadata.hasOwnProperty("inputs")) {
+						for(var i in sc_metadata.inputs) {//
+							var input = sc_metadata.inputs[i];
+							if(input.type == "column") {
+								for(var j in columns) {//loop thru columns to find match for defaults
+									var column = columns[j];
+									if(input.hasOwnProperty("defaults")) {//check if input has default property
+										if(column.metadata.title == input['defaults']) {//if match is found
+											scriptOptions[input.param] = column;//assign column
+											break;
+										}
+									}
+									else{//if no default is specified
+										scriptOptions[input.param] = null;//empty object without default value filled in
+									}
+								}// end of column iteration
+							} 
+							else if(input.type == "value" || input.type == "options") {
+								scriptOptions[input.param] = input['defaults'];
+							}
+							
+							scriptCtrl.validatequery();
+						}// end of metadata input iteration
+						
+						//scriptCtrl.validatequery();
+					}
+				}
+			}
+		};
 		
+		function validateQuery(){
+			var qo = scriptCtrl.queryService.queryObject;
+			
+			var isQueryValid = true;
+			var validationStatus= "Query is valid.";
+			//validate datatable
+			if(!qo.dataTable){
+				validationStatus = "Input data has not been selected";
+				isQueryValid = false;//setting false
+				setQueryObjectParams();
+				return;
+			}
+			
+			//validate script
+			//if script has not been selected
+			if(qo.scriptSelected == null || qo.scriptSelected == "")
+			{
+				validationStatus = "Script has not been selected.";
+				isQueryValid = false;
+				setQueryObjectParams();//setting false
+				return;
+			}
+			
+			
+			//validate options
+			if(qo.scriptOptions){//if they exist validate them
+				var g = 0;
+				var counter = Object.keys(scriptCtrl.analysisService.cache.scriptMetadata.inputs).length;
+				for(var f = 0; f < counter; f++) {
+					var tempObj = scriptCtrl.queryService.cache.scriptMetadata.inputs[f];
+					if(!qo.scriptOptions[tempObj.param]) {
+						validationStatus = "'" + f + "'" + " has not been selected";
+						isQueryValid = false;
+						setQueryObjectParams();//setting false
+						return;
+					}
+					else
+						g++;
+				}
+			}
+			else{
+				validationStatus = "Script - Options has not been set.";
+				isQueryValid = false;
+				setQueryObjectParams();//setting false
+				return;
+				
+			}
+			
+			setQueryObjectParams();//to set true status
+			
+			function setQueryObjectParams (){//closure function, do not move
+				
+				qo.properties.validationStatus = validationStatus;
+				qo.isQueryValid = isQueryValid;
+			};
+			
+		};
 		function toggleButton (input) {
 			
 			if (scriptCtrl.queryService.queryObject.scriptOptions[input.param] == input.options[0]) {
@@ -60,7 +161,7 @@
 			}
 		};
 		
-		
+		//watches for change in computation engine
 		$scope.$watch(function(){
 			return scriptCtrl.queryService.queryObject.ComputationEngine;
 		}, function(){
@@ -68,10 +169,12 @@
 				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.queryService.queryObject.ComputationEngine);
 		});
 		
+		//watches for change in script selected
 		$scope.$watch(function(){
 			return scriptCtrl.queryService.queryObject.scriptSelected;
 		}, function() {
-			scriptCtrl.getScriptMetadata(scriptCtrl.queryService.queryObject.scriptSelected, true);
+			if(scriptCtrl.queryService.queryObject.scriptSelected)
+				scriptCtrl.getScriptMetadata(scriptCtrl.queryService.queryObject.scriptSelected, true);
 		});
 		
 	}//end of controller definition
