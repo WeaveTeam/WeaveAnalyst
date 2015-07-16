@@ -11,7 +11,7 @@
  * @author spurushe
  * @author fkamayou
  */
-
+var x;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('qoButtons', qoButtons);
@@ -31,8 +31,8 @@
 	};
 	
 	//controller is put out of the directive definition
-	qoButtonController.$inject = ['$scope', '$modal', 'queryService', 'WeaveService','projectService', 'QueryHandlerService'];//dependencies
-	function qoButtonController ($scope, $modal, queryService, WeaveService,projectService, QueryHandlerService){
+	qoButtonController.$inject = ['$scope', '$modal','$window', 'queryService', 'WeaveService','projectService', 'QueryHandlerService'];//dependencies
+	function qoButtonController ($scope, $modal, $window, queryService, WeaveService,projectService, QueryHandlerService){
 		var qo_btnsCtrl = this;
 		
 		qo_btnsCtrl.queryService = queryService;
@@ -44,6 +44,7 @@
 		qo_btnsCtrl.save_Visualizations = save_Visualizations;
 		qo_btnsCtrl.run_update = run_update;
 		qo_btnsCtrl.run = run;
+		qo_btnsCtrl.launch_Weave = launch_Weave;
 		
 		//structure for file upload
 		qo_btnsCtrl.queryObjectUploaded = {
@@ -116,6 +117,10 @@
 		
 		function run(){
 			//run new QueryHandlerService.run(queryService.queryObject)
+		};
+		
+		function launch_Weave (){
+			qo_btnsCtrl.WeaveService.launch_Weave();
 		};
 	}
 	
