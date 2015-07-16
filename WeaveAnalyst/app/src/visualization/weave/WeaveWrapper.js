@@ -13,32 +13,31 @@ if(!this.wa)
 	
 	var p = WeaveWrapper.prototype;
 	
-	
 	//////////////
 	////VIZs
 	//////////////
-	p.request_BarChart = function(){
+	p.request_BarChart = function(tool_config){
 		if(this.check_WeaveReady()){
 			var toolName = this.generate_UniqueName("BarChartTool");
 			this.weave.path(toolName)
 			.request('CompoundBarChartTool')
-			.state({  showAllLabels : state.showAllLabels })
+			.tool_config({  showAllLabels : tool_config.showAllLabels })
 			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
-			.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
+			.push('sortColumn').setColumn(tool_config && tool_config.sort ? tool_config.sort.metadata : "", tool_config && tool_config.sort ? tool_config.sort.dataSourceName : "")
 			.pop()
-			.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
+			.push('labelColumn').setColumn(tool_config && tool_config.label ? tool_config.label.metadata : "", tool_config && tool_config.label ? tool_config.label.dataSourceName : "")
 			.pop()
-			.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
+			.push("heightColumns").setColumns(tool_config && tool_config.heights && tool_config.heights.length ? tool_config.heights.map(function(column) {
 				return column.metadata;
-			}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
+			}) : {}, tool_config && tool_config.heights && tool_config.heights[0] ? tool_config.heights[0].dataSourceName : "")
 			.pop()
-			.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
+			.push("positiveErrorColumns").setColumns(tool_config && tool_config.posErr ? tool_config.posErr.map(function(column) {
 				return column.metadata;
-			}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
+			}) : {}, tool_config && tool_config.posErr && tool_config.posErr[0] ? tool_config.posErr[0].dataSourceName : "")
 			.pop()
-			.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
+			.push("negativeErrorColumns").setColumns(tool_config && tool_config.negErr && tool_config.negErr.map(function(column) {
 				return column.metadata;
-			}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
+			}), tool_config && tool_config.negErr && tool_config.negErr[0] ? tool_config.negErr[0].dataSourceName : "");
 		}
 		else{
 			console.log("Weave and its api are not ready");
@@ -48,7 +47,7 @@ if(!this.wa)
 	};
 	
 	
-	p.request_ScatterPlot = function(){
+	p.request_ScatterPlot = function(tool_config){
 		var toolName;
 		if(this.check_WeaveReady()){
 			
@@ -56,9 +55,9 @@ if(!this.wa)
 			
 			 this.weave.path(toolName).request('ScatterPlotTool')
 			.push('children', 'visualization','plotManager', 'plotters', 'plot')
-			.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName)
+			.push('dataX').setColumn(tool_config.X.metadata, tool_config.X.dataSourceName)
 			.pop()
-			.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
+			.push('dataY').setColumn(tool_config.Y.metadata, tool_config.Y.dataSourceName);
 				
 		}
 		else{//if weave is not ready
@@ -69,20 +68,20 @@ if(!this.wa)
 	};
 	
 	
-	p.request_AdvancedDataTable = function(){
+	p.request_AdvancedDataTable = function(tool_config){
 		var toolName;
 		if (this.check_WeaveReady())
 		{
 			toolName = this.generate_UniqueName("DataTableTool");
 			
 			this.weave.path(toolName).request('AdvancedTableTool')
-			.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
+			.push("columns").setColumns(tool_config && tool_config.columns && tool_config.columns.length ? tool_config.columns.map(function(column) {
 				return column.metadata;
-			}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
+			}) : {}, tool_config && tool_config.columns && tool_config.columns[0] ? tool_config.columns[0].dataSourceName : ""); 
 			
 			// empty columns
-			if(state.columns && !state.columns.length)
-				weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
+			if(tool_config.columns && !tool_config.columns.length)
+				weave.path(toolName).request("AdvancedTableTool").push("columns").tool_config({});
 		}
 		else{//if weave is not ready
 			console.log("Weave and its api are not ready");
@@ -104,11 +103,11 @@ if(!this.wa)
 		var toolName;
 		if(this.check_WeaveReady()){
 			toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
-			ws.weave.path(toolName).request('AttributeMenuTool').call(setQueryColumns, {choices: state.columns});
+			ws.weave.path(toolName).request('AttributeMenuTool').call(setQueryColumns, {choices: tool_config.columns});
 				
-				if(state.vizAttribute && state.selectedVizTool)
+				if(tool_config.vizAttribute && tool_config.selectedVizTool)
 					ws.weave.path(toolName).request('AttributeMenuTool')
-					.state({targetAttribute : state.vizAttribute.title , targetToolPath : [state.selectedVizTool]});
+					.tool_config({targetAttribute : tool_config.vizAttribute.title , targetToolPath : [tool_config.selectedVizTool]});
 			}
 		else{
 			console.log('Weave and its api are not ready yet');
@@ -122,17 +121,17 @@ if(!this.wa)
 			
 			this.weave.path(toolName).request('DataFilterTool');
 			
-			if(state.filterStyle == "Discrete values") {
-				this.weave.path(toolName, "editor", null).request("StringDataFilterEditor").state({
-					layoutMode : state.layoutMode.value,
-					showPlayButton : state.showPlayButton,
-					showToggle : state.showToggle
+			if(tool_config.filterStyle == "Discrete values") {
+				this.weave.path(toolName, "editor", null).request("StringDataFilterEditor").tool_config({
+					layoutMode : tool_config.layoutMode.value,
+					showPlayButton : tool_config.showPlayButton,
+					showToggle : tool_config.showToggle
 				});
-			} else if(state.filterStyle == "Continuous range") {
+			} else if(tool_config.filterStyle == "Continuous range") {
 				this.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
 			}
-			if(state.column) {
-				this.weave.path(toolName, "filter", null, "column").setColumn(state.column.metadata, state.column.dataSourceName);
+			if(tool_config.column) {
+				this.weave.path(toolName, "filter", null, "column").setColumn(tool_config.column.metadata, tool_config.column.dataSourceName);
 			}
 		}
 		else{
