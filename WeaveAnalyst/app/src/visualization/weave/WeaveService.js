@@ -9,7 +9,7 @@
 		
 		that.blah = "bujumbarra";
 		that.launch_Weave = function(){
-			var weaveWindow = $window.open("src/visualization/weave/test.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
+			var weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
 			weaveWindow.wa_data = that.blah;
 		};
 		
