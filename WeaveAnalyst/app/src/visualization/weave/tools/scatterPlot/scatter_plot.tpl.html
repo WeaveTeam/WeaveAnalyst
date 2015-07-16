@@ -1,0 +1,68 @@
+<div class="panel-body" ng-controller="ScatterPlotCtrl">
+	<ul class="input-controls">
+	
+	
+			<table>
+			<tr>
+				<tr>	
+					<td>
+						<input   type="checkbox"
+								 ng-model="tool.enabled"/>
+					</td>
+					
+					<td style="padding-left: 5px;">
+						Enable
+					</td>
+				</tr>
+				<td>
+					 Title:
+				</td>
+				<td style="padding-left: 5px;">
+					<input  style = "width : 100%" type="text" placeholder="Default" 
+							ng-model='tool.title'>
+
+				</td>
+			</tr>
+			
+			<tr>
+			
+				<td>
+						X Column:
+
+				</td>
+			
+				<td style="padding-left: 5px;">
+					<ui-select  ng-model="tool.X" droppable theme="select2" style="width: 100%;" ng-click = fetchColumnProvider()>
+				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+		
+		<tr>
+			<td>
+						Y Column:
+
+			</td>
+			
+			<td style="padding-left: 5px;">
+
+				<ui-select  ng-model="tool.Y" droppable theme="select2" style="width: 100%;" ng-click = fetchColumnProvider()>
+			    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in queryService.cache.columns | filter : { metadata : { title : $select.search }}">
+				       		 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+				</ui-select>
+			</td>
+		</tr>
+		
+		
+
+	</table>
+<!-- 		<color-Column-Selector></color-Column-Selector> -->
+<div color-Column-Selector plotname = "plot"></div>
+
+	</ul>
+</div>
