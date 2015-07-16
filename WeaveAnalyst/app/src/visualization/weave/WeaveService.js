@@ -7,9 +7,10 @@
 	function WeaveService ($q,$window, rootScope, runQueryService, dataServiceURL, queryService){
 		var that = this;
 		
+		that.blah = "bujumbarra";
 		that.launch_Weave = function(){
-			$window.open("../weave.html?",
-					"abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
+			var weaveWindow = $window.open("src/visualization/weave/test.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
+			weaveWindow.wa_data = that.blah;
 		};
 		
 	};

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<html ng-app="myApp">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Test</title>
@@ -7,39 +7,27 @@
 <body>
 
 <div>Weave</div>
-	
+	<div ng-controller = "appCtrl as c">
+	{{c.greeting}}
+	</div>
 
 	<div id="flashContent" style="width: 70%; height: 800px; float:left"></div>
+		<script type="text/javascript" src="../../../bower_components/angular/angular.min.js"></script>
 		<script src="../../../bower_components/jquery/dist/jquery.min.js"></script>
 		<script type = "text/javascript" src="WeaveWrapper.js"></script>		
 		<script type="text/javascript" src="/swfobject.js"></script>
-        <script type="text/javascript">
-        		var loadFlashContent = function() {
-        			var swfVersionStr = "10.2.0";
-		            // To use express install, set to playerProductInstall.swf, otherwise the empty string. 
-		            var xiSwfUrlStr = "playerProductInstall.swf";
-		            var flashvars = {};
-		            var params = {};
-		            params.quality = "high";
-		            params.bgcolor = "#869ca7";
-		            params.allowscriptaccess = "sameDomain";
-		            params.allowfullscreen = "true";
-		            params.base = window.location.protocol+"//"+window.location.host;
-		            var attributes = {};
-		            attributes.id = "weave";
-		            attributes.name = "weave";
-		            attributes.align = "middle";
-		            swfobject.embedSWF(
-		                "/weave.swf", "flashContent", 
-		                "100%", "800px", 
-		                swfVersionStr, xiSwfUrlStr, 
-		                flashvars, params, attributes);
-		            // JavaScript enabled so display the flashContent div in case it is not replaced with a swf object.
-		            swfobject.createCSS("#flashContent", "display:block;text-align:left;");
-        		};
-	            $('#flashContent').ready(function() {
-	            	setTimeout(loadFlashContent, 100);
-	            });
-        </script>
+		
+		<script type = "text/javascript">
+			angular.module('myApp', []);
+			
+			angular.module('myApp').controller('appCtrl', appCtrl);
+			appCtrl.$inject = ['$window'];
+			function appCtrl($window){
+				
+				var c = this;
+				c.greeting = $window.wa_data;
+				console.log("window", $window);
+			};
+		</script>
 </body>
 </html>
