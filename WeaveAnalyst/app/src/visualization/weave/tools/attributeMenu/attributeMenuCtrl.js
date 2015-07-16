@@ -2,7 +2,7 @@
  * controls the attribute menu visualization tool  widget
  */
 (function(){
-	angular.module('weaveAnalyst.WeaveModule').controller("AttributeMenuController",AttributeMenuController );
+	angular.module('weaveApp').controller("AttributeMenuController",AttributeMenuController );
 	AttributeMenuController.$inject = ['$scope', 'WeaveService', '$timeout'];
 	
 	function AttributeMenuController ($scope, WeaveService, $timeout){

@@ -1,4 +1,4 @@
-angular.module('weaveAnalyst.AnalysisModule').controller("keyColumnCtrl", function(){
+angular.module('weaveApp').controller("keyColumnCtrl", function(){
 
 
 });

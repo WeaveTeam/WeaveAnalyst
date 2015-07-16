@@ -1,3 +1,3 @@
-angular.module('weaveAnalyst.AnalysisModule').controller("ColorCtrl", function(){
+angular.module('weaveApp').controller("ColorCtrl", function(){
 
 });

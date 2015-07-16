@@ -4,5 +4,10 @@
 
 (function(){
 	
-	angular.module('weaveAnalyst.WeaveModule');
+	angular.module('weaveApp').controller('scatterPlotController', scatterPlotController );
+	
+	function scatterPlotController(){
+		
+	};
+	
 })();
