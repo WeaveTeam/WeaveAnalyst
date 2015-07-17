@@ -11,7 +11,6 @@
  * @author spurushe
  * @author fkamayou
  */
-var x;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('qoButtons', qoButtons);

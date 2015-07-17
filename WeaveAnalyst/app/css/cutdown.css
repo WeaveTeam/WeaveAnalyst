@@ -22,19 +22,6 @@
 	text-align: center;
 }
 
-.myaside {
-	z-index: 1049;
-	margin-left :20px;
-	margin-right :20px;
-	width : 97%;
-	height : 150px;
-	background: #fff;
-	position: fixed;
-	overflow: auto;
-	top: 70%;
-	bottom: 0
-}
-
 .erroLog-modal .modal-dialog{
 	width: 1000px;
 	margin: 200px auto;
@@ -535,9 +522,9 @@
 }
 
 .panel-default>.panel-heading {
-	/* color: #333; */
-	/* background-color: #5E5B5B; */
-	border-color: #ddd;
+	color: #333;
+	background-color: #5E5B5B;
+	//border-color: #ddd;
 	color: #D5D5D5;
 	background-color: #4C4F53;
 }
@@ -556,7 +543,7 @@
 
 .panel-heading {
 	width: 100%;
-	background: #4C4F53;
+	background: #5E5B5B;
 	color: #FFF;
 	border: 1px solid #C2C2C2;
 	height: 30px;
