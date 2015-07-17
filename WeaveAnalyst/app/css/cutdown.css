@@ -989,6 +989,7 @@ select {
 	background : #5bb75b;
 }
 
+/** for the d3 filter map**/
 #states {
   fill: #335555;
 }
@@ -1018,6 +1019,7 @@ select {
 	stroke:black;
 	stroke-width: 0.5px;
 }
+/** for the d3 filter map**/
 
 .activeListItem {
 	background-color: #B2FFFF
