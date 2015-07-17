@@ -2,12 +2,11 @@
 <html ng-app="weaveApp">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-		<title>Weave</title>
+		<title>WeaveApp</title>
 		<link href="../../../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
 		<link href="../../../bower_components/angular-ui-select/dist/select.css" rel="stylesheet" />
 		<link href="../../../lib/ui-select2/select2.css"  rel="stylesheet"/>
 		<link href="../../../css/weaveApp.css" rel="stylesheet">
-		
 	</head>
 
 
@@ -18,22 +17,22 @@
 		<!-- Viz tool widgets -->
 			<div id= "widgetContainer">
 				<accordion close-others="oneAtATime">
-   					 <accordion-group heading="Static Header">
-     					 This content is straight in the template.
-    				</accordion-group>
-   				 <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
-     				 {{group.content}}
-    			</accordion-group>
-   			    <accordion-group heading="Dynamic Body Content">
-      				<p>The body of the accordion group grows to fit the contents</p>
-      				  <button class="btn btn-small" ng-click="addItem()">Add Item</button>
+   					 <accordion-group heading="Scatterplot">
+     					 <scatter-Plot></scatter-Plot>
+    				 </accordion-group>
+   					 <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
+     					 {{group.content}}
+    				 </accordion-group>
+   			   		 <accordion-group heading="Dynamic Body Content">
+      					<p>The body of the accordion group grows to fit the contents</p>
+      				 	 <button class="btn btn-small" ng-click="addItem()">Add Item</button>
        				 <div ng-repeat="item in items">{{item}}</div>
-    			</accordion-group>
- 			 </accordion>
+    				</accordion-group>
+ 				 </accordion>
 			</div>
+			
 		<!-- WEAVE -->
 			<div id="flashContent"></div>
-			
 		</div>
 		<!--Angular  -->
 		<script type="text/javascript" src="../../../bower_components/angular/angular.min.js"></script>
@@ -47,9 +46,11 @@
 		<script src="../../../bower_components/angular-sanitize/angular-sanitize.min.js"></script>
 		<!-- Angular animate -->
 		<script src="../../../bower_components/angular-animate/angular-animate.min.js"></script>
+		<!-- UI select-->
+       <script src= "../../../bower_components/angular-ui-select/dist/select.min.js"></script>
 		<script type = "text/javascript" src="WeaveWrapper.js"></script>		
 		<script type="text/javascript" src="/swfobject.js"></script>
-		
+				
 		<script type="text/javascript">
         		var loadFlashContent = function() {
         			var swfVersionStr = "10.2.0";
@@ -68,7 +69,7 @@
 		            attributes.align = "middle";
 		            swfobject.embedSWF(
 		                "/weave.swf", "flashContent", 
-		                "100%", "100%", 
+		                "80%", "100%", 
 		                swfVersionStr, xiSwfUrlStr, 
 		                flashvars, params, attributes);
 		            // JavaScript enabled so display the flashContent div in case it is not replaced with a swf object.
@@ -80,9 +81,10 @@
         </script>
 		
 		<script type = "text/javascript">
-			angular.module('weaveApp', ['ngAnimate',
-			                               'ui.bootstrap',
-			                               'ngSanitize']);
+			angular.module('weaveApp', [ 'ngAnimate',
+			                             'ui.select',
+		                              	 'ui.bootstrap',
+			                             'ngSanitize']);
 			
 			angular.module('weaveApp').controller('appCtrl', appCtrl);
 			appCtrl.$inject = ['$window', '$scope'];
@@ -112,5 +114,6 @@
 				  };
 			};
 		</script>
+		<script type= "text/javascript" src="tools/scatterPlot/scatter_plot_directive.js"></script>
 </body>
 </html>

@@ -9,21 +9,23 @@ body{
 	min-height: 100%;
 	height: 100%
 }
+
 #parentDiv{
 	width:100%;
 	height:100%;
-	display:table
 }
 
+
+/* contains the widgets used to configure weave*/
 #widgetContainer{
 	width:20%;
 	height:100%;
-/* 	background-color:red; */
-	display:table-cell
+	float:left;
 }
 
+/* contains weave*/
 #flashContent{
 	width: 70%;
 	height: 100%;
-	display:table-cell
+	float:left;
 }
