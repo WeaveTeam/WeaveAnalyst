@@ -1,24 +1,15 @@
-
-<div class="panel-body" ng-controller="DataTableCtrl">
-	<ul class="input-controls">
-		
+<ul class="input-controls">
 		<tr>	
-			<td>
-				<input   type="checkbox"
-						 ng-model="tool.enabled"/>
-			</td>
+			<td><input ng-model="dtCtrl.config.checked"  type="checkbox"/></td>
 			
-			<td style="padding-left: 5px;">
-				Enable
-			</td>
+			<td style="padding-left: 5px;">Enable</td>
 		</tr>
 		<div class="portlet-content">
-			<ui-select  ng-model="tool.columns"  theme="select2" style="width: 100%;">
-		    	<ui-select-match allow-clear="true" placeholder="Choose Column(s)...">{{$item.title}}</ui-select-match>
-				<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-		       		 <div ng-bind-html="column.title| highlight: $select.search"></div>
-		        </ui-select-choices>
+			<ui-select ng-model = "dtCtrl.config.columns" theme="select2" style="width: 100%;">
+				<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
+						<ui-select-choices repeat="item in spCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 			</ui-select>
 		</div>
-	</ul>
-</div>
+</ul>

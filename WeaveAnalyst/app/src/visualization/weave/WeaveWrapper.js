@@ -3,7 +3,7 @@
  *@author spurushe
  */
 
-if(!this.wa)
+if(!this.wa)//the this refers to the weaveApp window object here
 	this.wa = {};
 
 (function(){
@@ -85,7 +85,10 @@ if(!this.wa)
 		var toolName;
 		if (WeaveWrapper.check_WeaveReady())
 		{
-			toolName = this.generate_UniqueName("DataTableTool");
+			if(tool_config.toolName)
+				toolName = tool_config.toolName;
+			else
+				toolName = this.generate_UniqueName("DataTableTool");
 			
 			WeaveWrapper.weave.path(toolName).request('AdvancedTableTool')
 			.push("columns").setColumns(tool_config && tool_config.columns && tool_config.columns.length ? tool_config.columns.map(function(column) {
