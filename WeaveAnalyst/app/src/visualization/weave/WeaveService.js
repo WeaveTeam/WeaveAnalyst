@@ -16,7 +16,7 @@
 				return;
 			else{
 				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
-				weaveWindow.wa_data = that.blah;
+				that.weaveWindow.wa_data = that.blah;
 			}
 		};
 		
