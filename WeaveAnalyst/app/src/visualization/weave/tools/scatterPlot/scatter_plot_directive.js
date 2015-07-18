@@ -1,5 +1,7 @@
 /**
- * controls the scatter plot visualization tool  widget
+ * directive that creates the scatter plot visualization tool widget
+ * controls the scatter plot in Weave
+ * @spurushe
  */
 
 (function(){
@@ -25,26 +27,31 @@
 		var weave_wrapper;
 		
 		spCtrl.request_scatterPlot = request_scatterPlot;
+		spCtrl.initWeaveWrapper = initWeaveWerapper;
 		spCtrl.items = ['a','d'];
 		
 		spCtrl.config = {
+			checked : false,
 			toolName: null,
 			X : null,
 			Y : null
 		};
 		
+		function initWeaveWrapper(){
+			//TODO put this retrieval in manager class later
+			if(!wa.wWrapper)
+				weave_wrapper = new wa.WeaveWrapper();
+			else
+				weave_wrapper = WeaveWrapper.instance;
+		};
 		
 		function request_scatterPlot (){
 			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
-				//TODO put this retrieval in manager class later
-				if(!wa.wWrapper)
-					weave_wrapper = new wa.WeaveWrapper();
-				else
-					weave_wrapper = WeaveWrapper.instance;
 				
+				spCtrl.initWeaveWrapper();
 				
-				if(spCtrl.checked)//if checked
-					spCtrl.config.toolName = weave_wrapper.request_ScatterPlot(spCtrl.config);
+				if(spCtrl.config.checked)//if checked
+					spCtrl.config.toolName = weave_wrapper.request_ScatterPlot(spCtrl.config);//request it with config
 				else{//if unchecked
 					if(spCtrl.config.toolName)//if the tool exists
 						weave_wrapper.remove_Object(spCtrl.config.toolName);//remove it
