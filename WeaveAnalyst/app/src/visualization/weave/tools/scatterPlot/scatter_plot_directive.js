@@ -27,7 +27,7 @@
 		var weave_wrapper;
 		
 		spCtrl.request_scatterPlot = request_scatterPlot;
-		spCtrl.initWeaveWrapper = initWeaveWerapper;
+		spCtrl.initWeaveWrapper = initWeaveWrapper;
 		spCtrl.items = ['a','d'];
 		
 		spCtrl.config = {
