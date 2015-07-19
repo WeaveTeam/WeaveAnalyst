@@ -7,7 +7,7 @@
 		<div class="portlet-content">
 			<ui-select multiple ng-model = "dtCtrl.config.columns" theme="select2" style="width: 100%;">
 				<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
-						<ui-select-choices repeat="item in spCtrl.items | filter : $select.search">
+						<ui-select-choices repeat="item in dtCtrl.items | filter : $select.search">
 			       			 {{item}}
 			        	</ui-select-choices>
 			</ui-select>

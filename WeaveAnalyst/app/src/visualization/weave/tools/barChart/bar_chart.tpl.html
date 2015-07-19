@@ -1,105 +1,82 @@
-<div class="panel-body" ng-controller="BarChartCtrl">
-		
-		<ul class="input-controls">
+<ul class="input-controls">
 		<table>
 			<tr>	
-				<td>
-					<input   type="checkbox"
-							 ng-model="tool.enabled"/>
-				</td>
+				<td><input   type="checkbox" ng-model="bcCtrl.config.checked"/></td>
 				
-				<td style="padding-left: 5px;">
-					Enable
-				</td>
+				<td style="padding-left: 5px;">Enable</td>
 			</tr>
 			<tr>
-				<td>
-					 Title:
-				</td>
+				<td>Title:</td>
 				<td style="padding-left: 5px;">
-					<input  
-							ng-init = "queryService.queryObject.Indicator.title"
-							style = "width : 100%" type="text"
-							placeholder="Default" 
-							ng-model="tool.title"/>
+					<input  style = "width : 100%" type="text" placeholder="Default" ng-model="bcCtrl.config.toolName"/>
 				</td>
 			</tr>
 			
 			<tr>
 			
-				<td>
-					Heights
-				</td>
+				<td>Heights</td>
 			
 				<td style="padding-left: 5px;">
-					<ui-select ng-model="tool.heights" theme="select2" style="width: 100%;">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$item.title}}</ui-select-match>
-						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-				        </ui-select-choices>
+					<ui-select ng-model="bcCtrl.config.heights" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 					</ui-select>
 				</td>
 			</tr>
 		
 		<tr>
-			<td>
-				Positive Errors
-			</td>
+			<td>Positive Errors</td>
 			
 			<td style="padding-left: 5px;">
-				<ui-select ng-model="tool.posErr" theme="select2" style="width: 100%;">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$item.title}}</ui-select-match>
-						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-				        </ui-select-choices>
+				<ui-select ng-model="bcCtrl.config.posErr" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 					</ui-select>
 			</td>
 		</tr>
 			
 		<tr>
-			<td>
-				Negative Errors
-			</td>
+			<td>Negative Errors</td>
 			
 			<td style="padding-left: 5px;">
 
-				<ui-select ng-model="tool.negErr" theme="select2" style="width: 100%;">
-				    	<ui-select-match allow-clear="true" placeholder="Choose Column...">{{$item.title}}</ui-select-match>
-						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-				        </ui-select-choices>
+				<ui-select ng-model="bcCtrl.config.negErr" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 					</ui-select>
 			</td>
 		</tr>	
 			
 		<tr>
-			<td>
-				Sort
-			</td>
+			<td>Sort</td>
 			
 			<td style="padding-left: 5px;">
 
-				<ui-select ng-model="tool.sort" theme="select2" style="width: 100%;">
-			    	<ui-select-match allow-clear="true" placeholder="Choose Column(s)...">{{$select.selected.title}}</ui-select-match>
-					<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-			       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-			        </ui-select-choices>
+				<ui-select ng-model="bcCtrl.config.sort" theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 				</ui-select>
 			</td>
 		</tr>
 		
 		<tr>
-			<td>
-				Label
-			</td>
+			<td>Label</td>
 			
 			<td style="padding-left: 5px;">
 
-				<ui-select ng-model=tool.label theme="select2" style="width: 100%;">
-			    	<ui-select-match allow-clear="true" placeholder="Choose Column(s)...">{{$select.selected.title}}</ui-select-match>
-					<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
-			       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
-			        </ui-select-choices>
+				<ui-select ng-model=bcCtrl.config.label theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
 				</ui-select>
 			</td>
 		</tr>
@@ -110,11 +87,8 @@
 						 ng-init="tool.showAllLabels = true"/>
 			</td>
 			
-			<td style="padding-left: 5px;">
-				Show All Axis Labels
-			</td>
+			<td style="padding-left: 5px;">Show All Axis Labels</td>
 		</tr>
 		</table>
-	</ul>
-</div>
+</ul>
 
