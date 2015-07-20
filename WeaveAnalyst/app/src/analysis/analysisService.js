@@ -8,7 +8,6 @@
 	function analysisService ($q, rootScope, queryService, runQueryService, scriptManagementURL){
 		var that = this;
 		
-		that.queryService = queryService;
 		that.activeNode = null;
 		that.selectedItems = [];
 		that.selectedValue = {};
@@ -21,7 +20,7 @@
 		};
 		
 		//fetching datatables
-		that.queryService.getDataTableList(true);
+		queryService.getDataTableList(true);
 		
 		that.buildTree = function (node, key) {
 			return {
