@@ -108,7 +108,8 @@
 	    .state('data_stats',{
 	    	url:'/dataStatistics',
 	    	templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-    		//controller : 'dataStatsCtrl',
+    		controller : 'data_StatisticsController',
+    		controllerAs : 'ds_Ctrl',
     		data :{
     			activetab : 'data_stats'
     		}
