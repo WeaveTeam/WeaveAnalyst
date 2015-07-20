@@ -1,5 +1,5 @@
 /**
- * This Service is designed to receive a query object preprocess an analysis query and processes its results.
+ * This Service is designed to receive a query object, pre-process an analysis query and processes its results.
  * @author spurushe
  * @author fkamayou
  * 
