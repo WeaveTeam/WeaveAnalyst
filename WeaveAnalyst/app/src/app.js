@@ -23,7 +23,7 @@
 	                               'weaveAnalyst.errorLog',
 	                               'weaveAnalyst.AnalysisModule',
 	                               'weaveAnalyst.WeaveModule',
-	                               'weaveAnalyst.QueryHandlerModule']);
+	                               'weaveAnalyst.run']);
 
 	
 	angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
