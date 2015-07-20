@@ -1,8 +1,16 @@
 /**
- * 
+ * code for rendering the d3 map filter tool used in the Weave Analyst
+ * @ author spurushe
+ * @ author sanjay1909
  */
 
-this.d3_viz = {};
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.d3_viz = {};
+}
 
 (function(){
 	
