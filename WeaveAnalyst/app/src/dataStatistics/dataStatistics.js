@@ -1,5 +1,6 @@
 /**
  * controllers and service for the 'Data Stats' tab and its nested tabs
+ * @author spurushe
  */
 //TODO create submodules corresponding to every nested tab
 //Module definition
@@ -169,12 +170,9 @@
 		
 		ds_Ctrl.queryService = queryService;
 		ds_Ctrl.statisticsService = statisticsService;
+		ds_Ctrl.statsData = [];//dataprovider for ui-grid
 		
 		ds_Ctrl.getStatistics = getStatistics;
-		
-		ds_Ctrl.statsData = [];//dataprovider for ui-grid
-			
-		
 		
 		if(queryService.cache.dataTableList.length == 0)//getting the list of datatables if they have not been retrieved yet//that is if the person visits this tab directly
 			queryService.getDataTableList(true);
@@ -186,7 +184,6 @@
 			return ds_Ctrl.statisticsService.cache.summaryStats.statsData;
 		}, function(){
 			ds_Ctrl.statsData = ds_Ctrl.statisticsService.cache.summaryStats.statsData;
-			console.log("stats", ds_Ctrl.statsData);
 		});
 		
 		
