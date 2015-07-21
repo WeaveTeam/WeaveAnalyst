@@ -9,7 +9,7 @@ angular.module('weaveAnalyst.dataStatistics').directive('sparkLines',[ function 
 				
 					//data: '='//data that describes the column breaks and column counts in each bin for each numerical column !! gets populated asyncronously
 			},
-			templateUrl: '<div id = "singleContainer" style = "width:100%; height:93%; overflow-y: scroll; background-color:white;opacity:0.5; border : 1px solid #999191"></div>',
+			template: '<div id = "sparklineContainer"></div>',
 			controller : function(){
 				
 				

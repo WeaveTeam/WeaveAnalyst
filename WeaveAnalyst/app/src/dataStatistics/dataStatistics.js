@@ -22,8 +22,8 @@
 	//************************SERVICE***********************************************************
 	angular.module('weaveAnalyst.dataStatistics').service('statisticsService', data_statisticsService);
 	
-	data_statisticsService.$inject = ['$q', 'queryService', 'QueryHandlerService'];
-	function data_statisticsService($q, queryService, QueryHandlerService){
+	data_statisticsService.$inject = ['$q', 'queryService','analysisService', 'QueryHandlerService','summaryStatistics' ];
+	function data_statisticsService($q, queryService,analysisService, QueryHandlerService, summaryStatistics){
 		var that = this;
 		
 		that.cache = {
@@ -34,13 +34,28 @@
 			input_metadata : null
 		};
 		
+		that.getStatistics = function(dt){
+			//retrieve metadata for the built in canned stats script
+			analysisService.getScriptMetadata("getStatistics.R", true).then(function(){
+				that.cache.input_metadata = analysisService.cache.scriptMetadata;
+				
+				queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
+					var ncols = queryService.cache.numericalColumns;
+					
+					that.getColumnTitles(ncols);
+					
+					that.calculate_Statistics('getStatistics.R', {'SummaryStatistics':ncols}, summaryStatistics, true );
+				});
+			});
+		};
+		
 		/**
 		 * common function that runs various statistical tests and scripts and processes results accordingly
 		 * @param scriptName name of the script 
 		 * @param statsObject the input data
 		 * @param statistic to calculate 
 		 */
-		that.calculate_Statistics = function (scriptName, statsObject, statsToCalculate, forceUpdate){
+		that.calculate_Statistics = function (scriptName, statsObject, statToCalculate, forceUpdate){
 
 			var statsInputs = QueryHandlerService.handle_ScriptInput_Options(statsObject);//will return a dataColumnmatrix bean
 			if(statsInputs){
@@ -57,7 +72,7 @@
 									switch (statToCalculate)
 									{
 										case summaryStatistics:
-											that.handle_DataStats(result.resultData[0], that.cache.statsInputMetadata.inputs );
+											that.handle_DataStats(result.resultData[0], that.cache.input_metadata.inputs );
 											that.handle_SparklineData(result.resultData[1]);
 											break;
 										case correlationMatrix:
@@ -99,20 +114,6 @@
 					}
 					
 					data.push(oneStatsGridObject);
-					
-					//during the last iteration
-					if(x == (resultData.length - 1)){
-						this.cache.summaryStats.columnDefinitions = [];
-						for(var z = 0; z < metadata.length; z++){
-							//populates the column definitions of the grid
-							this.cache.summaryStats.columnDefinitions.push({
-								field: metadata[z].param,
-								displayName : metadata[z].param,
-								enableCellEdit:false
-							});
-						}
-						
-					}
 				}
 				
 				that.cache.summaryStats.statsData = [];//clear previous entries
@@ -162,42 +163,38 @@
 	//********************CONTROLLERS***************************************************************
 	angular.module('weaveAnalyst.dataStatistics').controller('data_StatisticsController', data_statisticsController );
 	
-	data_statisticsController.$inject = ['queryService', 'statisticsService', 'analysisService', 'summaryStatistics'];
-	function data_statisticsController (queryService, statisticsService, analysisService, summaryStatistics){
+	data_statisticsController.$inject = ['$scope','queryService', 'statisticsService', 'analysisService'];
+	function data_statisticsController ($scope, queryService, statisticsService){
 		var ds_Ctrl = this;
 		
 		ds_Ctrl.queryService = queryService;
 		ds_Ctrl.statisticsService = statisticsService;
-		ds_Ctrl.analysisService = analysisService;
 		
 		ds_Ctrl.getStatistics = getStatistics;
 		
-		ds_Ctrl.columnDefinitions = [];//populates the stats grid
-		ds_Ctrl.statsData = [];//the array that gets populated by the Column statistics
+		ds_Ctrl.statsData = [];//dataprovider for ui-grid
 			
 		
 		
 		if(queryService.cache.dataTableList.length == 0)//getting the list of datatables if they have not been retrieved yet//that is if the person visits this tab directly
 			queryService.getDataTableList(true);
-			
+		
+		/////////
+		//watches
+		//////////
+		$scope.$watch(function (){
+			return ds_Ctrl.statisticsService.cache.summaryStats.statsData;
+		}, function(){
+			ds_Ctrl.statsData = ds_Ctrl.statisticsService.cache.summaryStats.statsData;
+			console.log("stats", ds_Ctrl.statsData);
+		});
+		
 		
 		function getStatistics (){
 			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
 				
-			if(dt.id){//if a datatable has been selected
-				//retrieve metadata for the built in canned stats script
-				ds_Ctrl.analysisService.getScriptMetadata("getStatistics.R", true).then(function(){
-					ds_Ctrl.statisticsService.cache.input_metadata = ds_Ctrl.analysisService.cache.scriptMetadata;
-					
-					ds_Ctrl.queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
-						var ncols = ds_Ctrl.queryService.cache.numericalColumns;
-						
-						ds_Ctrl.statisticsService.getColumnTitles(ncols);
-						
-						ds_Ctrl.statisticsService.calculate_Statistics('getStatistics.R', {'SummaryStatistics':ncols}, summaryStatistics, true );
-					});
-				});
-			}//end of if 
+			if(dt.id)//if a datatable has been selected
+				ds_Ctrl.statisticsService.getStatistics(dt);
 		};
 	};
 })();
