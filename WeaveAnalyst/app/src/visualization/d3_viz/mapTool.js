@@ -9,7 +9,7 @@ if(!this.wa){
 }
 
 if(!this.wa.d3_viz){
-	this.d3_viz = {};
+	this.wa.d3_viz = {};
 }
 
 (function(){
@@ -431,6 +431,6 @@ if(!this.wa.d3_viz){
 	};
 	
 	
-	d3_viz.mapTool = mapTool;
+	window.wa.d3_viz.mapTool = mapTool;
 }());
 

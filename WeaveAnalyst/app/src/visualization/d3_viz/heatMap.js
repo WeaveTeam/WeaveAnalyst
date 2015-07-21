@@ -10,7 +10,7 @@ if(!this.wa){
 }
 
 if(!this.wa.d3_viz){
-	this.d3_viz = {};
+	this.wa.d3_viz = {};
 }
 
 (function(){
@@ -38,7 +38,7 @@ if(!this.wa.d3_viz){
 	
 	var p = heatMap.prototype;
 	
-	d3_viz.heatMap = heatMap;
+	window.wa.d3_viz.heatMap = heatMap;
 	
 	
 	//initializes the heat map 
