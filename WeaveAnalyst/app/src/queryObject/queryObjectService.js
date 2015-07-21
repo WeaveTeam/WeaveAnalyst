@@ -17,7 +17,7 @@
                             'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL','WeaveDataSource'];
 	
 	function queryService ($q, scope, runQueryService, 
-   		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationService, WeaveDataSource)
+   		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationServiceURL, WeaveDataSource)
 	{
 		
 		var that = this; // point to this for async responses
@@ -101,7 +101,51 @@
 				filterArray : [],
 				numericalColumns : []
 		};
+		/**
+	     * This function wraps the async aws runScript function into an angular defer/promise
+	     * So that the UI asynchronously wait for the data to be available...
+	     */
+	    that.runScript = function(scriptName) {
+	        
+	    	var deferred = $q.defer();
 
+	    	runQueryService.queryRequest(computationServiceURL, 
+	    								 'runScript', 
+	    								 [scriptName], 
+	    								 function(result){	
+											deferred.resolve(result);
+	    								 },
+	    								 function(error){
+    										deferred.reject(error);
+	    								 }
+	    	);
+	    	
+	        return deferred.promise;
+	    };
+	    
+	    
+	    /**
+	     * this function pulls data before running a script
+	     * @param inputs the ids of the columns to pull the data
+	     * @param reMaps remapObjects to overwrite data values temporarily
+	     */
+	    that.getDataFromServer = function(inputs, reMaps) {
+	    	
+	    	var deferred = $q.defer();
+
+	    	runQueryService.queryRequest(computationServiceURL, 
+	    								'getDataFromServer', 
+	    								[inputs, reMaps],
+	    								function(result){	
+											deferred.resolve(result);
+										 },
+										 function(error){
+											deferred.reject(error);
+										 });
+	    	
+	        return deferred.promise;
+	    };
+	    
 		
 		/**
 		  * This function makes nested async calls to the aws function getEntityChildIds and

@@ -23,7 +23,7 @@
 	                               'weaveAnalyst.errorLog',
 	                               'weaveAnalyst.AnalysisModule',
 	                               'weaveAnalyst.WeaveModule',
-	                               'weaveAnalyst.QueryHandlerModule']);
+	                               'weaveAnalyst.run']);
 
 	
 	angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
@@ -108,7 +108,8 @@
 	    .state('data_stats',{
 	    	url:'/dataStatistics',
 	    	templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-    		//controller : 'dataStatsCtrl',
+    		controller : 'data_StatisticsController',
+    		controllerAs : 'ds_Ctrl',
     		data :{
     			activetab : 'data_stats'
     		}
