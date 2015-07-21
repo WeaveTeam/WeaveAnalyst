@@ -58,7 +58,7 @@
 		.state('index', {
 			url:'/projects',//projects is the entry point into the app
 	    	templateUrl : 'src/project/projectManagementPanel.html',
-	    	controller : 'ProjectManagementCtrl',
+	    	controller : 'ProjectManagementController',
 	    	data: {
 	    		activetab : 'project'
 	    	}
