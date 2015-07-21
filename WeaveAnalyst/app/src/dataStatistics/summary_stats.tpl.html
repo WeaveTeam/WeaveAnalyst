@@ -3,7 +3,6 @@ ctrl = dataStatsCtrl -->
 <div class = "parent_stats_div">
 		
 		<p style = "float:left; width: 61%">Edit getStatistics.json and getStatistics.R to add more summary statistics</p>
-		
 			
 		<!-- DATAGRID -->
 		<div class= "stats_grid"  ui-grid= "{data : ds_Ctrl.statsData}"></div>
@@ -12,9 +11,8 @@ ctrl = dataStatsCtrl -->
 		<div class = "sparkLinesColumn">
 			<div class = "sparklinesHeading"><p style = "padding-top: 8px" >Sparklines</p></div>
 			
-			<div id= "sparklineDiv" 
+			<div id= "one_sparklineDiv" 
 			 spark-Lines = "" data = "ds_Ctrl.statisticsService.cache.sparklineData">
-			
 			</div>
 		</div>
 		
