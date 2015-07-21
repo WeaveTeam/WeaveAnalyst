@@ -9,12 +9,12 @@ if(!this.wa){
 }
 
 if(!this.wa.d3_viz){
-	this.d3_viz = {};
+	this.wa.d3_viz = {};
 }
 
 (function(){
 	
-	function sparkLines (){
+	function sparkLine (){
 		this._container;
 		this._svg;
 		
@@ -31,12 +31,12 @@ if(!this.wa.d3_viz){
 		this._bar;
 	};
 	
-	var p = sparkLines.prototype;
-	d3_viz.sparkLines = sparkLines;
+	var p = sparkLine.prototype;
+	window.wa.d3_viz.sparkLine = sparkLine;
 	
 	
 	
-	p.initialze_sparkLines = function(config){
+	p.initialze_sparkLine = function(config){
 		
 		this._container = config.container;
 
@@ -45,7 +45,7 @@ if(!this.wa.d3_viz){
 		this._counts = config.counts;
 		
 		this._margin = {top: 5, right: 5, bottom: 5, left: 5};
-		this._width = 60; this._height= 60;
+		this._width = config.width; this._height= config.height;
 
 		//scales
 		this._heightScale = d3.scale.linear()
@@ -67,6 +67,15 @@ if(!this.wa.d3_viz){
 		.style("font-weight", 'bold');
 		
 		this._barWidth = (this._width - this._margin.left - this._margin.right)/this._counts.length;
+		
+		//creating the svgS
+		this._svg = d3.select(this._container).append('svg')
+					  .attr('fill', 'black')
+					  .attr('width', this._width)//svg viewport dynamically generated
+					  .attr('height', this._height )
+					  .append('g')
+					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+		
 	};
 	
 	
@@ -76,29 +85,27 @@ if(!this.wa.d3_viz){
 	 * @param dom_element_to_append_to :the HTML element to which the sparkline D3 viz is appended
 	 * @param sparklineData : the distribution data calculated in R/STATA
 	 */
-	p.render_sparkLines = function(){
-		//creating the svgS
-		this._svg = d3.select(this._container).append('svg')
-					  .attr('fill', 'black')
-					  .attr('width', this._width)//svg viewport dynamically generated
-					  .attr('height', this._height )
-					  .append('g')
-					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+	p.render_sparkLine = function(){
+		var slObj = this;
 		
+		if(!slObj._svg){
+			console.log("Still initializing chart");
+			setTimeout(p.render_sparkLine, 100);
+		}
+	
 		//making one g element per bar 
-		this._bar = this._svg.selectAll("g")
-	      			   .data(this._counts)
+		slObj._bar = slObj._svg.selectAll("g")
+	      			   .data(slObj._counts)
 	      			   .enter().append("svg:g")
-	      			   .attr("transform", function(d, i) { return "translate(" + (i * this._barWidth ) + ",0)"; });
+	      			   .attr("transform", function(d, i) {  return "translate(" + (i * slObj._barWidth ) + ",0)"; });
 
-		this._bar.append("rect")
-	      .attr("y", function(d) { return this._heightScale(d); })
-	      .attr("height", function(d) { return this._height - this._heightScale(d); })
-	      .attr("width", this._barWidth)
-	      .on('mouseover', function(d){ this._tooltip.style('visibility', 'visible' ).text(d); 
-			             							   d3.select(this).style('stroke-opacity', 1);})
-			             .on("mousemove", function(){return this._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-			             .on('mouseout', function(){ this._tooltip.style('visibility', 'hidden'); 
+		slObj._bar.append("rect")	
+	      .attr("y", function(d) { return slObj._heightScale(d); })
+	      .attr("height", function(d) { return slObj._height - slObj._heightScale(d); })
+	      .attr("width", slObj._barWidth)
+	      .on('mouseover', function(d){ slObj._tooltip.style('visibility', 'visible' ).text(d);   d3.select(this).style('stroke-opacity', 1);})
+          .on("mousemove", function(){return slObj._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+          .on('mouseout', function(){ slObj._tooltip.style('visibility', 'hidden'); 
 			             							 d3.select(this).style('stroke-opacity', 0);});
 	};
 })();
