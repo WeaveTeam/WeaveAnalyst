@@ -13,10 +13,12 @@
 		var that = this;
 		var nestedFilterRequest = {and : []};
 		
+		//this function pre-processes filters applied on the input data before being sent to the server
 		that.handle_Filters = function(){
 			
 		};
 		
+		//this function pre-processes the inputs of a particular computation by wrapping it into a bean
 		that.handle_ScriptInput_Options = function(scriptOptions){
 
 	    	var typedInputObjects= [];
@@ -79,10 +81,12 @@
 	    	return typedInputObjects;
 		};
 		
+		//this function temporarily remaps original data values to new ones without altering the original data 
 		that.handle_ColumnRemapping = function(){
 			
 		};
 		
+		//runs a pre-processed query (analysis) on the server (in R/STATA etc)
 		that.run_query = function(){
 			
 		};
