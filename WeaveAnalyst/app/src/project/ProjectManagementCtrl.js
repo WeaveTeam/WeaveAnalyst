@@ -9,13 +9,11 @@
 		prjtCtrl.projectService = projectService;
 		prjtCtrl.WeaveService = WeaveService;
 		prjtCtrl.queryService = queryService;
+		
 		prjtCtrl.checkQOTableExits = checkQOTableExits;
 		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
 		prjtCtrl.nameOfQueryObjectToDelete = "";
 		prjtCtrl.deleteProject = deleteProject;
-		prjtCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
-		prjtCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
-		prjtCtrl.openInAnalysis = openInAnalysis;
 		prjtCtrl.openAdditionPanel = openAdditionPanel;
 		
 		//options needed for creating the modal instance window
@@ -116,55 +114,6 @@
 			}
 		};
 		
-		//deletes a single queryObject within the currently selected Project
-		function deleteSpecificQueryObject(item){
-			prjtCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
-			prjtCtrl.deleteQueryConfirmation(prjtCtrl.projectService.cache.project.selected, prjtCtrl.nameOfQueryObjectToDelete);
-		};
-		
-		function deleteQueryConfirmation (currentProject, currentQueryFileName){
-			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
-			if(deletePopup == true){
-				prjtCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
-			}
-		};
-		
-		function openInAnalysis (incoming_queryObject) {
-			$scope.$emit("queryObjectloaded", incoming_queryObject);
-			$location.path('/analysis'); 
-		};
-		
-		//called when the thumb-nail is clicked
-		/**
-		 *@param given a query object
-		 *@returns it returns the weave visualizations for it.
-		 */
-		function returnSessionState (queryObject){
-			prjtCtrl.projectService.returnSessionState(queryObject).then(function(weaveSessionState){
-				var newWeave;
-				if(!(angular.isUndefined(weaveSessionState))){
-					
-			   		 if (!newWeave || newWeave.closed) {
-							newWeave = window
-									.open("/weave.html?",
-											"abc",
-											"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
-						}
-			   		 
-			   		prjtCtrl.WeaveService.setWeaveWindow(newWeave);
-				   		
-				   		$scope.$watch(function(){
-				   			return prjtCtrl.WeaveService.weave;
-				   		},function(){
-				   			if(prjtCtrl.WeaveService.checkWeaveReady()) 
-				   				prjtCtrl.WeaveService.setBase64SessionState(weaveSessionState);
-				   		});
-			   		}
-				else{
-					console.log("Session state was not returned");
-				}
-			});
-		};
 		
 		//button click event that creates the modal
 		function openAdditionPanel(){
@@ -175,9 +124,6 @@
 				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
 				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
 				 console.log("userName", additionParams.userNameEntered);
-				 
-				 
-				 
 			});
 		};
 		

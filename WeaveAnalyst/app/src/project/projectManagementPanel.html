@@ -19,11 +19,17 @@
 
 						<div style="display: inline-block; margin-left: 90px;">
 
-							<button id = "newProjectButton"  type="button" class="btn btn-sm new-project-button" ng-click = "prjtCtrl.openAdditionPanel()">
-								Create a project
+							<button  type="button" class="btn btn-sm new-project-button" popover = "Create new project"
+									popover-trigger="mouseenter" ng-click = "prjtCtrl.openAdditionPanel()">New
 							</button>
-							<button  ng-click = "prjtCtrl.deleteProject()"  class="btn btn-sm new-project-button" data-trigger="hover" data-title="Delete this project">
-								Delete selected project
+							<button  ng-click = "prjtCtrl.deleteProject()"  class="btn btn-sm new-project-button" data-trigger="hover" popover = "Delete current project" popover-trigger="mouseenter">
+								Delete
+							</button>
+							<button class="btn btn-sm new-project-button" data-trigger="hover" popover = "Copy current project" popover-trigger="mouseenter">
+								Copy
+							</button>
+							<button class="btn btn-sm new-project-button" data-trigger="hover" popover = "Rename current project" popover-trigger="mouseenter">
+								Rename
 							</button>
 						</div>
 
@@ -36,58 +42,9 @@
 				<div class="dd" id="nestable3">
 					<ol ui-sortable class="dd-list" ng-model="prjtCtrl.projectService.cache.returnedQueryObjects" id="queryObjectChoicesUI">
 							<li class="dd-item dd3-item" data-id = "15"  ng-repeat="item in prjtCtrl.projectService.cache.returnedQueryObjects">
-							<div class="dd-handle dd3-handle">
-								<!--Drag-->
-							</div>
-							<div class= "dd3-content d-list-content">
-								<div style='display : table'; inline-block; >
-								
-<!---Contains the list of query Objects in a project	-->	
-									<div style="width : 85%; display : table-cell">
-										<ul style="list-style:initial">
-											<li>
-												<span class="prj-txt-lbl">Title: </span> 
-												<span class="prj-txt-val"> {{item.queryObject.title}} </span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Date: </span>
-												<span class="prj-txt-val">{{item.queryObject.date}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Datatable: </span>
-												<span class="prj-txt-val">{{item.queryObject.dataTable.title}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Script: </span>
-												<span class="prj-txt-val">{{item.queryObject.scriptSelected}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Columns: </span>
-												<span class="prj-txt-val">{{item.columnstring}}</span>
-											</li>
-										</ul>
-									</div>
- <!-- Contains the picture -->		<!-- div style="display : table-cell" ng-repeat = "pic in thumbnailsToDisplay"  ng-class = "{'clickMe' : status}" ng-mouseenter = "status = true" ng-mouseLeave = "status =false"-->
-										<div id = "blah">
-											<img width = "150" height = "100" 
-												 ng-src= "{{item.thumbnail || 'css/img/ImageUnavailable.png'}}" 
-												 
-												 ng-click = "prjtCtrl.returnSessionState(item.queryObject)">
-											 </img>
-										</div>
-								</div>
-								<div class="query-btn-holder">
-										<button ng-click = "prjtCtrl.deleteSpecificQueryObject(item)" class="btn btn-sm query-button">
-											Delete
-										</button>
-									
-										<button ng-click = "prjtCtrl.openInAnalysis(item.queryObject)" class ="btn btn-sm query-button">
-											Open
-										</button>
-								</div>
-							</div>
-				</li>
-				</ol>
+								<!-- add directive here and pass item as attribute -->
+							</li>
+					</ol>
 			</div>
 		</div>
 	</div>
