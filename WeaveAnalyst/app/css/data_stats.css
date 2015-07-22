@@ -3,7 +3,7 @@
 .parent_stats_div{
 	 width: 100%;
 	 height: 100%;
-	 margin-left:10px
+	 margin-left:10px;
 }
 
 #sparklineContainer{
@@ -39,4 +39,14 @@
 	float:left;
 	oveflow:auto
 }
+.coeff_list{
+	float: left;
+	padding-left:10px; 
+	padding-right: 20px
+}
 
+#corrMatrixContainer{
+	width: 83%;
+	height: 80%;
+	float:left;
+}
