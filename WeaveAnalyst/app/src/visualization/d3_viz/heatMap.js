@@ -48,7 +48,7 @@ if(!this.wa.d3_viz){
 		this._container = config.container;
 		
 		this._width = this._container.offsetWidth - this._margin.left - this._margin.right;
-		this._height = this._container.offsetHeight = this._margin.top = this._margin.bottom;
+		this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
 
 		//original SVG
 		this._heatMapSvg = d3.select(this._container).append("svg")
@@ -56,15 +56,15 @@ if(!this.wa.d3_viz){
 			.attr("height",this._height );
 		
 		this._data = config.data;
-		this._labels = config.columnTitles;
+		this._labels = config.labels;
 		
 		  // Scaling Functions
-		this._rowScale = d3.scale.linear().range([0, width]).domain([0,this._data[0].length]);
+		this._rowScale = d3.scale.linear().range([0, this._width]).domain([0,this._data.length]);
 
-		this._colScale = d3.scale.linear().range([0, height]).domain([0,this._data.length]);
+		this._colScale = d3.scale.linear().range([0, this._height]).domain([0,this._data.length]);
 
-		//tooltip
-		this._toolTip = d3.select(dom_element_to_append_to)
+		//toolTip
+		this._toolTip = d3.select(this._container)
 		.append("div")
 		.style("position", "absolute")
 		.style("z-index", "10")
@@ -79,36 +79,38 @@ if(!this.wa.d3_viz){
 	 *  columnTitles required for labeling the matrix
 	 */
 	p.render_heatMap = function(){
-		if(!this._heatMapSvg){
-			console.log("Heat Map not initialized yet");
-			return;
+		
+		var hmObj = this;
+		
+		if(!hmObj._heatMapSvg){
+			console.log("Heat Map still initializing");
+			setTimeout(p.render_heatMap, 100);
 		}
 		
 		this.setColor();
-		
 
 		// remove all previous items before render
-	    if(this._heatMapSvg)
-	    	this._heatMapSvg.selectAll('*').remove();
+	    if(hmObj._heatMapSvg)
+	    	hmObj._heatMapSvg.selectAll('*').remove();
 	    else
 	    	return;
 		
 		
 		//row creation
-		this._rowObjects = this._heatMapSvg.selectAll(".row")//.row is a predefined grid class
-						.data(this._data)
+	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
+						.data(hmObj._data)
 						.enter().append("svg:g")
 						.attr("class", "row");
 		
 		//appending text for row
-		this._rowObjects.append("text")
+	    hmObj._rowObjects.append("text")
 	      .attr("x", -1)
-	      .attr("y", function(d, i) { return this._colScale(i); })
+	      .attr("y", function(d, i) { return hmObj._colScale(i); })
 	      .attr("dy", "1")
 	      .attr("text-anchor", "end")
-	      .text(function(d, i) { return this._labels[i]; });
+	      .text(function(d, i) { return hmObj._labels[i]; });
 
-		this._rowCells = rowObjects.selectAll(".cell")
+	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
 		    			.data(function (d,i)
 				    		{ 
 				    			return d.map(function(a) 
@@ -116,18 +118,18 @@ if(!this.wa.d3_viz){
 				    					return {value: a, row: i};} ) ;
 							})//returning a key function
 			           .enter().append("svg:rect")
-			             .attr("x", function(d, i) {  return this._rowScale(i); })
-			             .attr("y", function(d, i) { return this._colScale(d.row); })
-			             .attr("width", this._rowScale(1))
-			             .attr("height", this._colScale(1))
-			             .style("fill", function(d) { return this._colorScale(d.value);})
+			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
+			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
+			             .attr("width", hmObj._rowScale(1))
+			             .attr("height", hmObj._colScale(1))
+			             .style("fill", function(d) { return hmObj._colorScale(d.value);})
 			             .style('stroke', "black")
 			             .style('stroke-width', 1)
 			             .style('stroke-opacity', 0)
-			             .on('mouseover', function(d){ this._tooltip.style('visibility', 'visible' ).text(d.value); 
+			             .on('mouseover', function(d){ hmObj._toolTip.style('visibility', 'visible' ).text(d.value); 
 			             							   d3.select(this).style('stroke-opacity', 1);})
-			             .on("mousemove", function(){return this._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-			             .on('mouseout', function(){ this._tooltip.style('visibility', 'hidden'); 
+			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
 			             							 d3.select(this).style('stroke-opacity', 0);});
 	};
 	
