@@ -9,8 +9,8 @@
 
 	//*******************************Value recipes********************************************
 	//Correlation coefficients
-	//angular.module('weaveAnalyst.dataStatistics').value('pearsonCoeff', {label:"Pearson's Coefficent", scriptName : "getCorrelationMatrix.R"});
-	//angular.module('weaveAnalyst.dataStatistics').value('spearmanCoeff', {label : "Spearman's Coefficient", scriptName:"getSpearmanCoefficient.R"});
+	angular.module('weaveAnalyst.dataStatistics').value('pearsonCoeff', {label:"Pearson's Coefficent", algorithm : 'pearson' });
+	angular.module('weaveAnalyst.dataStatistics').value('spearmanCoeff', {label : "Spearman's Coefficient", algorithm:"spearman"});
 
 	//value recipes to be used in result handling of non-query statistics
 	//Summary statistics for each numerical data columns
@@ -23,35 +23,22 @@
 	//************************SERVICE***********************************************************
 	angular.module('weaveAnalyst.dataStatistics').service('statisticsService', data_statisticsService);
 	
-	data_statisticsService.$inject = ['$q', 'queryService','analysisService', 'QueryHandlerService','summaryStatistics' ];
-	function data_statisticsService($q, queryService,analysisService, QueryHandlerService, summaryStatistics){
+	data_statisticsService.$inject = ['$q', 'queryService','analysisService', 'QueryHandlerService','summaryStatistics', 'correlationMatrix' ];
+	function data_statisticsService($q, queryService,analysisService, QueryHandlerService, summaryStatistics, correlationMatrix){
 		var that = this;
 		
 		that.cache = {
 			dataTable : null,
 			summaryStats : {statsData:[], columnDefinitions:[]},
 			sparklineData :{ breaks: [], counts: {}},
+			heatMap :null,
 			columnTitles: null,//column titles of the columns in current table 
 			input_metadata : null
 		};
 		
-		that.getStatistics = function(dt){
-			//retrieve metadata for the built in canned stats script
-			analysisService.getScriptMetadata("getStatistics.R", true).then(function(){
-				that.cache.input_metadata = analysisService.cache.scriptMetadata;
-				
-				queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
-					var ncols = queryService.cache.numericalColumns;
-					
-					that.getColumnTitles(ncols);
-					
-					that.calculate_Statistics('getStatistics.R', {'SummaryStatistics':ncols}, summaryStatistics, true );
-				});
-			});
-		};
-		
 		/**
 		 * common function that runs various statistical tests and scripts and processes results accordingly
+		 * main purpose is to run NON_QUERY computations 
 		 * @param scriptName name of the script 
 		 * @param statsObject the input data
 		 * @param statistic to calculate 
@@ -68,7 +55,7 @@
 						queryService.runScript(scriptName).then(function(result){
 							if(result){
 								//handling different kinds of non -query results returned from R
-								for(var x = 0; x < statsInputs.length; x++){
+								for(var x = 0; x < 1; x++){
 									
 									switch (statToCalculate)
 									{
@@ -77,11 +64,10 @@
 											that.handle_SparklineData(result.resultData[1]);
 											break;
 										case correlationMatrix:
-											that.handleCorrelationData(result.resultData);
+											that.handle_CorrelationData(result.resultData[0]);
 											break;
 										
 									}
-										
 									
 								}//end of loop for statsinputs
 							}
@@ -90,6 +76,24 @@
 				});
 			}
 		};
+		
+		
+		//function calls for calculation data_stats
+		that.get_Summary_Statistics = function(dt){
+			//retrieve metadata for the built in canned stats script
+			analysisService.getScriptMetadata("getStatistics.R", true).then(function(){
+				that.cache.input_metadata = analysisService.cache.scriptMetadata;
+				
+				queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
+					var ncols = queryService.cache.numericalColumns;
+					
+					that.getColumnTitles(ncols);
+					
+					that.calculate_Statistics('getStatistics.R', {'SummaryStatistics':ncols}, summaryStatistics, true );
+				});
+			});
+		};
+		
 		
 		/**
 		 * this function populates the Summary statistics grid
@@ -141,7 +145,27 @@
 			that.cache.sparklineData = sparklineData;
 		};
 		
-		that.handleCorrelationData = function(){
+		//function calls to calculate coefficients
+		//does not require a separate script metadata file
+		that.get_Coefficients = function(dt, algorithm){
+			
+			queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
+				var ncols = queryService.cache.numericalColumns;
+				
+				that.getColumnTitles(ncols);
+				
+				that.calculate_Statistics("getCorrelationMatrix.R", {'CorrelationMatrix' : ncols, 'algorithm' : algorithm}, correlationMatrix, true );
+			});
+		};
+		
+		/**
+		 * processes the correlation matrix data: populates the data provider for the correlation matrix directive
+		 * @param result the corr matrix data returned from R
+		 */
+		that.handle_CorrelationData = function(resultData){
+			var hm = that.cache.heatMap = {};
+			hm.input_data = resultData;
+			hm.labels = that.cache.columnTitles;
 			
 		};
 		
@@ -164,15 +188,19 @@
 	//********************CONTROLLERS***************************************************************
 	angular.module('weaveAnalyst.dataStatistics').controller('data_StatisticsController', data_statisticsController );
 	
-	data_statisticsController.$inject = ['$scope','queryService', 'statisticsService', 'analysisService'];
-	function data_statisticsController ($scope, queryService, statisticsService){
+	data_statisticsController.$inject = ['$scope','queryService', 'statisticsService', 'pearsonCoeff', 'spearmanCoeff'];
+	function data_statisticsController ($scope, queryService, statisticsService, pearsonCoeff, spearmanCoeff){
 		var ds_Ctrl = this;
 		
 		ds_Ctrl.queryService = queryService;
 		ds_Ctrl.statisticsService = statisticsService;
-		ds_Ctrl.statsData = [];//dataprovider for ui-grid
 		
-		ds_Ctrl.getStatistics = getStatistics;
+		ds_Ctrl.statsData = [];//dataprovider for ui-grid
+		ds_Ctrl.selectedCoeff = {label : "", algorithm : ""};
+		ds_Ctrl.availableCoeffList = [pearsonCoeff, spearmanCoeff];
+		
+		ds_Ctrl.get_Summary_Statistics = get_Summary_Statistics;
+		ds_Ctrl.get_Coefficients = get_Coefficients;
 		
 		if(queryService.cache.dataTableList.length == 0)//getting the list of datatables if they have not been retrieved yet//that is if the person visits this tab directly
 			queryService.getDataTableList(true);
@@ -187,11 +215,18 @@
 		});
 		
 		
-		function getStatistics (){
-			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
-				
-			if(dt.id)//if a datatable has been selected
-				ds_Ctrl.statisticsService.getStatistics(dt);
+		function get_Summary_Statistics (){
+//			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
+//				
+//			if(dt)//if a datatable has been selected
+//				ds_Ctrl.statisticsService.get_Summary_Statistics(dt);
 		};
+		
+		function get_Coefficients (algorithm){
+			var dt = ds_Ctrl.statisticsService.cache.dataTable;
+			if(dt)
+				ds_Ctrl.statisticsService.get_Coefficients(dt, algorithm);
+		
+		}; 
 	};
 })();

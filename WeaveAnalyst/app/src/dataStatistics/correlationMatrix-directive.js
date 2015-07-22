@@ -1,27 +1,60 @@
 /**
  * this directive contains the UI and logic for the correlation Matrix
+@author spurushe
  */
+(function(){
 
-angular.module('weaveAnalyst.dataStatistics').directive('correlationMatrix',[function factory(){
-	var directiveDefnObj= {
-			restrict : 'E', //restricts the directive to a specific directive declaration style.in this case as element
-			scope : {//isolated scope, its parent is the scope of the correlation matrix tab in dataStatsMain.tpl.html
-					//data: '='
-			},
-			templateUrl: 'src/dataStatistics/corr_Matrices_directive_content.tpl.html',
-			//this is the scope against the templateUrl i.e.src/dataStatistics/correlationMatrices.tpl.htm
-			controller : function(){
-				
-			},
-			//scope: the isolated scope against the template url
-			//elem :The jQLite wrapped element on which the directive is applied.  
-			//attrs : any attributes that may have been applied on the directive element for e.g.<aws-select-directive style = "padding-top: 5px"></aws-select-directive>
-			link: function(scope, elem, attrs){
-				
-
-			}
-	};
+	angular.module('weaveAnalyst.dataStatistics').directive('correlationMatrix', heatMapComponent);
 	
-	return directiveDefnObj;
-}]);
+	function heatMapComponent (){
+		return {
+			restrict : 'E', 
+			template : '<div id="corrMatrixContainer"></div>',
+			scope : {
+					data: '='
+			},
+			link: function(scope, elem, attrs){
+				var dom_element_to_append_to = document.getElementById('corrMatrixContainer');
+//				var array1 = [1,6,9,4,5];
+//				var array2= [6.6,2,5,3,10];
+//				var array3= [2,7,8,6.3,1];
+//				var array4= [4,2,5,3,1.9];
+//				var array5= [1,3.4,5,3,10];
+//				var mydata = [array1, array2, array3, array4];
+//				var labels = ["one", "two", "three", "four"];
+//				
+//				
+//				var config = {
+//						data: mydata,
+//						labels : labels,
+//						container : dom_element_to_append_to
+//					};
+//					
+//					var hm = new window.wa.d3_viz.heatMap();//create
+//					hm.initialize_heatMap(config);//initialize
+//					hm.render_heatMap();//render
+					
+				
+				scope.$watch(function(){
+					return scope.data;
+				}, function(){
+					if(scope.data){
+						var config = {
+							data: scope.data.input_data,
+							labels : scope.data.labels,
+							container : dom_element_to_append_to
+						};
+						
+						var hm = new window.wa.d3_viz.heatMap();//create
+						hm.initialize_heatMap(config);//initialize
+						hm.render_heatMap();//render
+					}
+				});
+				
+
+			}//end of link function
+
+		};
+	}//end of directive defintion
+})();
 

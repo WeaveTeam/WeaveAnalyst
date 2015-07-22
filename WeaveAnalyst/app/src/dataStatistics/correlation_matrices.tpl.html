@@ -1,3 +1,19 @@
-<!-- CORRELATION Matrix -->
 <!-- the directive has its own controller -->
-	<correlation-Matrix data = "queryService.cache.numericalColumns" ></correlation-Matrix><!-- TODO include categorical columns as well -->
+<div class= "parent_stats_div">
+
+<!-- Coefficients List -->
+	<div class= "coeff_list" >
+		<table >
+		<tr ng-repeat = "coeff in ds_Ctrl.availableCoeffList">
+		
+			<td>
+				<input ng-disabled = "!ds_Ctrl.statisticsService.cache.dataTable"
+				type="radio" value="{{coeff.label}}" ng-model = "ds_Ctrl.selectedCoeff" ng-change = "ds_Ctrl.get_Coefficients(coeff.algorithm)"/> {{coeff.label}}
+			</td>
+			
+		</tr>
+		</table>
+	</div>
+	
+	<correlation-Matrix data = "ds_Ctrl.statisticsService.cache.heatMap"> </correlation-Matrix>
+</div>
