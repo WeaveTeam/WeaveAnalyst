@@ -30,7 +30,7 @@
 		         backdropClick: false,
 		         dialogFade: true,
 		         keyboard: true,
-		         templateUrl: 'src/project/projectAdditionPanel.html',
+		         templateUrl: 'src/project/projectAdditionModal.html',
 		         controller: 'pjtAddtionInstanceController',
 		         controllerAs : 'pam',
 		         resolve :{
