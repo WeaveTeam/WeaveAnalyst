@@ -1,5 +1,6 @@
 /**
  * contains all the functions required for project management 
+ * @author spurushe
  */
 (function(){
 	
@@ -13,13 +14,14 @@
 				project: {selected : null},
 				listOfProjectsFromDatabase : [],
 				returnedQueryObjects : [],
-				columnstring : "", 
-				projectDescription : "", 
-				userName : "", 
-				weaveSessionState : "",
+				columnstring : null, 
+				projectDescription : null, 
+				userName : null, 
+				weaveSessionState : null,
 				deleteProjectStatus : null, 
 				deleteQueryObjectStatus : null, 
-				insertQueryObjectStatus : null 
+				insertQueryObjectStatus : null,
+				no_of_projects : 0
 		};
 
 		/**
@@ -29,9 +31,7 @@
 			var deferred = $q.defer();
 			
 			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
-	        
-			deferred.resolve(result);
-				
+				deferred.resolve(result);
 			});
 			return deferred.promise;
 		};
@@ -41,11 +41,9 @@
 		 */
 		that.createQOTable = function(){
 			var deferred = $q.defer();
-			
-			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
-	        
-			deferred.resolve(result);
 				
+			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
+				deferred.resolve(result);
 			});
 			return deferred.promise;
 		};
@@ -60,9 +58,7 @@
 	    	var deferred = $q.defer();
 	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
 				that.cache.listOfProjectsFromDatabase = result;
-	        
 				deferred.resolve(result);
-			
 			});
 	    	
 	    	return deferred.promise;
@@ -180,14 +176,11 @@
 	   	 //console.log("stringified queryObject", queryObject);
 	   	 
 	   	 runQueryService.queryRequest(projectManagementURL, 'getSessionState', [queryObject], function(result){
-	    		
 	   		 that.cache.weaveSessionState = result;
-	   		 
-            deferred.resolve(result);
+	   		 deferred.resolve(result);
 	        	
-	        });
+	   	 });
 	    		
-	  
 			return deferred.promise;
 	   };
 	   
@@ -214,13 +207,10 @@
 	      	 }
 	      	 
 	      	 that.cache.deleteProjectStatus = 0;//reset 
-	       	
 	      	 deferred.resolve(result);
 	       	
 	       });
-	       
 	       return deferred.promise;
-	       
 	   };
 	   
 	   /**
@@ -241,12 +231,10 @@
 		       	
 		       	//if the project contained only one QO which was deleted , retrive the new updated lists of projects
 		       	if(that.cache.returnedQueryObjects.length == 0){
-		       		
 		       		that.getListOfProjects();
-		       		
 		       		that.cache.project.selected = "";
 		       	}
-               deferred.resolve(result);
+		       	deferred.resolve(result);
 		       	
 		       });
 		       
@@ -274,10 +262,9 @@
 	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
 	       	}
 	       	
-           deferred.resolve(result);
+	       	deferred.resolve(result);
 	       	
 	       });
-	       
 	       return deferred.promise;
 	       
 	   };

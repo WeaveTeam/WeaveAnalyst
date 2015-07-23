@@ -1,3 +1,7 @@
+/** this controller controls the project tab 
+ * @author spurushe
+ * 
+ **/
 (function(){
 	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
 	
@@ -91,11 +95,13 @@
 		
 	     //checks if a table is created for storing query objects
 	     function checkQOTableExits (){
-	    	prjtCtrl.projectService.checkQOTableExits().then(function(projExists){
+	    	var	pS = prjtCtrl.projectService;
+	    	
+	    	pS.checkQOTableExits().then(function(projExists){
 		    	 console.log("projExists",projExists );
 		    	 if(projExists){
-		    		 prjtCtrl.projectService.getListOfProjects().then(function(projectList){
-		    			 console.log("projectList", projectList);
+		    		 pS.getListOfProjects().then(function(projectList){
+		    			 pS.cache.no_of_projects = projectList.length;
 		    			 if(projectList.length == 0)
 		    				 alert("There are no stored query objects");
 		    		 });//retrives project list
@@ -104,7 +110,7 @@
 			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
 			    		 		+ "Create a table to store query objects?");
 			    		 if(conf == true){
-			    			 prjtCtrl.projectService.createQOTable().then(function(status){
+			    			 pS.createQOTable().then(function(status){
 			    				 if(status){
 			    					 console.log("status", status);
 			    				 }
