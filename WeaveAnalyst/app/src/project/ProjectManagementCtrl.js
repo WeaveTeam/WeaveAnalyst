@@ -85,7 +85,7 @@
 	    	 else if(mode == 'Compact')
 	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
 	    	 else 
-	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail."
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail.";
 	    		 
 	     };
 		
