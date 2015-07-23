@@ -58,6 +58,7 @@
 	    	var deferred = $q.defer();
 	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
 				that.cache.listOfProjectsFromDatabase = result;
+				that.cache.no_of_projects = result.length;
 				deferred.resolve(result);
 			});
 	    	

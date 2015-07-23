@@ -101,7 +101,6 @@
 		    	 console.log("projExists",projExists );
 		    	 if(projExists){
 		    		 pS.getListOfProjects().then(function(projectList){
-		    			 pS.cache.no_of_projects = projectList.length;
 		    			 if(projectList.length == 0)
 		    				 alert("There are no stored query objects");
 		    		 });//retrives project list
