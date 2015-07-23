@@ -11,10 +11,13 @@
 		prjtCtrl.queryService = queryService;
 		
 		prjtCtrl.checkQOTableExits = checkQOTableExits;
-		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
-		prjtCtrl.nameOfQueryObjectToDelete = "";
+		prjtCtrl.construct_view = construct_view;
 		prjtCtrl.deleteProject = deleteProject;
 		prjtCtrl.openAdditionPanel = openAdditionPanel;
+		
+		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
+		prjtCtrl.nameOfQueryObjectToDelete = "";
+		prjtCtrl.view_modes = ['List', 'Compact', 'Detail'];
 		
 		//options needed for creating the modal instance window
 		 //communicating with the modal
@@ -72,6 +75,19 @@
 		 
 	     	prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus = 0;//reset
 	      });
+	     
+	     //this function alters the three kinds of views for viewing projects and query objects
+	     function construct_view (){
+	    	 var mode = prjtCtrl.projectService.viewMode;
+	    	 
+	    	 if(mode == 'List')
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the projects and its query obejcts as a list. Select Compact to view a project in detail. Select Detail to view a project's query objects in detail.";
+	    	 else if(mode == 'Compact')
+	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
+	    	 else 
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail."
+	    		 
+	     };
 		
 	     //checks if a table is created for storing query objects
 	     function checkQOTableExits (){

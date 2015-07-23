@@ -59,6 +59,7 @@
 			url:'/projects',//projects is the entry point into the app
 	    	templateUrl : 'src/project/projectManagementPanel.html',
 	    	controller : 'ProjectManagementController',
+	    	controllerAs : 'prjtCtrl',
 	    	data: {
 	    		activetab : 'project'
 	    	}

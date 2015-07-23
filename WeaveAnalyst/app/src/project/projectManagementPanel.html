@@ -1,24 +1,33 @@
 <div class="project-management">
 	<div >
-		<div class="prj-contents" style="width: 100%; padding-left: 40px;">
-			<div style="width: 90%;  height: 100%;" class="panel panel-default">
-
-<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="spinner-1"></span>
+		<div class="prj-contents" style="width: 100%; padding-left: 2%;">
+			<div style="width: 97%;  height: 100%;" class="panel panel-default">
 
 				<div class="panel-heading">
 					<h2>Manage Query Object and Projects</h2>
 				</div>
 				<div class="widget-selectors">
+				
+				<div style = "width:50%; display: inline-block">
+					<!-- View options -->
+					<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" ng-change = "prjtCtrl.construct_view()">
+						    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
+								<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">
+								{{view}}
+						        </ui-select-choices>
+					</ui-select>
+				</div>
+				
+				
 <!-- Project List -->	
-						<ui-select ng-model="prjtCtrl.projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
-					    	<ui-select-match allow-clear="true" placeholder="Choose Indicator...">{{$select.selected}}</ui-select-match>
-							<ui-select-choices repeat="project in prjtCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
-					       		 <div ng-bind-html="project | highlight: $select.search"></div>
-					        </ui-select-choices>
-						</ui-select>			
+<!-- 						<ui-select ng-model="prjtCtrl.projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%"> -->
+<!-- 					    	<ui-select-match allow-clear="true" placeholder="Choose Indicator...">{{$select.selected}}</ui-select-match> -->
+<!-- 							<ui-select-choices repeat="project in prjtCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search "> -->
+<!-- 					       		 <div ng-bind-html="project | highlight: $select.search"></div> -->
+<!-- 					        </ui-select-choices> -->
+<!-- 						</ui-select>			 -->
 
 						<div style="display: inline-block; margin-left: 90px;">
-
 							<button  type="button" class="btn btn-sm new-project-button" popover = "Create new project"
 									popover-trigger="mouseenter" ng-click = "prjtCtrl.openAdditionPanel()">New
 							</button>
@@ -35,7 +44,7 @@
 
 				</div>
 				<div style="width: 100%; height: 40px;">
-					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i> {{prjtCtrl.projectService.cache.projectDescription}}</h5>
+					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i>{{prjtCtrl.projectService.view_Desc}} </h5>
 
 				</div>
 
@@ -45,7 +54,7 @@
 								<!-- add directive here and pass item as attribute -->
 							</li>
 					</ol>
-			</div>
+				</div>
 		</div>
 	</div>
 </div>
