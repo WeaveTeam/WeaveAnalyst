@@ -6,6 +6,7 @@
 
 	angular.module('weaveAnalyst',['ui.router',
 	                               'ui.grid',
+	                               'ui.grid.treeView',
 	                               'ui.layout',
 	                               'ui.select',
 	                               'mk.editablespan',
