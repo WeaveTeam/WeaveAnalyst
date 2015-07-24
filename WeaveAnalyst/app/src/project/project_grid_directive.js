@@ -53,6 +53,24 @@
 //			      });
 //			    }
 			  };	
+		
+//		pGrid_Ctrl.data= [
+//		  			    {
+//		  			        "id": 0,
+//		  			        "Name": "Sandoval Mclean",
+//		  			        "Description": "ONe"
+//		  			    },
+//		  			    {
+//		  			        "id": 1,
+//		  			        "Name": "Nieves Mack",
+//		  			        "Description": "Two"
+//		  			    },
+//		  			    {
+//		  			        "id": 2,
+//		  			        "Name": "Terry Clay",
+//		  			        "Description": "Three"
+//		  			    }];
+		  		
 	};//end of grid controller
 		
 })();
