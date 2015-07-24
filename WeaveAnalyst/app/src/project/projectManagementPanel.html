@@ -1,6 +1,6 @@
 <div class="project-management">
-	<div >
-		<div class="prj-contents" style="width: 100%; padding-left: 2%;">
+	<div>
+		<div class="prj-contents">
 			<div style="width: 97%;  height: 100%;" class="panel panel-default">
 
 				<div class="panel-heading">
@@ -13,26 +13,24 @@
 						<!-- View options -->
 						<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" ng-change = "prjtCtrl.construct_view()">
 							    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
-									<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">
-									{{view}}
-							        </ui-select-choices>
+									<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
 						</ui-select>
 						
 						<!-- Project List	 -->
-							<ui-select 	ng-if = "prjtCtrl.projectService.viewMode == 'Compact' || prjtCtrl.projectService.viewMode == 'Detail'"
-										ng-model="prjtCtrl.projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
-						    	<ui-select-match allow-clear="true" placeholder="Choose Project">{{$select.selected}}</ui-select-match>
-								<ui-select-choices repeat="project in prjtCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
-						       		 <div ng-bind-html="project | highlight: $select.search"></div>
-						        </ui-select-choices>
-							</ui-select>	
+						<ui-select 	ng-if = "prjtCtrl.projectService.viewMode == 'Compact' || prjtCtrl.projectService.viewMode == 'Detail'"
+									ng-model="prjtCtrl.projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
+					    	<ui-select-match allow-clear="true" placeholder="Choose Project">{{$select.selected.Name}}</ui-select-match>
+							<ui-select-choices repeat="project in prjtCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
+					       		 <div ng-bind-html="project.Name | highlight: $select.search"></div>
+					        </ui-select-choices>
+						</ui-select>	
 					</div>
 					<!-- Buttons  -->
 					<div style="display: inline-block; margin-left: 90px;">
 						<button  type="button" class="btn btn-sm new-project-button" popover = "Create new project"
 								popover-trigger="mouseenter" ng-click = "prjtCtrl.openAdditionPanel()">New
 						</button>
-						<button  ng-click = "prjtCtrl.deleteProject()"  class="btn btn-sm new-project-button" data-trigger="hover" popover = "Delete current project" popover-trigger="mouseenter">
+						<button  ng-click = "prjtCtrl.deleteProject()" class="btn btn-sm new-project-button" data-trigger="hover" popover = "Delete current project" popover-trigger="mouseenter">
 							Delete
 						</button>
 						<button class="btn btn-sm new-project-button" data-trigger="hover" popover = "Copy current project" popover-trigger="mouseenter">
@@ -53,7 +51,7 @@
 <!-- CONTENT OF DIFFERENT VIEWS -->
 				<!--LIST VIEW  -->
 				<div ng-if = "prjtCtrl.projectService.viewMode == 'List'">
-					<project-Grid></project-Grid>
+					<project-Grid data = "prjtCtrl.projectService.cache.listOfProjectsFromDatabase"></project-Grid>
 				</div>
 <!-- 				<div class="dd" id="nestable3"> -->
 <!-- 					<ol ui-sortable class="dd-list" ng-model="prjtCtrl.projectService.cache.returnedQueryObjects" id="queryObjectChoicesUI"> -->

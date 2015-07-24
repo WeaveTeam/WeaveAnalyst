@@ -10,11 +10,14 @@
 		return{
 			restrict : 'E',
 			controller : projectGridController,
+			scope:{
+				data : '='
+			},
 			template : '<div ui-grid = "pGrid_Ctrl.gridOptions" ui-grid-tree-view></div>',
 			controllerAs : 'pGrid_Ctrl',
 			bindToController : true,
 			link : function(){
-				
+
 			}
 		};
 	};//end of directive defintion
@@ -23,16 +26,18 @@
 	function projectGridController (projectService, uiGridTreeViewConstants){
 		var pGrid_Ctrl = this;
 		
+		
 		pGrid_Ctrl.projectService = projectService;
 		pGrid_Ctrl.gridOptions = {
 				enableSorting: true,
 			    enableFiltering: true,
 			    showTreeExpandNoChildren: true,
 			    columnDefs: [
-			      { name: 'Project Name', width: '30%'},
-			      { name: 'Author', width: '15%'},
-			      { name: 'Description', width: '45%'}
-			    ]
+			      { name: 'Name', width: '30%'},
+			     // { name: 'Author', width: '15%'},
+			      { name: 'Description', width: '65%'}//handle warning of data type
+			    ],
+			    data : pGrid_Ctrl.data
 //			    onRegisterApi: function( gridApi ) {
 //			      $scope.gridApi = gridApi;
 //			      $scope.gridApi.treeBase.on.rowExpanded($scope, function(row) {

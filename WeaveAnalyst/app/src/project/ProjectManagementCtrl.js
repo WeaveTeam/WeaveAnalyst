@@ -53,14 +53,14 @@
 		
 		
 		//when a project is selected or changed
-		$scope.$watch(function(){
-			return prjtCtrl.projectService.cache.project.selected;
-		},function(){
-			if(prjtCtrl.projectService.cache.project.selected){
-				console.log("project Selected", prjtCtrl.projectService.cache.project.selected);
-				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected);
-			}
-		});
+//		$scope.$watch(function(){
+//			return prjtCtrl.projectService.cache.project.selected;
+//		},function(){
+//			if(prjtCtrl.projectService.cache.project.selected){
+//				console.log("project Selected", prjtCtrl.projectService.cache.project.selected);
+//				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected);
+//			}
+//		});
 		
 		//Watch for when record is inserted in db
 	     $scope.$watch(function(){
