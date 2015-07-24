@@ -92,8 +92,8 @@ public class AwsProjectService
 	    * @throws Exception
 	    */
 	//retrieves all the projects belonging to a particular user
-	public String[] getProjectListFromDatabase() throws SQLException, RemoteException{
-		String[] projectNames = null;
+	public ProjectObject[] getProjectListFromDatabase() throws SQLException, RemoteException{
+		ProjectObject[] projects = null;
 		
 		try{
 			
@@ -104,14 +104,19 @@ public class AwsProjectService
 			
 			List<String> selectColumns = new ArrayList<String>();
 			selectColumns.add("projectName");//we're retrieving the list of projects in the projectName column in database
-			String query = String.format("SELECT distinct(%s) FROM %s", "projectName", (SQLUtils.quoteSchemaTable(con,schema, "stored_query_objects")));
+			String query = String.format("SELECT distinct(%s), %s FROM %s", "projectName", "projectDescription", (SQLUtils.quoteSchemaTable(con,schema, "stored_query_objects")));
 			projectObjects = SQLUtils.getResultFromQuery(con,query, null, true );
 			
-			projectNames = new String[projectObjects.rows.length];
+			projects = new ProjectObject[projectObjects.rows.length];
 			for(int i = 0; i < projectObjects.rows.length; i++){
-				Object project = projectObjects.rows[i][0];//TODO find better way to do this
-				projectNames[i] = project.toString();
-
+				Object pN = projectObjects.rows[i][0];//TODO find better way to do this
+				Object pD = projectObjects.rows[i][1];
+				
+				ProjectObject pObj = new ProjectObject();
+				pObj.Name = pN.toString();
+				pObj.Description = pD.toString();
+				
+				projects[i] = pObj;
 			}
 			
 			con.close();
@@ -120,7 +125,7 @@ public class AwsProjectService
 			throw new RemoteException("Unable to retrieve project list", e);
 		}
 		
-		return projectNames;
+		return projects;
 	}
 	
 	/** 
@@ -460,6 +465,13 @@ public class AwsProjectService
 		String queryObjectName;
 		String projectDescription;
 		String thumbnail;
+	}
+	
+	public static class ProjectObject
+	{
+		String Name;
+		String Description;
+		//can add additional properties later like author, flad for data change etc
 	}
 }
 
