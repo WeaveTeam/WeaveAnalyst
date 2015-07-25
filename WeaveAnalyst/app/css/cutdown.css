@@ -955,6 +955,16 @@ select {
 	margin-top: 8px;
 }
 
+.querycard_Edit{
+	font-size :20px;
+	width : 30px;
+	height:30px;
+	border-radius: 5px;
+	float:left;
+	border: none;
+	background :rgb(205,245,245);
+}
+
 .queryDoneInit {
 	float:left;
 	width : 1240px;

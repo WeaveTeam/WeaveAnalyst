@@ -25,6 +25,7 @@
 	function queryCardController(scope, projectService){
 		var q_cardCtrl = this;
 		q_cardCtrl.projectService = projectService;
+		q_cardCtrl.item = scope.item;
 		
 		q_cardCtrl.returnSessionState = returnSessionState;
 		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
