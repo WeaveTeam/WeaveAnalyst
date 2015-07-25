@@ -26,12 +26,19 @@
 		var q_cardCtrl = this;
 		q_cardCtrl.projectService = projectService;
 		q_cardCtrl.item = scope.item;
+		q_cardCtrl.editMode = false;
+		
 		
 		q_cardCtrl.returnSessionState = returnSessionState;
 		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
 		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
 		q_cardCtrl.openInAnalysis = openInAnalysis;
+		q_cardCtrl.enableEditMode = enableEditMode;
 
+		function enableEditMode (){
+			q_cardCtrl.editMode = true;
+		};
+		
 		//deletes a single queryObject within the currently selected Project
 		function deleteSpecificQueryObject(item){
 			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 

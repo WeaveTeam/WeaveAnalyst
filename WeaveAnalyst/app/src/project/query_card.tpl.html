@@ -1,11 +1,11 @@
-
-<div class= "dd3-content d-list-content">
-	<button class = "querycard_Edit" popover = "Edit Query Card" popover-trigger="mouseenter"  popover-placement="top" ><i class = "fa fa-pencil-square-o"></i></i></button>
-	<div style='display : table'; inline-block; >
+<div class= "dd3-content d-list-content" ng-if ="!q_cardCtrl.editMode">
+	<button class = "querycard_Edit" popover = "Edit Query Card" popover-trigger="mouseenter"  popover-placement="top"
+			ng-click = "q_cardCtrl.enableEditMode()" ><i class = "fa fa-pencil-square-o"></i></button>
 	
-<!---Contains the list of query Objects in a project	-->	
+	<div style='display : table'; inline-block;>
+	
 		<div style="width : 85%; display : table-cell">
-			<ul style="list-style:initial">
+			<ul style="list-style:initial; padding-bottom: 20px">
 				<li>
 					<span class="prj-txt-lbl">Title: </span> 
 					<span class="prj-txt-val"> {{q_cardCtrl.item.queryObject.title}} </span>
@@ -37,7 +37,42 @@
 				 </img>
 			</div>
 	</div>
-	<div class="query-btn-holder">
+</div>
+
+<div class= "dd3-content d-list-content q_cardEdit" ng-if ="q_cardCtrl.editMode">
+	Modifying : {{q_cardCtrl.item.queryObject.title}}
+	<div style='display : table'; inline-block;>
+	
+		<div style="width : 85%; display : table-cell">
+			<ul style="list-style:initial">
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+			</ul>
+		</div>
+<!-- Contains the picture -->
+			<div>
+				<img width = "150" height = "100" 
+					 ng-src= "{{q_cardCtrl.item.thumbnail || 'css/img/ImageUnavailable.png'}}" 
+					 
+					 ng-click = "q_cardCtrl.returnSessionState(item.queryObject)">
+				 </img>
+			</div>
+	</div>
+		
+ 	<div class="query-btn-holder"> 
 			<button ng-click = "q_cardCtrl.deleteSpecificQueryObject(item)" class="btn btn-sm query-button">
 				Delete
 			</button>
@@ -47,3 +82,29 @@
 			</button>
 	</div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -300,7 +300,7 @@
   background: #fbfbfb
 }
 .dd3-content:hover {
-  background: #B2E6FF
+   border: 5px solid #B2E6FF
 }
 .dd-dragel > .dd3-item > .dd3-content {
   margin: 0
@@ -458,4 +458,7 @@
 
 }
 
+.q_cardEdit {
+	 border: 5px solid #FFCCCC;
+}
 
