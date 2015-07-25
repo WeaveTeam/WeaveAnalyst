@@ -47,20 +47,20 @@
 		         }
 			};
 		
-		//check for table
+		//check for table 
 		prjtCtrl.checkQOTableExits();
 		//create table with dummy project and queries
 		
 		
 		//when a project is selected or changed
-//		$scope.$watch(function(){
-//			return prjtCtrl.projectService.cache.project.selected;
-//		},function(){
-//			if(prjtCtrl.projectService.cache.project.selected){
-//				console.log("project Selected", prjtCtrl.projectService.cache.project.selected);
-//				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected);
-//			}
-//		});
+		$scope.$watch(function(){
+			return prjtCtrl.projectService.cache.project.selected;
+		},function(){
+			if(prjtCtrl.projectService.cache.project.selected){
+				console.log("project Selected", prjtCtrl.projectService.cache.project.selected.Name);
+				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected.Name);
+			}
+		});
 		
 		//Watch for when record is inserted in db
 	     $scope.$watch(function(){
@@ -98,7 +98,7 @@
 	    	var	pS = prjtCtrl.projectService;
 	    	
 	    	pS.checkQOTableExits().then(function(projExists){
-		    	 console.log("projExists",projExists );
+		    	 console.log("stored_query_objects table exists",projExists );
 		    	 if(projExists){
 		    		 pS.getListOfProjects().then(function(projectList){
 		    			 if(projectList.length == 0)

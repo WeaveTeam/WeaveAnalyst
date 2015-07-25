@@ -110,6 +110,7 @@
 	    			}
 	    		
 	                deferred.resolve(AWSQueryObjectCollection);
+	                rootScope.$apply();
 	        	
 	        });
 	    	

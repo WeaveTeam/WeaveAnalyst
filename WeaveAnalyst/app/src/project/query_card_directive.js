@@ -8,8 +8,10 @@
 	function queryCard(){
 		return {
 			restrict : 'E',
-			scope :{},
-			templateUrl : 'src/projects/query_card.tpl.html',
+			scope :{
+				data : '='
+			},
+			templateUrl : 'src/project/query_card.tpl.html',
 			controller : queryCardController,
 			controllerAs : 'q_cardCtrl',
 			bindToControler : true,
@@ -19,26 +21,27 @@
 		};
 	}//end of directive definition
 	
-	queryCardController.$inject = ['projectService'];
-	function queryCardController(projectService){
+	queryCardController.$inject = ['$scope', 'projectService'];
+	function queryCardController(scope, projectService){
 		var q_cardCtrl = this;
 		q_cardCtrl.projectService = projectService;
+		q_cardCtrl.item = scope.item;
 		
 		q_cardCtrl.returnSessionState = returnSessionState;
-		prjtCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
-		prjtCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
-		prjtCtrl.openInAnalysis = openInAnalysis;
+		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
+		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
+		q_cardCtrl.openInAnalysis = openInAnalysis;
 
 		//deletes a single queryObject within the currently selected Project
 		function deleteSpecificQueryObject(item){
-			prjtCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
-			prjtCtrl.deleteQueryConfirmation(prjtCtrl.projectService.cache.project.selected, prjtCtrl.nameOfQueryObjectToDelete);
+			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
+			q_cardCtrl.deleteQueryConfirmation(q_cardCtrl.projectService.cache.project.selected, q_cardCtrl.nameOfQueryObjectToDelete);
 		};
 		
 		function deleteQueryConfirmation (currentProject, currentQueryFileName){
 			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
 			if(deletePopup == true){
-				prjtCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
+				q_cardCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
 			}
 		};
 		

@@ -49,17 +49,24 @@
 				</div>
 
 <!-- CONTENT OF DIFFERENT VIEWS -->
-				<!--LIST VIEW  -->
+				<!--LIST VIEW  -- displays the list of projects as a grid -->
 				<div ng-if = "prjtCtrl.projectService.viewMode == 'List'">
 					<project-Grid data = "prjtCtrl.projectService.cache.listOfProjectsFromDatabase"></project-Grid>
 				</div>
-<!-- 				<div class="dd" id="nestable3"> -->
-<!-- 					<ol ui-sortable class="dd-list" ng-model="prjtCtrl.projectService.cache.returnedQueryObjects" id="queryObjectChoicesUI"> -->
-<!-- 							<li class="dd-item dd3-item" data-id = "15"  ng-repeat="item in prjtCtrl.projectService.cache.returnedQueryObjects"> -->
-<!-- 								add directive here and pass item as attribute -->
-<!-- 							</li> -->
-<!-- 					</ol> -->
-<!-- 				</div> -->
+				
+				<!-- COMPACT VIEW -- displays the query object cards per project-->
+				<div ng-if = "prjtCtrl.projectService.viewMode == 'Compact'">
+					<div class="dd" id="nestable3">
+							<ol ui-sortable class="dd-list">
+									<li class="dd-item dd3-item" data-id = "15"  ng-repeat="item in prjtCtrl.projectService.cache.returnedQueryObjects">
+										<query-card data ="item"></query-card>
+									</li>
+							</ol>
+					</div>
+				</div>
+				
+				
+
 		</div>
 	</div>
 </div>
