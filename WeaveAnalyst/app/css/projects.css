@@ -296,11 +296,11 @@
   font-size: 15px;
   color: #333;
   text-decoration: none;
-  border: 1px solid #cfcfcf;
+  border: 5px solid #cfcfcf;
   background: #fbfbfb
 }
 .dd3-content:hover {
-  background: #70DBFF
+  background: #B2E6FF
 }
 .dd-dragel > .dd3-item > .dd3-content {
   margin: 0
