@@ -33,11 +33,22 @@
 		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
 		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
 		q_cardCtrl.openInAnalysis = openInAnalysis;
-		q_cardCtrl.enableEditMode = enableEditMode;
+		q_cardCtrl.edit = edit;
+		q_cardCtrl.save = save;
 
-		function enableEditMode (){
+		//toggles the edit mode for editing a query card
+		function edit (){
 			q_cardCtrl.editMode = true;
 		};
+		
+		//saves a modified query card to the server
+		function save (item){
+			//save the edited state
+			//if saved make the edit mode false
+			alert(item.queryObject.title + " has been saved");
+			q_cardCtrl.editMode = false;
+		};
+		
 		
 		//deletes a single queryObject within the currently selected Project
 		function deleteSpecificQueryObject(item){

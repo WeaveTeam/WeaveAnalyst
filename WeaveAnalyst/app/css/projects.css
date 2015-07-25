@@ -462,3 +462,24 @@
 	 border: 5px solid #FFCCCC;
 }
 
+
+.query-card-edit-btn{
+	font-size :20px;
+	width : 30px;
+	height:30px;
+	border-radius: 5px;
+	float:left;
+	border: none;
+	background :rgb(205,245,245);
+}
+
+.query-card-save-btn{
+	font-size :20px;
+	width : 30px;
+	height:30px;
+	border-radius: 5px;
+	float:right;
+	border: none;
+	background :rgb(255, 204, 204);
+}
+

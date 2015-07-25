@@ -1,6 +1,6 @@
 <div class= "dd3-content d-list-content" ng-if ="!q_cardCtrl.editMode">
-	<button class = "querycard_Edit" popover = "Edit Query Card" popover-trigger="mouseenter"  popover-placement="top"
-			ng-click = "q_cardCtrl.enableEditMode()" ><i class = "fa fa-pencil-square-o"></i></button>
+	<button class = "query-card-edit-btn" popover = "Edit Query Card" popover-trigger="mouseenter"  popover-placement="top"
+			ng-click = "q_cardCtrl.edit()" ><i class = "fa fa-pencil-square-o"></i></button>
 	
 	<div style='display : table'; inline-block;>
 	
@@ -42,6 +42,8 @@
 <!-- DURING EDIT MODE -->
 <div class= "dd3-content d-list-content q_cardEdit" ng-if ="q_cardCtrl.editMode">
 	Modifying : {{q_cardCtrl.item.queryObject.title}}
+	<button class = "query-card-save-btn" popover = "Save Query Card" popover-trigger="mouseenter"  popover-placement="top"
+			ng-click = "q_cardCtrl.save(q_cardCtrl.item)" ><i class = "fa fa-pencil-square-o"></i></button>
 	<div style='display : table'; inline-block;>
 	
 		<div style="width : 85%; display : table-cell">
