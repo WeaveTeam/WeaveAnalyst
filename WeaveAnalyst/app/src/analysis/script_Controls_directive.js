@@ -86,7 +86,7 @@
 								scriptOptions[input.param] = input['defaults'];
 							}
 							
-							scriptCtrl.validatequery();
+							//scriptCtrl.validatequery();
 						}// end of metadata input iteration
 						
 						//scriptCtrl.validatequery();
