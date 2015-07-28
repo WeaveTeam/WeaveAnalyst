@@ -17,6 +17,8 @@
 			else{
 				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
 				that.weaveWindow.wa_data = that.blah;
+				
+				//fetching the weave root item
 			}
 		};
 		
