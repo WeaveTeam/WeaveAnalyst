@@ -40,41 +40,7 @@
 
 			</div><!-- sCRIPT OPTIONS END -->
 	</div>
-	
-		<div style = "width:45%;height: 100%; float:left;">
-			<!-- REMAPPING -->
-			
-			<div style="height : 30px; margin-top:30px">
-				{{ description }}
-			</div>
-			
-		  	<div  style="overflow: auto; height:170px; margin-top:15px">
-		  			
-			      <table border="border: 1px solid #0000FF"  ng-show="varValues.length">
-						<tr> 
-							<td  align="center">
-								Value
-							</td>
-							<td  align="center">
-								Label
-							</td>
-							<td   align="center">
-								New Value
-							</td>
-						 </tr>
-						<tr ng-repeat="varValue in varValues">
-							<td width= "10%" style="padding-left: 5px; padding-right: 5px"> {{varValue.value}} </td> 
-							<td width= "40%" style="padding-left: 5px" > {{varValue.label}} </td>
-							<td width= "50%"> <input style ="width : 100%"
-												ng-model="values[$index]"
-												ng-change="setValue(varValue.value, values[$index])"> 
-												</input> </td>
-						</tr>
-					</table>
-		  	</div>
-		
-		</div>	
-			
-			
+<!-- TODO enable -->			
+
 		</div><!-- end of scripts control -->
 </div> <!-- end of calculations control -->
