@@ -7,6 +7,7 @@
 	function WeaveService ($q,$window, rootScope, runQueryService, dataServiceURL, queryService){
 		var that = this;
 		that.weaveWindow;
+		that.wWrapper;
 		
 		that.blah = "bujumbarra";
 		that.launch_Weave = function(){
@@ -19,7 +20,15 @@
 				that.weaveWindow.wa_data = that.blah;
 				
 				//fetching the weave root item
+				that.request_Tree();
 			}
+		};
+		
+		that.request_Tree = function (){
+			if(WeaveWrapper.check_WeaveReady())
+				that.request_tree();
+			else
+				setTimeout(that.request_Tree, 100);
 		};
 		
 	};
