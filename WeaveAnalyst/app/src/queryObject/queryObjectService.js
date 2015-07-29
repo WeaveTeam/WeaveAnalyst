@@ -13,10 +13,10 @@
 	//SERVICE
 	//////////////////////
 	angular.module("weaveAnalyst.queryObject").service("queryService", queryService);;
-	queryService.$inject = ['$q', '$rootScope', 'runQueryService',
+	queryService.$inject = ['$q', 'runQueryService',
                             'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL','WeaveDataSource'];
 	
-	function queryService ($q, scope, runQueryService, 
+	function queryService ($q, runQueryService, 
    		 				   dataServiceURL, adminServiceURL, projectManagementURL, computationServiceURL, WeaveDataSource)
 	{
 		

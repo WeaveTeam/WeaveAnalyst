@@ -3,8 +3,8 @@
 	
 	angular.module('weaveAnalyst.WeaveModule').service('WeaveService', WeaveService);
 	
-	WeaveService.$inject = ['$q','$window','$rootScope','runQueryService', 'dataServiceURL','queryService'];
-	function WeaveService ($q,$window, rootScope, runQueryService, dataServiceURL, queryService){
+	WeaveService.$inject = ['$q','$window','runQueryService', 'dataServiceURL','queryService'];
+	function WeaveService ($q,$window, runQueryService, dataServiceURL, queryService){
 		var that = this;
 		that.weaveWindow;
 		that.wWrapper;

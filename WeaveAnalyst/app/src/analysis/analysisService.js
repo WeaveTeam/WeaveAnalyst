@@ -3,9 +3,9 @@
  */
 (function(){
 	angular.module('weaveAnalyst.AnalysisModule').service('analysisService', analysisService);
-	analysisService.$inject = ['$q', '$rootScope', 'queryService', 'runQueryService', 'scriptManagementURL'];
+	analysisService.$inject = ['$q', 'queryService', 'runQueryService', 'scriptManagementURL'];
 	
-	function analysisService ($q, rootScope, queryService, runQueryService, scriptManagementURL){
+	function analysisService ($q, queryService, runQueryService, scriptManagementURL){
 		var that = this;
 		
 		that.activeNode = null;
