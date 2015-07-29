@@ -7,24 +7,27 @@ if(!this.wa)//the this refers to the weaveApp window object here
 	this.wa = {};
 
 (function(){
+	//static properties
+	WeaveWrapper.instance;
+	WeaveWrapper.weave;
+	WeaveWrapper.weave_Tree;
+	
 	//constructor
 	function WeaveWrapper (){
 		//TODO move this into a manager class
 		WeaveWrapper.instance = this;
-		WeaveWrapper.weave;
-		WeaveWrapper.weave_Tree;
 		
 	}
 	
 	//static function
 	/** requests the WeaveNodeTree hierarchy comprised of IWeaveTreeNode objects**/
 	WeaveWrapper.request_WeaveTree = function (){
-		if(WeaveWrapper.check_WeaveReady()){
-			if(!WeaveWrapper.weave_Tree)
-				WeaveWrapper.weave_Tree = new WeaveWrapper.weave.WeaveTreeNode();
+		if(!WeaveWrapper.weave_Tree){
+			WeaveWrapper.weave_Tree = new WeaveWrapper.weave.WeaveTreeNode();
+			return WeaveWrapper.weave_Tree;
 		}
 		else
-			return;
+			return WeaveWrapper.weave_Tree;
 	};
 	
 	//static function
@@ -37,7 +40,7 @@ if(!this.wa)//the this refers to the weaveApp window object here
 	
 	var p = WeaveWrapper.prototype;
 	//attaching it to the global wa object
-	window.wa.WeaveWrapper = WeaveWrapper;
+	this.wa.WeaveWrapper = WeaveWrapper;
 	
 	//////////////
 	////VIZs
