@@ -12,20 +12,20 @@
      					<label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'STATA'" uncheckable>Stata</label>
 <!--        					    <label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'PYTHON'" uncheckable>Python</label> -->
 			</div>
+			
 			<br/>
 			<!-- Script Select-->		
 			<div style = "width: 75%; margin-top: 5px">
-										<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !scriptCtrl.queryService.queryObject.scriptSelected, 'validatedUI' : scriptCtrl.queryService.queryObject.scriptSelected}"
-											title = "Red flags indicate required selections for query validation">
-											
-												<ui-select ng-model="scriptCtrl.queryService.queryObject.scriptSelected" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
-										    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
-													<ui-select-choices repeat="script in scriptCtrl.analysisService.cache.scriptList | filter : $select.search">
-						<!-- 							       			 <div ng-bind-html="script | highlight: $select.search"></div> -->
-										       			 {{script}}
-										        	</ui-select-choices>
-												</ui-select>
-										</div>
+				<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !scriptCtrl.queryService.queryObject.scriptSelected, 'validatedUI' : scriptCtrl.queryService.queryObject.scriptSelected}"
+					title = "Red flags indicate required selections for query validation">
+					
+						<ui-select ng-model="scriptCtrl.queryService.queryObject.scriptSelected" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
+				    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
+							<ui-select-choices repeat="script in scriptCtrl.analysisService.cache.scriptList | filter : $select.search">
+				       			 {{script}}
+				        	</ui-select-choices>
+						</ui-select>
+				</div>
 <!-- 										<button style = "float:left; margin-left: 10px" ><i class="fa fa-info-circle fa-lg"  -->
 <!-- 										popover = "1.This selects a script (computation) to be executed on the data. &#10;2.This must be followed by selection of script input parameters." ></i></button> -->
 			</div><!-- script select ends -->
@@ -38,9 +38,9 @@
 					<column-Menu> </column-Menu>
 				</div>
 
-			</div><!-- sCRIPT OPTIONS END -->
+			</div><!-- SCRIPT OPTIONS END -->
 	</div>
-<!-- TODO enable -->			
+<!-- TODO enable remapping -->			
 
-		</div><!-- end of scripts control -->
-</div> <!-- end of calculations control -->
+	</div><!-- end of body -->
+</div>
