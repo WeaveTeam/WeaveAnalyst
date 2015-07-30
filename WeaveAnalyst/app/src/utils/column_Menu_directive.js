@@ -15,14 +15,25 @@
 		return {
 			restrict : 'E',
 			templateUrl : 'src/utils/column_Menu.tpl.html',
+			scope:{
+				input : '=',
+				dataTable : '=',
+				dataSourceName : '='
+			},
 			controller : columnMenuController,
-			link : function(){
+			bindToController : true,
+			link : function(scope, elem, attrs){
 				
 			}
 		};//end of directive definition
 	};
 	
-	function columnMenuController (){
+	columnMenuController.$inject = ['$scope', 'queryService'];
+	function columnMenuController (scope, queryService){
+		var cMenu_Ctrl = this;
+		cMenu_Ctrl.queryService = queryService;
 		
+		console.log("scope", scope);
+		//console.log("ctrl", cMenu_Ctrl );
 	};
 })();
