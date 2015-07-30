@@ -21,19 +21,18 @@
 				that.weaveWindow.wa_data = that.blah;
 				
 				that.weaveWindow.addEventListener("load", that.create_weaveWrapper);//getting the instance
-
 			}
 		};
 		
 		that.create_weaveWrapper = function(){
 			
-			var wA = that.weaveWindow.wa;
+			var wApp = that.weaveWindow.weaveApp;
 			
 			if(!that.wWrapper && that.weaveWindow){
-				if(!wA.WeaveWrapper.instance)
-					that.wWrapper =  new wA.WeaveWrapper();
+				if(!wApp.WeaveWrapper.instance)
+					that.wWrapper =  new wApp.WeaveWrapper();
 				else
-					that.wWrapper = wA.WeaveWrapper.instance;
+					that.wWrapper = wApp.WeaveWrapper.instance;
 			}
 			
 			//fetching the weave root item
@@ -41,10 +40,10 @@
 		};
 		
 		that.request_Tree = function (){
-			var wA = that.weaveWindow.wa;
+			var wApp = that.weaveWindow.weaveApp;
 			
-			if(wA.WeaveWrapper.check_WeaveReady()){//if weave is ready
-				that.weave_tree = wA.WeaveWrapper.request_WeaveTree();//get the tree
+			if(wApp.WeaveWrapper.check_WeaveReady()){//if weave is ready
+				that.weave_tree = wApp.WeaveWrapper.request_WeaveTree();//get the tree
 				console.log("weavetree", that.weave_tree.getLabel());
 			}
 			else

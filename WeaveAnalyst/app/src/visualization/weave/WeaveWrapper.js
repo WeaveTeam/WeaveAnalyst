@@ -3,8 +3,8 @@
  *@author spurushe
  */
 
-if(!this.wa)//the this refers to the weaveApp window object here
-	this.wa = {};
+if(!this.weaveApp)//the this refers to the weaveApp window object here
+	this.weaveApp = {};
 
 (function(){
 	//static properties
@@ -40,7 +40,7 @@ if(!this.wa)//the this refers to the weaveApp window object here
 	
 	var p = WeaveWrapper.prototype;
 	//attaching it to the global wa object
-	this.wa.WeaveWrapper = WeaveWrapper;
+	this.weaveApp.WeaveWrapper = WeaveWrapper;
 	
 	//////////////
 	////VIZs
