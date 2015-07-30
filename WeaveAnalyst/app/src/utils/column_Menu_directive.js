@@ -17,10 +17,11 @@
 			templateUrl : 'src/utils/column_Menu.tpl.html',
 			scope:{
 				input : '=',
-				dataTable : '=',
-				dataSourceName : '='
+				datatable : '@',
+				datasourcename : '@'
 			},
 			controller : columnMenuController,
+			controllerAs : 'cMenu_Ctrl',
 			bindToController : true,
 			link : function(scope, elem, attrs){
 				
@@ -33,7 +34,7 @@
 		var cMenu_Ctrl = this;
 		cMenu_Ctrl.queryService = queryService;
 		
-		console.log("scope", scope);
-		//console.log("ctrl", cMenu_Ctrl );
+		//console.log("scope", scope);
+		//console.log("ctrl", cMenu_Ctrl);
 	};
 })();

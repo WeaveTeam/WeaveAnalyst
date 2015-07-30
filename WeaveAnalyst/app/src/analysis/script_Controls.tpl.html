@@ -36,8 +36,8 @@
 						
 				<div ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
 					<column-Menu input = "input"
-								 dataTable = "scriptCtrl.dataTable"
-								 dataSourceName = "scriptCtrl.dataSourceName"> </column-Menu>
+								 datatable = {{scriptCtrl.dataTable}}
+								 datasourceName = {{scriptCtrl.dataSourceName}}> </column-Menu>
 				</div>
 
 			</div><!-- SCRIPT OPTIONS END -->

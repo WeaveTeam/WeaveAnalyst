@@ -1,20 +1,20 @@
-<div style = "width: 10%; float:left">{{input.param}} : </div>
+<div style = "width: 10%; float:left">{{cMenu_Ctrl.input.param }}  </div>
 
-<ui-select ng-if="input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
-  		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+  		<ui-select-match allow-clear="true" placeholder="DataSource">{{$select.selected.metadata.title}}</ui-select-match>
 	<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter :$select.slected.metadata.title">
      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
       	</ui-select-choices>
 </ui-select>
 
-<ui-select ng-if="input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
-  		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+  		<ui-select-match allow-clear="true" placeholder="Data Table">{{$select.selected.metadata.title}}</ui-select-match>
 	<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
       	</ui-select-choices>
 </ui-select>
 
-<ui-select ng-if="input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
   		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
 	<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
