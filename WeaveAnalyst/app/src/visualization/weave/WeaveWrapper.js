@@ -38,6 +38,16 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 		return WeaveWrapper.weave && WeaveWrapper.weave.WeavePath && WeaveWrapper.weave._jsonCall;
 	};
 	
+	//get list of children names for a particular tree node
+	WeaveWrapper.get_tree_Children_labels = function(node){
+		var child_labels = [];
+		
+		for(var i = 0; i < node.length; i++){
+			child_labels[i] = node[i].getLabel();
+		}
+		return child_labels;
+	};
+	
 	var p = WeaveWrapper.prototype;
 	//attaching it to the global wa object
 	this.weaveApp.WeaveWrapper = WeaveWrapper;

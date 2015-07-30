@@ -11,6 +11,9 @@
 		that.weave_tree;//so that the tree can be retrieved anywhere in the app by simply injecting this service
 		
 		that.blah = "bujumbarra";
+		that.dataSources;
+		that.dataTables;
+		
 		that.launch_Weave = function(){
 			
 			//check if it is open
@@ -44,10 +47,24 @@
 			
 			if(wApp.WeaveWrapper.check_WeaveReady()){//if weave is ready
 				that.weave_tree = wApp.WeaveWrapper.request_WeaveTree();//get the tree
-				console.log("weavetree", that.weave_tree.getLabel());
+				that.dataSources = that.request_Children();
 			}
 			else
 				setTimeout(that.request_Tree, 800);
+		};
+		
+		//any time a data source is added in weave, we need to get updated list of children
+		that.request_Children = function(){
+			//check if tree exists first
+			var wApp = that.weaveWindow.weaveApp;
+			var dSources;
+			var dSourceNames;
+			if(that.weave_tree){
+				dSources = that.weave_tree.getChildren();//highest node in the tree i.e.datasources
+				dSourceNames = wApp.WeaveWrapper.get_tree_Children_labels(dSources);
+			}
+			
+			return dSourceNames;
 		};
 		
 	};
