@@ -29,12 +29,22 @@
 		};//end of directive definition
 	};
 	
-	columnMenuController.$inject = ['$scope', 'WeaveService'];
-	function columnMenuController (scope, WeaveService){
+	columnMenuController.$inject = ['$scope', 'WeaveService', 'WeaveDataSource'];
+	function columnMenuController (scope, WeaveService, WeaveDataSource){
 		var cMenu_Ctrl = this;
 		cMenu_Ctrl.WeaveService = WeaveService;
 		
 		cMenu_Ctrl.ss = {ds : null};
+		
+		//TODO replace this eventually with a callback mechanism
+		scope.$watch(function(){
+			return cMenu_Ctrl.dataSource;
+		}, function(){
+			if(cMenu_Ctrl.dataSource == WeaveDataSource)//if its a 'WeaveDataSource'
+				cMenu_Ctrl.WeaveService.request_Tables(cMenu_Ctrl.dataSource);
+			else//if its a WADataSource or CSVDataSource
+				cMenu_Ctrl.WeaveService.request_Columns(cMenu_Ctrl.dataSource);
+		});
 		//console.log("scope", scope);
 		//console.log("ctrl", cMenu_Ctrl);
 	};

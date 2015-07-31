@@ -31,7 +31,8 @@
 	function scriptController ($scope, queryService, $filter, analysisService){
 		var scriptCtrl = this;
 		
-		//scriptCtrl.dataSourceName = "WeaveDataSource";
+		scriptCtrl.dataSourceName = "Hello";
+		dd = scriptCtrl.dataSourceName;
 	//	scriptCtrl.dataTable = "Hello";
 		
 		scriptCtrl.queryService = queryService;

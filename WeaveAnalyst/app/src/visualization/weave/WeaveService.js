@@ -3,8 +3,8 @@
 	
 	angular.module('weaveAnalyst.WeaveModule').service('WeaveService', WeaveService);
 	
-	WeaveService.$inject = ['$q','$window','runQueryService', 'dataServiceURL','queryService'];
-	function WeaveService ($q,$window, runQueryService, dataServiceURL, queryService){
+	WeaveService.$inject = ['$q','$window','queryService'];
+	function WeaveService ($q,$window, queryService){
 		var that = this;
 		that.weaveWindow;
 		that.wWrapper;
@@ -12,7 +12,10 @@
 		
 		that.blah = "bujumbarra";
 		that.dataSources;
+		that.current_DataSource;
+		that.current_DataTable;
 		that.dataTables;
+		that.dataColumns;
 		
 		that.launch_Weave = function(){
 			
@@ -57,15 +60,41 @@
 		that.request_Children = function(){
 			//check if tree exists first
 			var wApp = that.weaveWindow.weaveApp;
+			
 			var dSources;
 			var dSourceNames;
 			if(that.weave_tree){
 				dSources = that.weave_tree.getChildren();//highest node in the tree i.e.datasources
 				dSourceNames = wApp.WeaveWrapper.get_tree_Children_labels(dSources);
 			}
-			
 			return dSourceNames;
 		};
 		
+		//retrieves tables from a weavedataSurce
+		that.request_Tables = function(dataSource){
+			var wApp = that.weaveWindow.weaveApp;
+			if(that.current_DataSource != dataSource){//if diff fetch tables
+				that.dataTables = wApp.WeaveWrapper.get_tree_Children_labels(dataSource);
+				console.log("fetching new list");
+				that.current_DataSource = dataSource;//set to new selected datasource
+			}
+			
+			console.log("fetching old list");
+			return that.dataTables;
+		};
+		
+		//retreives columns from a CSVDataSource or WeaveAnalystDataSource or a table from WeaveDatSource
+		that.request_Columns = function(source_node){
+			var wApp = that.weaveWindow.weaveApp;
+			if(that.current_DataTable != source_node){//if diff fetch columns
+				that.dataColumns = wApp.WeaveWrapper.get_tree_Children_labels(source_node);
+				console.log("fetching new list");
+				that.current_DataTable = source_node;
+			}
+			
+			console.log("fetching old list");
+			return that.dataColumns;
+			
+		};
 	};
 })();
