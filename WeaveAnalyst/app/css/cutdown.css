@@ -523,10 +523,8 @@
 
 .panel-default>.panel-heading {
 	color: #333;
-	background-color: #5E5B5B;
 	//border-color: #ddd;
-	color: #D5D5D5;
-	background-color: #4C4F53;
+	background-color: #EAEAEA;
 }
 
 .panel {
@@ -543,9 +541,9 @@
 
 .panel-heading {
 	width: 100%;
-	background: #5E5B5B;
-	color: #FFF;
-	border: 1px solid #C2C2C2;
+	background:  #EAEAEA;
+	color: #333;
+	border: 2px solid #ddd;
 	height: 30px;
 	padding: 0;
 }
@@ -896,8 +894,8 @@ select {
 	height: 30px;
 	border-bottom: 1px solid #e7e7e7;
 	border-top: 1px solid #f4f4f4;
-	color: #D5D5D5;
-	background-color: #4C4F53;
+	color: #333;
+	background-color:  #EAEAEA;
 	margin-bottom: 3px;
 }
 

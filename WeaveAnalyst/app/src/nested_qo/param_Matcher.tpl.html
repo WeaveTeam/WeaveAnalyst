@@ -1,23 +1,22 @@
-<div>
-		<div style="width: 60%;  height: 100%;" class="panel panel-default">
+<div style = "width: 4%; float:left; padding-left: 1%"><i style = "font-size :20px;"class="fa fa-minus-circle"></i></div>
 
-				<div class="panel-heading">
-					<h2>Map Parameters</h2>
-				</div>
-				
-				<div style = "margin-left :2%">
-					Query Objects : 7 
-						<!-- View options -->
-						<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" style = "width : 30%">
-							    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
-									<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
-						</ui-select>
-				</div>
-				
-<!-- View description -->
-				<div style="width: 100%; height: 40px;">
-					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i>{{prjtCtrl.projectService.view_Desc}} </h5>
+<ui-select  droppable ng-model="cMenu_Ctrl.dataSource" theme="select2" style= "width: 30%; float:left">
+  		<ui-select-match allow-clear="true" placeholder="Source parameter">{{$select.selected.name}}</ui-select-match>
+	<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.search">
+      	</ui-select-choices>
+</ui-select>
 
-				</div>
-			</div>
-</div>
+<div style = "width: 4%; float:left;padding-left: 1%"><i style = "font-size :20px;"class="fa fa-chevron-circle-right"></i></div>
+
+<ui-select droppable ng-model="cMenu_Ctrl.dataTable" theme="select2" style= "width: 30%; float:left">
+  		<ui-select-match allow-clear="true" placeholder="Destination Query Objects">{{$select.selected.name}}</ui-select-match>
+	<ui-select-choices repeat="table in cMenu_Ctrl.WeaveService.dataTables | filter : $select.search">
+      	</ui-select-choices>
+</ui-select>
+
+<ui-select droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+  		<ui-select-match allow-clear="true" placeholder="Destination parameter">{{$select.selected.metadata.title}}</ui-select-match>
+	<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
+     			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+      	</ui-select-choices>
+</ui-select>

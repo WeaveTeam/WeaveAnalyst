@@ -116,10 +116,17 @@ var shanti;
 			for (var t =0 ; t < node.length; t++){
 					
 				children = that.retrieve_Children(node[t]);//1. retrieve them
+				console.log("children", children);
+				//2. process them
+				
+				switch (children[0].name){
+					case "Data Tables" :
+					that.dataTables = that.format_Tree_Objects(children[0].source);
+					shanti = that.dataTables;
+					break;
+				}
 			}			
-			shanti= children;
 
-			//2. process them 
 			return children;
 		};
 		
@@ -141,6 +148,12 @@ var shanti;
 			return children;
 		};
 		
-		
+		that.format_Tree_Objects = function(tree_Object){
+			var formatted = [];
+			for(var f =0; f < tree_Object.length; f++){
+				formatted[f] = {name : tree_Object[f].getLabel(), source : tree_Object[f]};
+			}
+			return formatted;
+		};
 	};
 })();
