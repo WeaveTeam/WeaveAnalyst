@@ -1,0 +1,23 @@
+<div>
+		<div style="width: 60%;  height: 100%;" class="panel panel-default">
+
+				<div class="panel-heading">
+					<h2>Map Parameters</h2>
+				</div>
+				
+				<div style = "margin-left :2%">
+					Query Objects : 7 
+						<!-- View options -->
+						<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" style = "width : 30%">
+							    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
+									<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
+						</ui-select>
+				</div>
+				
+<!-- View description -->
+				<div style="width: 100%; height: 40px;">
+					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i>{{prjtCtrl.projectService.view_Desc}} </h5>
+
+				</div>
+			</div>
+</div>
