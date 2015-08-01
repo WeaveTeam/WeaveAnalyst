@@ -1,4 +1,4 @@
-angular.module('weaveAnalyst.directives.popover-with-tpl', []).directive('popoverWithTpl', function($compile, $templateCache, $q, $http) {
+angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compile, $templateCache, $q, $http) {
 
   var getTemplate = function(templateUrl) {
     var def = $q.defer();

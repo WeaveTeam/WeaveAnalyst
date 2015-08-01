@@ -9,7 +9,8 @@
  */
 
 (function(){
-	angular.module('weaveAnalyst.AnalysisModule').directive('columnMenu', columnMenuComponent);
+	angular.module('weaveAnalyst.utils', []);
+	angular.module('weaveAnalyst.utils').directive('columnMenu', columnMenuComponent);
 	
 	function columnMenuComponent (){
 		return {

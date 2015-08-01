@@ -1,4 +1,4 @@
-angular.module('weaveAnalyst.directives.fileUpload', [])
+angular.module('weaveAnalyst.utils')
         .directive('fileUpload', function($q) {
           return {
             restrict: 'E',

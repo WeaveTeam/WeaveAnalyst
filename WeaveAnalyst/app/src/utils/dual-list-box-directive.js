@@ -1,7 +1,4 @@
-angular.module('weaveAnalyst.directives.dualListBox', [])
-/*
- * Is aws.Main needed? isn't it just routing?
- */
+angular.module('weaveAnalyst.utils')
 .directive(
         'dualListBox',
         function($compile, $timeout) {
