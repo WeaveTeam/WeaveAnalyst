@@ -32,7 +32,6 @@
 		var scriptCtrl = this;
 		
 		scriptCtrl.dataSourceName = "Hello";
-		dd = scriptCtrl.dataSourceName;
 	//	scriptCtrl.dataTable = "Hello";
 		
 		scriptCtrl.queryService = queryService;

@@ -38,14 +38,14 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 		return WeaveWrapper.weave && WeaveWrapper.weave.WeavePath && WeaveWrapper.weave._jsonCall;
 	};
 	
-	//get list of children names for a particular tree node
-	WeaveWrapper.get_tree_Children_labels = function(node){
-		var child_labels = [];
+	//get list of children for a particular tree node
+	WeaveWrapper.get_tree_Children = function(node){
+		var children = [];
 		
 		for(var i = 0; i < node.length; i++){
-			child_labels[i] = node[i].getLabel();
+			children[i] = {name : node[i].getLabel() , source : node[i] };
 		}
-		return child_labels;
+		return children;
 	};
 	
 	var p = WeaveWrapper.prototype;

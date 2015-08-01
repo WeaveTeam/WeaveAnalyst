@@ -1,3 +1,4 @@
+var shanti;
 (function(){
 	angular.module('weaveAnalyst.WeaveModule', []);
 	
@@ -12,10 +13,36 @@
 		
 		that.blah = "bujumbarra";
 		that.dataSources;
-		that.current_DataSource;
+		that.current_DataSource = {name: null, source: null};
 		that.current_DataTable;
 		that.dataTables;
 		that.dataColumns;
+		
+		that.selected_data;
+		
+		/*{
+		 * [DataSource1] : {
+		 * 						[DataTable1] : {
+		 * 											[column1] : {dataSourceName : null, metadata : null}
+		 * 										}	
+		 * 				    }
+		 * 					.
+		 * 					.
+		 * 					.
+		 * [DataSourceN] : {
+		 * 						[column1] : {dataSourceName : null, metadata : null}
+		 * 						[column2] : {dataSourceName : null, metadata : null}
+		 * 						.
+		 * 						.
+		 * 					}
+		 *}
+		 * 
+		 * look up for data sources, data tables and columns
+		 * this datamap will be populated on request lazily
+		 * */
+		that.data_Map = {};
+		
+		
 		
 		that.launch_Weave = function(){
 			
@@ -47,54 +74,73 @@
 		
 		that.request_Tree = function (){
 			var wApp = that.weaveWindow.weaveApp;
+			var dSources;
 			
 			if(wApp.WeaveWrapper.check_WeaveReady()){//if weave is ready
 				that.weave_tree = wApp.WeaveWrapper.request_WeaveTree();//get the tree
-				that.dataSources = that.request_Children();
+				dSources = that.weave_tree.getChildren();
+				
+				////////////////
+				///DATASOURCES
+				////////////////
+				that.dataSources = that.process_Children(dSources);
+				
 			}
 			else
 				setTimeout(that.request_Tree, 800);
 		};
-		
-		//any time a data source is added in weave, we need to get updated list of children
-		that.request_Children = function(){
-			//check if tree exists first
-			var wApp = that.weaveWindow.weaveApp;
+
+		that.request_data = function(node){
+			//var deferred = $q.defer();
+			var children;
+			//check if weave tree exists first
+			if(!that.weave_tree)
+				that.request_Tree();
 			
-			var dSources;
-			var dSourceNames;
-			if(that.weave_tree){
-				dSources = that.weave_tree.getChildren();//highest node in the tree i.e.datasources
-				dSourceNames = wApp.WeaveWrapper.get_tree_Children_labels(dSources);
-			}
-			return dSourceNames;
+			else{
+				//check if datasource already in data map
+				if (!that.data_Map.hasOwnProperty(node)){//if no fetch it from weave tree and populate data map 
+					children = that.process_Children(node.source);
+				}
+				else{
+				}
+				
+			}//end of else
+			
+			//return deferred.promise;
 		};
 		
-		//retrieves tables from a weavedataSurce
-		that.request_Tables = function(dataSource){
-			var wApp = that.weaveWindow.weaveApp;
-			if(that.current_DataSource != dataSource){//if diff fetch tables
-				that.dataTables = wApp.WeaveWrapper.get_tree_Children_labels(dataSource);
-				console.log("fetching new list");
-				that.current_DataSource = dataSource;//set to new selected datasource
-			}
+		that.process_Children = function(node){
+			var children;
 			
-			console.log("fetching old list");
-			return that.dataTables;
+			for (var t =0 ; t < node.length; t++){
+					
+				children = that.retrieve_Children(node[t]);//1. retrieve them
+			}			
+			shanti= children;
+
+			//2. process them 
+			return children;
 		};
 		
-		//retreives columns from a CSVDataSource or WeaveAnalystDataSource or a table from WeaveDatSource
-		that.request_Columns = function(source_node){
+		that.retrieve_Children = function(node){
 			var wApp = that.weaveWindow.weaveApp;
-			if(that.current_DataTable != source_node){//if diff fetch columns
-				that.dataColumns = wApp.WeaveWrapper.get_tree_Children_labels(source_node);
-				console.log("fetching new list");
-				that.current_DataTable = source_node;
-			}
+			var children;
+			var weaveTreeIsBusy = wApp.WeaveWrapper.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 			
-			console.log("fetching old list");
-			return that.dataColumns;
+			(function getting_Children(){
+				if(weaveTreeIsBusy())
+					setTimeout(getting_Children, 500);
+				else{
+					var c = node.getChildren();
+					var label = node.getLabel();
+					children = [{name : label, source : c}];
+				}
+			})(node);
 			
+			return children;
 		};
+		
+		
 	};
 })();
