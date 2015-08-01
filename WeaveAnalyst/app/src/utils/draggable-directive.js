@@ -1,4 +1,4 @@
-angular.module('weaveAnalyst.directives.dragModule', []).
+angular.module('weaveAnalyst.utils').
   directive('myDraggable', function($document) {
     return {
         

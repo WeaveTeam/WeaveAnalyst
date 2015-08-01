@@ -15,9 +15,10 @@
 	                               'ui.bootstrap',
 	                               'angularSpinner',
 	                               'ngSanitize',
+	                               'weaveAnalyst.utils',
 	                               'weaveAnalyst.configure',
 	                               'weaveAnalyst.dataStatistics',
-	                               'weaveAnalyst.directives',
+	                               //'weaveAnalyst.directives',
 	                               'weaveAnalyst.queryObject',                             
 	                               'weaveAnalyst.queryObjectEditor', 
 	                               'weaveAnalyst.project',
@@ -30,9 +31,9 @@
 	angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
 	                                          'weaveAnalyst.configure.metadata',
 	                                          'weaveAnalyst.configure.script']);
-	angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
-	                                'weaveAnalyst.directives.fileUpload',
-	                                'weaveAnalyst.directives.popover-with-tpl']);
+//	angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
+//	                                'weaveAnalyst.directives.fileUpload',
+//	                                'weaveAnalyst.directives.popover-with-tpl']);
 	
 	
 //	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
