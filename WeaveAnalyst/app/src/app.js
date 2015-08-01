@@ -18,11 +18,11 @@
 	                               'weaveAnalyst.utils',
 	                               'weaveAnalyst.configure',
 	                               'weaveAnalyst.dataStatistics',
-	                               //'weaveAnalyst.directives',
 	                               'weaveAnalyst.queryObject',                             
 	                               'weaveAnalyst.queryObjectEditor', 
 	                               'weaveAnalyst.project',
 	                               'weaveAnalyst.errorLog',
+	                               'weaveAnalyst.nested_qo',
 	                               'weaveAnalyst.AnalysisModule',
 	                               'weaveAnalyst.WeaveModule',
 	                               'weaveAnalyst.run']);
@@ -31,10 +31,6 @@
 	angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
 	                                          'weaveAnalyst.configure.metadata',
 	                                          'weaveAnalyst.configure.script']);
-//	angular.module('weaveAnalyst.directives', ['weaveAnalyst.directives.dualListBox',
-//	                                'weaveAnalyst.directives.fileUpload',
-//	                                'weaveAnalyst.directives.popover-with-tpl']);
-	
 	
 //	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
 //		$rootScope.$safeApply = function(fn, $scope) {
