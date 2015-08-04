@@ -7,12 +7,10 @@
  */
 
 (function (){
-	angular.module("weaveAnalyst.queryObject", []);
-
 	//////////////////////
 	//SERVICE
 	//////////////////////
-	angular.module("weaveAnalyst.queryObject").service("queryService", queryService);;
+	angular.module("weaveAnalyst.nested_qo").service("queryService", queryService);;
 	queryService.$inject = ['$q', 'runQueryService',
                             'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL','WeaveDataSource'];
 	
@@ -414,7 +412,7 @@
 
 
 (function(){
-	angular.module('weaveAnalyst.queryObject').service('runQueryService',runQueryService );
+	angular.module('weaveAnalyst.nested_qo').service('runQueryService',runQueryService );
 	
 	runQueryService.$inject = ['errorLogService','usSpinnerService','$modal'];
 	
