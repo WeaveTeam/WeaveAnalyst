@@ -18,7 +18,6 @@
 	                               'weaveAnalyst.utils',
 	                               'weaveAnalyst.configure',
 	                               'weaveAnalyst.dataStatistics',
-	                               'weaveAnalyst.queryObject',                             
 	                               'weaveAnalyst.queryObjectEditor', 
 	                               'weaveAnalyst.project',
 	                               'weaveAnalyst.errorLog',
