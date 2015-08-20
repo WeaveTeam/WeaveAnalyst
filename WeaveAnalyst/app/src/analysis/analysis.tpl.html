@@ -30,7 +30,7 @@
 						Query Objects : 7 
 							<!-- View options -->
 							<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" style = "width : 30%">
-								    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
+								    	<ui-select-match placeholder="Choose Query Object">{{$select.selected}}</ui-select-match>
 										<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
 							</ui-select>
 					</div>

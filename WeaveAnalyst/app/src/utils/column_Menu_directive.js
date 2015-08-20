@@ -17,7 +17,8 @@
 			restrict : 'E',
 			templateUrl : 'src/utils/column_Menu.tpl.html',
 			scope:{
-				input : '='
+				input : '=',
+				scriptoptions :'='
 				//datatable : '@'
 				//datasourcename : '@'
 			},
@@ -30,19 +31,49 @@
 		};//end of directive definition
 	};
 	
-	columnMenuController.$inject = ['$scope', 'WeaveService'];
-	function columnMenuController (scope, WeaveService){
+	columnMenuController.$inject = ['$scope', 'WeaveService', 'queryService'];
+	function columnMenuController (scope, WeaveService, queryService){
 		var cMenu_Ctrl = this;
 		cMenu_Ctrl.WeaveService = WeaveService;
+		cMenu_Ctrl.queryService = queryService;
 		
-		cMenu_Ctrl.ss = {ds : null};
+		cMenu_Ctrl.dataObject = {
+				data_Source: null,
+				data_Table : null,
+				data_Column : null
+		};
+		
 		cMenu_Ctrl.dSource_Change_Handler = dSource_Change_Handler;
+		cMenu_Ctrl.fetch_data_Columns = fetch_data_Columns;
 		
+	
 		function dSource_Change_Handler (){
-			if(cMenu_Ctrl.dataSource.name){
-				cMenu_Ctrl.WeaveService.request_data(cMenu_Ctrl.dataSource);
+			if(cMenu_Ctrl.dataObject.data_Source){
+				cMenu_Ctrl.WeaveService.request_data(cMenu_Ctrl.dataObject.data_Source);
 			}
 		};
+		
+		//this function is called when the drop down selector for data columns is clicked
+		function fetch_data_Columns (){
+			if(cMenu_Ctrl.dataObject.data_Source || cMenu_Ctrl.dataObject.data_Table){
+				var node;
+				//1. check if it weave datasource
+				if(cMenu_Ctrl.dataObject.data_Source.name == 'WeaveDataSource'){
+					//2. the check if datatable exists
+					if(cMenu_Ctrl.dataObject.data_Table)
+						node = cMenu_Ctrl.dataObject.data_Table.source;//set node to datatable
+				}
+				else{//datasources other than weavedatasource
+					node = cMenu_Ctrl.dataObject.data_Source.source;//else set node to dataSource
+				}
+				//3. fetch columns
+				cMenu_Ctrl.WeaveService.retrieve_Columns(node);
+			}
+			else
+				alert("Please select a datasource or a datatable first");
+			
+		};
+		
 		
 		//TODO replace this eventually with a callback mechanism
 //		scope.$watch(function(){

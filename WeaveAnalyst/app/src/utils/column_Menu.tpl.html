@@ -1,23 +1,27 @@
 <div style = "width: 10%; float:left">{{cMenu_Ctrl.input.param }}  </div>
 
-<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="cMenu_Ctrl.dataSource" theme="select2" style= "width: 30%; float:left"
+<!-- DATASOURCE THAT THE DATATABLE BELONGS TO -->
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" ng-model="cMenu_Ctrl.dataObject.data_Source" theme="select2" style= "width: 30%; float:left"
 ng-change = "cMenu_Ctrl.dSource_Change_Handler()">
   		<ui-select-match allow-clear="true" placeholder="DataSource">{{$select.selected.name}}</ui-select-match>
-	<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.search">
-			{{dSource.name}}
+	<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.selected.name">
+			<div ng-bind-html="dSource.name | highlight: $select.search"></div>
       	</ui-select-choices>
 </ui-select>
 
-<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="cMenu_Ctrl.dataTable" theme="select2" style= "width: 30%; float:left">
+<!-- DATA TABLE THAT DATA COLUMN BELONGS TO -->
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="cMenu_Ctrl.dataObject.data_Table" theme="select2" style= "width: 30%; float:left">
   		<ui-select-match allow-clear="true" placeholder="Data Table">{{$select.selected.name}}</ui-select-match>
 	<ui-select-choices repeat="table in cMenu_Ctrl.WeaveService.dataTables | filter : $select.search">
      			 {{table.name}}
       	</ui-select-choices>
 </ui-select>
 
-<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+<!-- THE DATA COLUMN -->
+<ui-select ng-if="cMenu_Ctrl.input.type == 'column'" droppable ng-model="cMenu_Ctrl.dataObject.data_Column" theme="select2" style= "width: 30%; float:left"
+ng-click = "cMenu_Ctrl.fetch_data_Columns()">
   		<ui-select-match allow-clear="true" placeholder="Select column...">{{$select.selected.metadata.title}}</ui-select-match>
-	<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
+	<ui-select-choices repeat="column in cMenu_Ctrl.WeaveService.dataColumns | filter : $select.selected.metadata.title">
      			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
       	</ui-select-choices>
 </ui-select>
