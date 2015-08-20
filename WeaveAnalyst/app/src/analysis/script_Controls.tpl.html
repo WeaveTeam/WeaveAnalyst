@@ -35,7 +35,7 @@
 			<div class="tool-bar">
 						
 				<div ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
-					<column-Menu input = "input"> </column-Menu>
+					<column-Menu input = "input" scriptoptions = "scriptCtrl.queryService.queryObject.scriptOptions"> </column-Menu>
 				</div>
 
 			</div><!-- SCRIPT OPTIONS END -->

@@ -19,32 +19,7 @@
 		      </div>
 	<!-- Query Matching panel -->	    
       <div ui-layout-container max-size="80%" >
-      	 <div>
-			<div style="width: 60%;  height: 100%;" class="panel panel-default">
-	
-					<div class="panel-heading">
-						<h2>Map Parameters</h2>
-					</div>
-					
-					<div style = "margin-left :2%; padding-top : 5px">
-						Query Objects : 7 
-							<!-- View options -->
-							<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" style = "width : 30%">
-								    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
-										<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
-							</ui-select>
-					</div>
-					
-	<!-- View description -->
-					<div style="width: 100%; height: 40px;">
-						<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign">
-						</i>Link query objects in the nested query object and check for compatibility of parameters</h5>
-	
-					</div>
-					
-					<param-Matcher></param-Matcher>
-			</div>
-		</div>
+      	 <param-Matcher></param-Matcher>
       </div>
 
   </div>

@@ -80,71 +80,124 @@ var shanti;
 				that.weave_tree = wApp.WeaveWrapper.request_WeaveTree();//get the tree
 				dSources = that.weave_tree.getChildren();
 				
-				////////////////
-				///DATASOURCES
-				////////////////
-				that.dataSources = that.process_Children(dSources);
-				
+				that.process_Children(dSources);
 			}
 			else
 				setTimeout(that.request_Tree, 800);
 		};
 
 		that.request_data = function(node){
-			//var deferred = $q.defer();
 			var children;
 			//check if weave tree exists first
 			if(!that.weave_tree)
 				that.request_Tree();
 			
 			else{
-				//check if datasource already in data map
-				if (!that.data_Map.hasOwnProperty(node)){//if no fetch it from weave tree and populate data map 
 					children = that.process_Children(node.source);
-				}
-				else{
-				}
 				
 			}//end of else
-			
-			//return deferred.promise;
 		};
 		
-		that.process_Children = function(node){
-			var children;
-			
-			for (var t =0 ; t < node.length; t++){
-					
-				children = that.retrieve_Children(node[t]);//1. retrieve them
-				console.log("children", children);
-				//2. process them
-				
-				switch (children[0].name){
-					case "Data Tables" :
-					that.dataTables = that.format_Tree_Objects(children[0].source);
-					shanti = that.dataTables;
-					break;
-				}
-			}			
-
-			return children;
-		};
-		
-		that.retrieve_Children = function(node){
+		//TODO merge this with retrieve_children funct
+		that.retrieve_Columns = function(node){
 			var wApp = that.weaveWindow.weaveApp;
-			var children;
-			var weaveTreeIsBusy = wApp.WeaveWrapper.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+			that.dataColumns = [];
+			node.getChildren();
 			
-			(function getting_Children(){
-				if(weaveTreeIsBusy())
-					setTimeout(getting_Children, 500);
+			that.get_Children_Busy(node).then(function(result_nodes){//fetches the columns
+				var col_nodes = result_nodes[0].source;
+				
+				var weaveTreeIsBusy = wApp.WeaveWrapper.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+				
+				
+				for(var t =0; t < col_nodes.length; t++){
+					get_metadata(col_nodes[t], t);
+				}
+				
+				
+				function get_metadata(node, index){
+					if(weaveTreeIsBusy())
+						setTimeout(get_metadata.bind(null, node, index), 500);
+					else{
+						that.dataColumns[index] = {
+								dataSource : node.getDataSourceName(),
+								metadata : node.getColumnMetadata()
+						};
+						
+					}
+				};
+				
+				shanti = that.dataColumns;
+				////////////////
+				///DATA COLUMNS
+				////////////////
+				//that.dataColumns = result; 
+			});
+			
+		};
+		
+		
+		
+		//var weaveTreeIsBusy = null;
+		
+		that.get_Children_Busy = function(node){
+			var deferred = $q.defer();
+			var wApp = that.weaveWindow.weaveApp;
+			var weaveTreeIsBusy = wApp.WeaveWrapper.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+			var children;
+
+			(function yyy (node){
+				if(weaveTreeIsBusy()){
+					console.log("busy");
+					setTimeout(yyy.bind(null, node), 200);
+				}
 				else{
 					var c = node.getChildren();
 					var label = node.getLabel();
 					children = [{name : label, source : c}];
+					deferred.resolve(children);
 				}
 			})(node);
 			
+			console.log("children", children);
+			return deferred.promise;
+		};
+		
+		that.process_Children = function(node){
+			var children;
+			var wApp = that.weaveWindow.weaveApp;
+			var weaveTreeIsBusy = wApp.WeaveWrapper.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+			
+			if(node.length){//if the node has several source
+				for (var t =0 ; t < node.length; t++){
+					that.get_Children_Busy(node[t]).then(function(children){//1. retrieve them
+
+						//if(children){
+							//2. process them
+							switch (children[0].name){
+								////////////////
+								///DATATABLES
+								////////////////
+								case "Data Tables" :
+								that.dataTables = that.format_Tree_Objects(children[0].source);
+								break;
+								////////////////
+								///DATASOURCES
+								////////////////	
+								case "WeaveDataSource":
+								that.dataSources = children;
+							}
+							//process geometry collections
+							//other types of data sources
+							//etc
+						//}
+					});
+				}			
+			}
+			else{
+				children = that.retrieve_Children(node);//1. retrieve them
+			}
+
 			return children;
 		};
 		
@@ -155,5 +208,6 @@ var shanti;
 			}
 			return formatted;
 		};
+		
 	};
 })();
