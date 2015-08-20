@@ -1,4 +1,4 @@
-angular.module('weaveAnalyst.utils')
+angular.module('weaveAnalyst.utils', [])
 .directive(
         'dualListBox',
         function($compile, $timeout) {
