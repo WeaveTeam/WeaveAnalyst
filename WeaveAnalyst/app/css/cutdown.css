@@ -974,6 +974,33 @@ select {
 	background : #5bb75b;
 }
 
+/*for the query matching panel : bottom half of the analysis tab*/
+.nqo_parent{
+	width: 100%;
+	height:100%;
+	padding-top : 5px
+}
+
+.nqo_add_btn{
+	margin-left :5px;
+	float:left
+}
+
+.nqo_matcher_panel{
+	width: 50%;
+	height: 100%;
+	float:left
+}
+
+.nqo_tree_container{
+	float: left; 
+	margin-left:10px; 
+	background-color: azure; 
+	width: 44%; 
+	height: 100%
+}
+
+
 /** for the d3 filter map**/
 #states {
   fill: #335555;
