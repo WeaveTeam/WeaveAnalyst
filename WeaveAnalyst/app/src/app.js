@@ -2,6 +2,7 @@
 //                                 
 //                                 'ui.sortable',
 //Using IIFEs
+var tt; 
 (function($stateProvider, $urlRouterProvider, $rootScope){
 
 	angular.module('weaveAnalyst',['ui.router',
@@ -145,6 +146,7 @@
 		var wa_main = this;
 		
 		wa_main.state = $state;
+		tt = wa_main;
 		wa_main.authenticationService = authenticationService;
 	};
 	

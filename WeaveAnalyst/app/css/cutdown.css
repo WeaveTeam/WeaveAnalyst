@@ -999,7 +999,14 @@ select {
 	width: 44%; 
 	height: 100%
 }
-
+/**    intro cards on index html**/
+.intro_card{
+	width:30%;
+	height: 20%; 
+	float:left;
+	border:solid 2px #ddd;
+	margin: 80px 40px 20px 50px;
+}
 
 /** for the d3 filter map**/
 #states {
