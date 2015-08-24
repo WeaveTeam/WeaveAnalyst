@@ -978,7 +978,6 @@ select {
 .nqo_parent{
 	width: 100%;
 	height:100%;
-	padding-top : 5px
 }
 
 .nqo_add_btn{
@@ -989,16 +988,41 @@ select {
 .nqo_matcher_panel{
 	width: 50%;
 	height: 100%;
-	float:left
+	float:left;
 }
 
 .nqo_tree_container{
-	float: left; 
+	float:left;
 	margin-left:10px; 
-	background-color: azure; 
-	width: 44%; 
+	padding-top: 5px;
+/* 	background-color: azure;  */
+	width: 46%; 
 	height: 100%
 }
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+
+
+
 /**    intro cards on index html**/
 .intro_card{
 	width:30%;

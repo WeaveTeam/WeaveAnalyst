@@ -1,8 +1,8 @@
 {
- "name": "flare",
+ "name": "Nested QO",
  "children": [
   {
-   "name": "animate",
+   "name": "QueryObject 1",
    "children": [
     {"name": "Easing", "size": 17010},
     {"name": "FunctionSequence", "size": 5842},
@@ -10,16 +10,16 @@
    ]
   },
   {
-   "name": "scale",
+   "name": "QueryObject 2",
    "children": [
-    {"name": "TimeScale", "size": 5833}
+    {"name": "QueryObject 2.1", "size": 5833}
    ]
   },
   {
-   "name": "vis",
+   "name": "QueryObject 3",
    "children": [
     {
-     "name": "axis",
+     "name": "QueryObject 3.1",
      "children": [
       {"name": "Axes", "size": 1302},
       {"name": "Axis", "size": 24593},
@@ -29,12 +29,12 @@
      ]
     },
     {
-     "name": "controls",
+     "name": "QueryObject 3.2",
      "children": [
       {"name": "TooltipControl", "size": 8435}
      ]
     },
-    {"name": "Visualization", "size": 16540}
+    {"name": "QueryObject 3.3", "size": 16540}
    ]
   }
  ]

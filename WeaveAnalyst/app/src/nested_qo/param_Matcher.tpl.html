@@ -1,5 +1,5 @@
-<div>
-			<div style="width: 60%;  height: 100%;" class="panel panel-default">
+<div class="nqo_parent">
+			<div class="panel panel-default nqo_matcher_panel">
 	
 					<div class="panel-heading">
 						<h2>Map Parameters</h2>
@@ -23,25 +23,25 @@
 					
 					<div style = "width: 4%; float:left; padding-left: 1%"><i style = "font-size :20px;"class="fa fa-minus-circle"></i></div>
 
-							<ui-select  droppable ng-model="cMenu_Ctrl.dataSource" theme="select2" style= "width: 30%; float:left">
-							  		<ui-select-match allow-clear="true" placeholder="Source parameter">{{$select.selected.name}}</ui-select-match>
-								<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.search">
-							      	</ui-select-choices>
-							</ui-select>
-							
-							<div style = "width: 4%; float:left;padding-left: 1%"><i style = "font-size :20px;"class="fa fa-chevron-circle-right"></i></div>
-							
-							<ui-select droppable ng-model="cMenu_Ctrl.dataTable" theme="select2" style= "width: 30%; float:left">
-							  		<ui-select-match allow-clear="true" placeholder="Destination Query Objects">{{$select.selected.name}}</ui-select-match>
-								<ui-select-choices repeat="table in cMenu_Ctrl.WeaveService.dataTables | filter : $select.search">
-							      	</ui-select-choices>
-							</ui-select>
-							
-							<ui-select droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
-							  		<ui-select-match allow-clear="true" placeholder="Destination parameter">{{$select.selected.metadata.title}}</ui-select-match>
-								<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
-							     			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
-							      	</ui-select-choices>
-							</ui-select>
+					<ui-select  droppable ng-model="cMenu_Ctrl.dataSource" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Source parameter">{{$select.selected.name}}</ui-select-match>
+						<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.search">
+					      	</ui-select-choices>
+					</ui-select>
+					
+					<div style = "width: 4%; float:left;padding-left: 1%"><i style = "font-size :20px;"class="fa fa-chevron-circle-right"></i></div>
+					
+					<ui-select droppable ng-model="cMenu_Ctrl.dataTable" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Destination Query Objects">{{$select.selected.name}}</ui-select-match>
+						<ui-select-choices repeat="table in cMenu_Ctrl.WeaveService.dataTables | filter : $select.search">
+					      	</ui-select-choices>
+					</ui-select>
+					
+					<ui-select droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Destination parameter">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
+					     			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+					      	</ui-select-choices>
+					</ui-select>
 			</div>
-		</div>
+</div>

@@ -27,6 +27,7 @@ if(!this.wa.d3_viz){
 		this._tree;
 		this._nodes;
 		this._links;
+		this._i;
 	};
 	
 	var p = collapsibleTree.prototype;
@@ -37,11 +38,16 @@ if(!this.wa.d3_viz){
 		
 		this._container = config.container;
 		
-		this._margin = {top: 20, right: 120, bottom: 20, left: 120},
-	    this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
-	    this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		console.log(config.container.offsetHeight);
+		
+		this._margin = {top: 20, right: 20, bottom: 20, left: 20};
+	    //this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
+	    //this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		
+		this._width= 500 - this._margin.right - this._margin.left,
+		this._height = 500 - this._margin.top - this._margin.bottom;
 
-		var i = 0;
+		this._i = 0;
 		this._duration = 750;
 
 		this._tree = d3.layout.tree()
@@ -50,41 +56,44 @@ if(!this.wa.d3_viz){
 		this._diagonal = d3.svg.diagonal()
 	    .projection(function(d) { return [d.x, d.y]; });
 		
-		this._treeSvg = d3.select("body").append("svg")
+		this._treeSvg = d3.select(this._container).append("svg")
 	    .attr("width", this._width + this._margin.right + this._margin.left)
 	    .attr("height", this._height + this._margin.top + this._margin.bottom)
 	    .append("g")
 	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
 		
+		this.create_Root_Node();
+		
 	};
+	
 	//creates the first root node
 	p.create_Root_Node = function(){
 
-		d3.json("flare.json", function(error, flare) {
+		d3.json("src/visualization/d3_viz/flare.json", function(error, flare) {
 		  if (error) throw error;
 
 		  this._root = flare;
 		  this._root.x0 =  this._height / 2;
 		  this._root.y0 = 0;
 
+		  function collapse(d) {
+			    if (d.children) {
+			      d._children = d.children;
+			      d._children.forEach(collapse);
+			      d.children = null;
+			    }
+			  }
+		  
 		  this._root.children.forEach(collapse);
-		  p.update( this._root);
-		});
+		  this.update(this._root);
+		}.bind(this));
 
 		d3.select(self.frameElement).style("height", "800px");
 	};
 	
-	//collapses the branches of a node
-	p.collapse = function(){
-	    if (d.children) {
-	      d._children = d.children;
-	      d._children.forEach(this.collapse).bind(window, this);
-	      d.children = null;
-	    }
-	};
-	
+
 	// Toggle children on click.
-	p.click = function (){
+	p.click = function (d){
 	  if (d.children) {
 	    d._children = d.children;
 	    d.children = null;
@@ -92,27 +101,30 @@ if(!this.wa.d3_viz){
 	    d.children = d._children;
 	    d._children = null;
 	  }
-	  p.update(d);
+	  this.update(d);
 	};
 	
 	p.update = function(source){
+		
+		var t = this;
 
+		//console.log("this", this);
 		  // Compute the new tree layout.
-		this._nodes = this._tree.nodes(this._root).reverse(),
-		this._links = this._tree.links(this._nodes);
+		t._nodes = t._tree.nodes(t._root).reverse(),
+		t._links = t._tree.links(t._nodes);
 
 		  // Normalize for fixed-depth.
-		 this._nodes.forEach(function(d) { d.y = d.depth * 180; });
+		 t._nodes.forEach(function(d) { d.y = d.depth * 180; });
 
 		  // Update the nodes…
-		  var node = svg.selectAll("g.node")
-		      .data( this._nodes, function(d) { return d.id || (d.id = ++i); });
+		  var node = t._treeSvg.selectAll("g.node")
+		      .data( t._nodes, function(d) { return d.id || (d.id = ++t._i); });
 
 		  // Enter any new nodes at the parent's previous position.
 		  var nodeEnter = node.enter().append("g")
 		      .attr("class", "node")
-		      .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-		      .on("click", click);
+		      .attr("transform", function(d) { return "translate(" + source.x0 + "," + source.y0 + ")"; })
+		      .on("click",function(d){ t.click (d)});
 
 		  nodeEnter.append("circle")
 		      .attr("r", 1e-6)
@@ -127,7 +139,7 @@ if(!this.wa.d3_viz){
 
 		// Transition nodes to their new position.
 		  var nodeUpdate = node.transition()
-		      .duration(duration)
+		      .duration(t._duration)
 		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
 
@@ -140,7 +152,7 @@ if(!this.wa.d3_viz){
 
 		// Transition exiting nodes to the parent's new position.
 		  var nodeExit = node.exit().transition()
-		      .duration( this._duration)
+		      .duration( t._duration)
 		      .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
 		      .remove();
 
@@ -151,28 +163,28 @@ if(!this.wa.d3_viz){
 		      .style("fill-opacity", 1e-6);
 
 		  // Update the links…
-		  var link =  this._treeSvg.selectAll("path.link")
-		      .data( this._links, function(d) { return d.target.id; });
+		  var link =  t._treeSvg.selectAll("path.link")
+		      .data( t._links, function(d) { return d.target.id; });
 
 		  // Enter any new links at the parent's previous position.
 		  link.enter().insert("path", "g")
 		      .attr("class", "link")
 		      .attr("d", function(d) {
 		        var o = {x: source.x0, y: source.y0};
-		        return  this._diagonal({source: o, target: o});
-		      });
+		        return  t._diagonal({source: o, target: o});
+		      }.bind(this));
 
 		  // Transition links to their new position.
 		  link.transition()
-		      .duration( this._duration)
-		      .attr("d",  this._diagonal);
+		      .duration( t._duration)
+		      .attr("d",  t._diagonal);
 
 		  // Transition exiting nodes to the parent's new position.
 		  link.exit().transition()
-		      .duration( this._duration)
+		      .duration( t._duration)
 		      .attr("d", function(d) {
 		        var o = {x: source.x, y: source.y};
-		        return  this._diagonal({source: o, target: o});
+		        return  t._diagonal({source: o, target: o});
 		      })
 		      .remove();
 
