@@ -58,7 +58,7 @@ if(!this.wa.d3_viz){
 		
 		this._treeSvg = d3.select(this._container).append("svg")
 	    .attr("width", this._width + this._margin.right + this._margin.left)
-	    .attr("height", this._height + this._margin.top + this._margin.bottom)
+	    .attr("height", 1000)
 	    .append("g")
 	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
 		

@@ -2,39 +2,36 @@
  "name": "Nested QO",
  "children": [
   {
-   "name": "QueryObject 1",
+   "name": "QO 1",
    "children": [
-    {"name": "Easing", "size": 17010},
-    {"name": "FunctionSequence", "size": 5842},
+    {"name": "QO 1.1", "size": 17010},
+    {"name": "Function", "size": 5842},
     {"name": "Tween", "size": 6006}
    ]
   },
   {
-   "name": "QueryObject 2",
+   "name": "QO 2",
    "children": [
-    {"name": "QueryObject 2.1", "size": 5833}
+    {"name": "QO 2.1", "size": 5833}
    ]
   },
   {
-   "name": "QueryObject 3",
+   "name": "QO 3",
    "children": [
     {
-     "name": "QueryObject 3.1",
+     "name": "QO 3.1",
      "children": [
       {"name": "Axes", "size": 1302},
-      {"name": "Axis", "size": 24593},
-      {"name": "AxisGridLine", "size": 652},
-      {"name": "AxisLabel", "size": 636},
-      {"name": "CartesianAxes", "size": 6703}
+      {"name": "Cart", "size": 6703}
      ]
     },
     {
-     "name": "QueryObject 3.2",
+     "name": "QO 3.2",
      "children": [
-      {"name": "TooltipControl", "size": 8435}
+      {"name": "Tooltip", "size": 8435}
      ]
     },
-    {"name": "QueryObject 3.3", "size": 16540}
+    {"name": "QO 3.3", "size": 16540}
    ]
   }
  ]

@@ -21,7 +21,6 @@
 					
 				};
 				
-				
 				var nesTree = new window.wa.d3_viz.collapsibleTree();
 				nesTree.intialize_tree(config);
 			}
