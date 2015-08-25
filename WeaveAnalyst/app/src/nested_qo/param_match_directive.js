@@ -24,7 +24,16 @@
 	};// end og directive definition
 	
 	
-	function param_MatcherController (){
+	param_MatcherController.$inject = ['projectService'];
+	function param_MatcherController (projectService){
 		var p_MCtrl = this;
+		p_MCtrl.projectService = projectService;
+		
+		p_MCtrl.add_mode = "";
+		
+		//check for table 
+		//p_MCtrl.checkQOTableExits();
+		//create table with dummy project and queries
+		
 	};
 })();
