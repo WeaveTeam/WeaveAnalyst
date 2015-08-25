@@ -22,20 +22,38 @@
 		};
 	};//end of directive defintion
 	
-	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants'];
-	function projectGridController (projectService, uiGridTreeViewConstants){
+	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants', '$scope'];
+	function projectGridController (projectService, uiGridTreeViewConstants, $scope){
 		var pGrid_Ctrl = this;
 		
 		
 		pGrid_Ctrl.projectService = projectService;
 
 		pGrid_Ctrl.gridOptions = {
-		          expandableRowTemplate : 'src/project/subGrid.html',
-		          expandableRowHeight : 150,
+		          expandableRowTemplate : 'src/project/subGrid.html',  //This is the template that will be used to render subgrid.
+		          expandableRowHeight : 150, //This will be the height of the subgrid
 		          expandableRowScope : {
-		              subGridVariable : 'subGridScopeVariable'
+		              subGridVariable : 'subGridScopeVariable'  //Variables of object expandableScope will be available in the scope of the expanded subgrid
 		          },
-				  data : pGrid_Ctrl.data
+		          onRegisterApi: function (gridApi) {
+		              gridApi.expandable.on.rowExpandedStateChanged($scope, function (row) {
+		                  if (row.isExpanded) {
+		                    row.entity.subGridOptions = {
+		                      columnDefs: [
+		                      { name: 'author'},
+		                      { name: 'queryObjectName'},
+		                      { name: 'columns'}
+		                    ]};
+		                    
+		                    pGrid_Ctrl.projectService.getListOfQueryObjects(row.entity.Name).then(function(childQos){
+		                    	
+		                    	row.entity.subGridOptions.data = childQos;
+		                    });
+		                    
+		                  }
+		              });
+		          },
+				  data : pGrid_Ctrl.data//sets the data of the parent grid
         };
 		
 		//defining the columns of the parent grid
@@ -44,10 +62,7 @@
 		                                { name: 'Description', width: '60%' }
 		                            ];
 		
-		pGrid_Ctrl.gridOptions.onRegisterApi = function (gridApi){
-			pGrid_Ctrl.gridApi = gridApi;
-        };
-		  		
+			
 	};//end of grid controller
 		
 })();
