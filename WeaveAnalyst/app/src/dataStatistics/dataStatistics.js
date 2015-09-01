@@ -216,10 +216,10 @@
 		
 		
 		function get_Summary_Statistics (){
-//			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
-//				
-//			if(dt)//if a datatable has been selected
-//				ds_Ctrl.statisticsService.get_Summary_Statistics(dt);
+			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
+				
+			if(dt)//if a datatable has been selected
+				ds_Ctrl.statisticsService.get_Summary_Statistics(dt);
 		};
 		
 		function get_Coefficients (algorithm){
