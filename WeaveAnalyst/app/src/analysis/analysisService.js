@@ -8,12 +8,6 @@
 	function analysisService ($q, queryService, runQueryService, scriptManagementURL){
 		var that = this;
 		
-		that.activeNode = null;
-		that.selectedItems = [];
-		that.selectedValue = {};
-		that.expandedNodes = null;
-		that.scrolledPosition = 0;
-		
 		that.cache = {
 				scriptList : [],
 				scriptMetadata :null
@@ -21,48 +15,6 @@
 		
 		//fetching datatables
 		queryService.getDataTableList(true);
-		
-		that.buildTree = function (node, key) {
-			return {
-				title : key,
-				value : node,
-				select : that.activeNode ? node == that.activeNode.data.value : false,
-				expand : that.expandedNodes && that.expandedNodes.indexOf(node) >= 0,
-				isFolder : !!(typeof node == 'object' && node),
-				children : (typeof node == 'object' && node)
-					? Object.keys(node).map(function(key) { return that.buildTree(node[key], key); })
-					: null
-			};	
-		};
-		
-
-		that.convertToTableFormat = function  (obj) {
-			var data = [];
-			for (var key in obj) {
-				data.push({property : key, value : angular.toJson(obj[key])});
-			}
-			return data;
-		};
-
-		 that.getPath = function (node) {
-			var path = [];
-			while (node.parent)
-			{
-				path.unshift(node.data.title);
-				node = node.parent;
-			}
-			return path;
-		};
-		
-		that.setValueAtPath = function (obj, path, value)
-		{
-			path.shift(); // throw away root
-			
-			for (var i = 0; i < path.length - 1; i++)
-		        obj = obj[path[i]];
-
-		    obj[path[i]] = value;
-		};
 		
 		
 		/**
@@ -120,7 +72,5 @@
 	        return deferred.promise;
 	    };
 
-		
-		
 	};
 })();

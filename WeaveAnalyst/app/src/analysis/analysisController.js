@@ -9,20 +9,14 @@
 	//Analysis Controller
 	/////////////////////
 	angular.module('weaveAnalyst.AnalysisModule').controller('AnalysisController', analysisController);
-	analysisController.$inject = ['$scope','$filter', 'queryService', 'analysisService', 'WeaveService', 'QueryHandlerService', '$window','statisticsService'];
+	analysisController.$inject = ['$scope','$filter', '$window', 'analysisService', 'WeaveService'];
 	
-	function analysisController ($scope,$filter, queryService, analysisService, WeaveService, QueryHandlerService, $window,statisticsService ){
+	function analysisController ($scope,$filter, $window, WeaveService ){
 		$scope.isCollapsed = false;
 		var anaCtrl = this;
 		
-		anaCtrl.queryService = queryService;
-		anaCtrl.analysisService = analysisService;
 		anaCtrl.WeaveService = WeaveService;
-		anaCtrl.QueryHandlerService = QueryHandlerService;
-		anaCtrl.statisticsService = statisticsService;
 		
-		anaCtrl.varValues = [];
-	
 		
 	};
 })();
