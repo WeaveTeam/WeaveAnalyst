@@ -4,7 +4,7 @@
  */
 
 (function(){
-	angular.module('weaveAnalyst.nested_qo').directive('queryObjectTree', nested_qoTreeComponent);
+	angular.module('weaveAnalyst.nested_qo').directive('d3QueryObjectTree', nested_qoTreeComponent);
 	
 	function nested_qoTreeComponent (){
 		return {
