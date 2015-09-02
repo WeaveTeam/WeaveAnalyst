@@ -3,20 +3,15 @@
  */
 (function(){
 	angular.module('weaveAnalyst.AnalysisModule').service('analysisService', analysisService);
-	analysisService.$inject = ['$q', 'queryService', 'runQueryService', 'scriptManagementURL'];
+	analysisService.$inject = ['$q', 'runQueryService', 'scriptManagementURL'];
 	
-	function analysisService ($q, queryService, runQueryService, scriptManagementURL){
+	function analysisService ($q, runQueryService, scriptManagementURL){
 		var that = this;
 		
 		that.cache = {
 				scriptList : [],
 				scriptMetadata :null
 		};
-		
-		//fetching datatables
-		queryService.getDataTableList(true);
-		
-		
 		/**
 	     * This function wraps the async aws getListOfScripts function into an angular defer/promise
 	     * So that the UI asynchronously wait for the data to be available...
