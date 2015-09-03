@@ -13,6 +13,7 @@ var tt;
 	                               'ui.grid.selection',
 	                               'ui.layout',
 	                               'ui.select',
+	                               'ui.tree', 
 	                               'mk.editablespan',
 	                               'ngAnimate',
 	                               'mgcrea.ngStrap',
