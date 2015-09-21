@@ -34,11 +34,8 @@
 		scriptCtrl.active_qoName = WeaveAPI.globalHashMap.getObject("active_qo");
 		scriptCtrl.active_qo = WeaveAPI.globalHashMap.getObject(scriptCtrl.active_qoName.value);
 		
-		scriptCtrl.active_qo.Computation_Engine.addImmediateCallback(this, function(){
-			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
-		});
 		
-		scriptCtrl.scriptOptions = ['a', 'b'];
+		scriptCtrl.scriptOptions = [];
 		
 		scriptCtrl.queryService = queryService;
 		scriptCtrl.analysisService = analysisService;
@@ -52,16 +49,7 @@
 		scriptCtrl.columnToRemap = {
 				value : {}
 		};
-		
-		//clears scrip options when script clear button is hit
-		function getScriptMetadata (scriptSelected, forceUpdate){
-			if(scriptCtrl.queryService.queryObject.scriptSelected)
-				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
-				then(scriptCtrl.autoFillDefaults);
-			else
-				scriptCtrl.analysisService.cache.scriptMetadata = {};
-		};
-		
+	
 		//this function checks if the script inputs have any user specified defaults in the script input metadata
 		function autoFillDefaults (){
 			var sc_metadata = scriptCtrl.analysisService.cache.scriptMetadata;
@@ -171,22 +159,41 @@
 		};
 		
 		//watches for change in computation engine
-//		$scope.$watch(function(){
-//			return scriptCtrl.queryService.queryObject.ComputationEngine;
-//		}, function(){
-//			if(scriptCtrl.queryService.queryObject.ComputationEngine)
-//				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.queryService.queryObject.ComputationEngine);
+		$scope.$watch(function(){
+			return scriptCtrl.active_qo.Computation_Engine.value;
+		}, function(){
+			if(scriptCtrl.active_qo.Computation_Engine.value)
+				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
+		});
+		
+		//USING WEAVECOREJS
+//		scriptCtrl.active_qo.Computation_Engine.addImmediateCallback(this, function(){
+//			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
 //		});
 		
 		
 		
 		//watches for change in script selected
 		$scope.$watch(function(){
-			return scriptCtrl.queryService.queryObject.scriptSelected;
+			return scriptCtrl.active_qo.script_Selected.value;
 		}, function() {
-			if(scriptCtrl.queryService.queryObject.scriptSelected)
-				scriptCtrl.getScriptMetadata(scriptCtrl.queryService.queryObject.scriptSelected, true);
+			if(scriptCtrl.active_qo.script_Selected.value)
+				scriptCtrl.getScriptMetadata(scriptCtrl.active_qo.script_Selected.value, true);
 		});
+		
+		
+		//clears scrip options when script clear button is hit
+		function getScriptMetadata (scriptSelected, forceUpdate){
+			if(scriptSelected)
+				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
+				then(function(result){
+					scriptCtrl.scriptOptions = [];//clear
+					scriptCtrl.scriptOptions = result.inputs;
+				});
+			else
+				scriptCtrl.analysisService.cache.scriptMetadata = {};
+		};
+		
 		
 	}//end of controller definition
 	
