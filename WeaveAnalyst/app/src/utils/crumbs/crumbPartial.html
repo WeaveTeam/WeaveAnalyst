@@ -1,0 +1,19 @@
+<div id="crumbsContainer" ng-init = "p_Ctrl.add_init_Crumb()">
+    <div ng-repeat = 'a in p_Ctrl.crumbTrail'>
+        <div class = "crumbs" ng-class="{onHover: hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false"  ng-click="p_Ctrl.display_Siblings(a)">{{a.label}}</div>
+        <div class = "arrow" ng-class="{onArrow: ahover}" ng-mouseenter="ahover = true" ng-mouseleave="ahover = false"  ng-click="p_Ctrl.display_Children(a)"
+             ng-show="a.w_node.isBranch() && $last"> <span class="fa fa-chevron-circle-right"/> </div>
+    </div>
+
+</div>
+
+<!--LIST -->
+<div id ="optionList" ng-show="p_Ctrl.showList">
+    <div class="searchC">
+        <input id = "searchFilter" ng-model = "searchText"/>
+        <i class="fa fa-search" style = "padding-left: 5px"></i>
+    </div>
+    <ul ng-repeat="opt in p_Ctrl.WeaveService.node_options| filter:searchText"><!--dynamically populated depending on the node selected-->
+        <li ng-click = "p_Ctrl.manage_Crumbs(opt)">{{opt.label}}</li>
+    </ul>
+</div>
