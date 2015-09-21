@@ -112,7 +112,7 @@
                 init_node.label = ds[0].getLabel();
                 init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
                 p_Ctrl.manage_Crumbs(init_node);
-                scope.$apply();//because digest completes by the time the tree root is fetched
+                //scope.$apply();//because digest completes by the time the tree root is fetched
             }
             else
                 setTimeout(p_Ctrl.add_init_Crumb, 300);
