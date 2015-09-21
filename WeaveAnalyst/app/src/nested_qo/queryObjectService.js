@@ -10,7 +10,7 @@
 	//////////////////////
 	//SERVICE
 	//////////////////////
-	angular.module("weaveAnalyst.nested_qo").service("queryService", queryService);;
+	angular.module("weaveAnalyst.nested_qo").service("queryService", queryService);
 	queryService.$inject = ['$q', 'runQueryService',
                             'dataServiceURL', 'adminServiceURL','projectManagementURL','computationServiceURL','WeaveDataSource'];
 	
@@ -25,7 +25,7 @@
 				date : new Date(),
 	    		author : "",
 	    		dataTable : "",
-				ComputationEngine : "R",
+				ComputationEngine : "",
 				Indicator : "",
 				columnRemap : {},
 				filters : [],

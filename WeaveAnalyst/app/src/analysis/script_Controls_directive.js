@@ -9,6 +9,7 @@
  * @author fkamayou
  */
 
+var shweta;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('scriptControls', scriptControls);
@@ -30,9 +31,15 @@
 	
 	function scriptController ($scope, queryService, $filter, analysisService){
 		var scriptCtrl = this;
+		shweta = $scope;
 		
-		scriptCtrl.dataSourceName = "Hello";
-	//	scriptCtrl.dataTable = "Hello";
+		scriptCtrl.active_qoName = WeaveAPI.globalHashMap.getObject("active_qo");
+		scriptCtrl.active_qo = WeaveAPI.globalHashMap.getObject(scriptCtrl.active_qoName.value);
+		
+		scriptCtrl.active_qo.Computation_Engine.addImmediateCallback(this, function(){
+			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
+		});
+		
 		
 		scriptCtrl.queryService = queryService;
 		scriptCtrl.analysisService = analysisService;
@@ -165,12 +172,14 @@
 		};
 		
 		//watches for change in computation engine
-		$scope.$watch(function(){
-			return scriptCtrl.queryService.queryObject.ComputationEngine;
-		}, function(){
-			if(scriptCtrl.queryService.queryObject.ComputationEngine)
-				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.queryService.queryObject.ComputationEngine);
-		});
+//		$scope.$watch(function(){
+//			return scriptCtrl.queryService.queryObject.ComputationEngine;
+//		}, function(){
+//			if(scriptCtrl.queryService.queryObject.ComputationEngine)
+//				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.queryService.queryObject.ComputationEngine);
+//		});
+		
+		
 		
 		//watches for change in script selected
 		$scope.$watch(function(){

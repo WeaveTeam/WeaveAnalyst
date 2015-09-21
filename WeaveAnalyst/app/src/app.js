@@ -36,7 +36,18 @@ var tt;
 	                                          'weaveAnalyst.configure.metadata',
 	                                          'weaveAnalyst.configure.script']);
 	
-//	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
+	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
+		
+		var x = $rootScope;
+		var gh = WeaveAPI.globalHashMap;
+		
+		gh.addGroupedCallback({}, function (){
+			$rootScope.$apply();
+		});
+		
+		gh.requestObject("qo1",  wa.QueryObject);
+		var active_qo = gh.requestObject("active_qo",  weavecore.LinkableString);
+		active_qo.value = "qo1";
 //		$rootScope.$safeApply = function(fn, $scope) {
 //				if($scope == undefined){
 //					$scope = $rootScope;
@@ -49,7 +60,8 @@ var tt;
 //	        	fn();
 //	    	}
 //		};
-//	}]);
+	}]);
+	
 	angular.module('weaveAnalyst').config(function($stateProvider, $urlRouterProvider) {
 	
 	//$parseProvider.unwrapPromises(true);
