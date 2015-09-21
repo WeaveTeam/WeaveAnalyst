@@ -1,4 +1,3 @@
-var shanti;
 (function(){
 	angular.module('weaveAnalyst.WeaveModule', []);
 	angular.module('weaveAnalyst.WeaveModule').service('WeaveService', weaveService);
@@ -20,7 +19,6 @@ var shanti;
 			else{
 				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
 				//that.weaveWindow.wa_data = that.blah;
-				shanti = that.weaveWindow;
 				that.weaveWindow.addEventListener("load", that.request_WeaveTree);
 				//that.weaveWindow.addEventListener("load", that.create_weaveWrapper);//getting the instance
 			}
