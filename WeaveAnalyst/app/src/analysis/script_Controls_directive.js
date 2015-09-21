@@ -9,7 +9,6 @@
  * @author fkamayou
  */
 
-var shweta;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('scriptControls', scriptControls);
@@ -31,7 +30,6 @@ var shweta;
 	
 	function scriptController ($scope, queryService, $filter, analysisService){
 		var scriptCtrl = this;
-		shweta = $scope;
 		
 		scriptCtrl.active_qoName = WeaveAPI.globalHashMap.getObject("active_qo");
 		scriptCtrl.active_qo = WeaveAPI.globalHashMap.getObject(scriptCtrl.active_qoName.value);
@@ -40,6 +38,7 @@ var shweta;
 			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
 		});
 		
+		scriptCtrl.scriptOptions = ['a', 'b'];
 		
 		scriptCtrl.queryService = queryService;
 		scriptCtrl.analysisService = analysisService;

@@ -30,13 +30,17 @@
 		
 			<br><br>
 			<!-- Script options -->	
-			<div class="tool-bar">
-						
-				<div ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
+				<div class = 'dataNav'>
+				    <!--ONE PER SCRIPT OPTION-->
+				    <div class = "sp_pills" ng-repeat="i in scriptCtrl.scriptOptions">
+				        <!--CRUMB CONTAINER-->
+				        <crumb-Selector></crumb-Selector>
+				    </div>
+				</div>	
+				<!-- <div ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
 					<column-Menu input = "input" scriptoptions = "scriptCtrl.queryService.queryObject.scriptOptions"> </column-Menu>
-				</div>
+				</div> -->
 
-			</div><!-- SCRIPT OPTIONS END -->
 	</div>
 <!-- TODO enable remapping -->			
 

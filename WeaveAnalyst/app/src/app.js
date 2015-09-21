@@ -2,7 +2,6 @@
 //                                 
 //                                 'ui.sortable',
 //Using IIFEs
-var tt; 
 (function($stateProvider, $urlRouterProvider, $rootScope){
 
 	angular.module('weaveAnalyst',['ui.router',
@@ -156,14 +155,17 @@ var tt;
 	
 	angular.module('weaveAnalyst').controller('weaveAnalystController',weaveAnalystController );
 	
-	weaveAnalystController.$inject = ['$state','authenticationService'];
-	function weaveAnalystController ($state,authenticationService){//treating controllers as a constructor
+	weaveAnalystController.$inject = ['$state','authenticationService', 'WeaveService'];
+	function weaveAnalystController ($state,authenticationService, WeaveService){//treating controllers as a constructor
 		
 		var wa_main = this;
 		
 		wa_main.state = $state;
-		tt = wa_main;
 		wa_main.authenticationService = authenticationService;
+		wa_main.WeaveService = WeaveService;
+		
+		//launching Weave
+		wa_main.WeaveService.launch_Weave();
 	};
 	
 	
