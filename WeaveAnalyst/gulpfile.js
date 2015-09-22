@@ -15,5 +15,11 @@ gulp.task('concatScripts', function(){
 			   .pipe(gulp.dest('app/dist'));
 });
 
+gulp.task('concatStyles', function(){
+	return gulp.src('app/css/*.css')
+			   .pipe(concat('wa.css'))
+			   .pipe(gulp.dest('app/dist'));
+});
+
 //default task which is the wrapper for all tasks
-gulp.task('default', ['concatScripts']);
+gulp.task('default', ['concatScripts', 'concatStyles']);
