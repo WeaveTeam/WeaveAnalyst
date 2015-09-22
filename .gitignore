@@ -9,3 +9,5 @@ tags
 .tmp
 .class
 *.war
+
+/node_modules/
