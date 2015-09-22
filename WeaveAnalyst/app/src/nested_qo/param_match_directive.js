@@ -7,7 +7,6 @@
  */
 
 (function(){
-	angular.module('weaveAnalyst.nested_qo', [] );
 	angular.module('weaveAnalyst.nested_qo').directive('paramMatcher', param_MatcherComponent);
 	
 	function  param_MatcherComponent (){

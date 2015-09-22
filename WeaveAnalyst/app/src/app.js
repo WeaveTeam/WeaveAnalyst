@@ -2,6 +2,9 @@
 //                                 
 //                                 'ui.sortable',
 //Using IIFEs
+
+if(!this.wa)
+	this.wa = {};
 (function($stateProvider, $urlRouterProvider, $rootScope){
 
 	angular.module('weaveAnalyst',['ui.router',
@@ -22,7 +25,7 @@
 	                               'weaveAnalyst.utils',
 	                               'weaveAnalyst.configure',
 	                               'weaveAnalyst.dataStatistics',
-	                               'weaveAnalyst.queryObjectEditor', 
+	                               //'weaveAnalyst.queryObjectEditor', 
 	                               'weaveAnalyst.project',
 	                               'weaveAnalyst.errorLog',
 	                               'weaveAnalyst.nested_qo',

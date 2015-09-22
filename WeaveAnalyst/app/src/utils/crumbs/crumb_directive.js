@@ -4,7 +4,6 @@
  * TODO import this as bower module from GITHUB
  * */
 (function (){
-
     angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
 
     selectorPillComponent.$inject= [];

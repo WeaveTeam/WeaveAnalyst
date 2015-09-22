@@ -50,7 +50,7 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 	
 	var p = WeaveWrapper.prototype;
 	//attaching it to the global wa object
-	this.weaveApp.WeaveWrapper = WeaveWrapper;
+	window.weaveApp.WeaveWrapper = WeaveWrapper;
 	
 	//////////////
 	////VIZs

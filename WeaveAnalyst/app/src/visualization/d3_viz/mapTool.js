@@ -178,7 +178,7 @@ if(!this.wa.d3_viz){
 		}.bind(this));//end of csv load
 	};
 	
-	addStatelayer = function(geometries){
+	var addStatelayer = function(geometries){
 		//adding map layer
 		
 		this._mapSvg.selectAll("*").remove();
@@ -370,7 +370,7 @@ if(!this.wa.d3_viz){
 	};
 	
 	
-	addCountyLayer = function(geometries){
+	var addCountyLayer = function(geometries){
 		if(this.cache.selectedCounties){
 			for(stateID in this.cache.selectedCounties)
 				for(countyID in this.cache.selectedCounties[stateID].counties)

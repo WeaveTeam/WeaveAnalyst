@@ -5,9 +5,7 @@
 //TODO create submodules corresponding to every nested tab
 //Module definition
 (function(){
-	angular.module('weaveAnalyst.dataStatistics', []);
-
-	//*******************************Value recipes********************************************
+		//*******************************Value recipes********************************************
 	//Correlation coefficients
 	angular.module('weaveAnalyst.dataStatistics').value('pearsonCoeff', {label:"Pearson's Coefficent", algorithm : 'pearson' });
 	angular.module('weaveAnalyst.dataStatistics').value('spearmanCoeff', {label : "Spearman's Coefficient", algorithm:"spearman"});

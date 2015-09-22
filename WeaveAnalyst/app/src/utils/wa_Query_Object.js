@@ -44,7 +44,7 @@ if(!this.wa)
 		
 	}
 	
-	this.wa.QueryObject = QueryObject;
+	window.wa.QueryObject = QueryObject;
 	
 })();
 

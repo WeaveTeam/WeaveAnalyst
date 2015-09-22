@@ -3,7 +3,7 @@
 @author spurushe
  */
 (function(){
-
+	angular.module('weaveAnalyst.dataStatistics', []);
 	angular.module('weaveAnalyst.dataStatistics').directive('correlationMatrix', heatMapComponent);
 	
 	function heatMapComponent (){

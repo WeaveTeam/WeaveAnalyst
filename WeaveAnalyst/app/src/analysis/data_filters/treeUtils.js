@@ -28,11 +28,11 @@ var cmp = function(a, b) {
 		return a > b ? 1 : a < b ? -1 : 0;
 };
 
-cmpByKey = function(node1, node2) {
+var cmpByKey = function(node1, node2) {
 	return cmp(node1.data.key, node2.data.key);
 };
 
-cmpByTitle = function(node1, node2) {
+var cmpByTitle = function(node1, node2) {
 	return cmp(node1.data.title, node2.data.title);
 };
 
