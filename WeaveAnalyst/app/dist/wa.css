@@ -2115,6 +2115,19 @@ li:hover{
 	height: 100%;
 	float:left;
 }
+
+.toolTip{
+	z-index: "10";
+	position: absolute;
+	text-align: left;
+	padding: 8px;
+	font: 12px sans-serif;
+	background:#E2E2E1;
+  	color: #000;
+	border: solid 1px #aaa;
+	border-radius: 4px;
+	pointer-events: none;
+}
 /*!
  *  Font Awesome 4.3.0 by @davegandy - http://fontawesome.io - @fontawesome
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)

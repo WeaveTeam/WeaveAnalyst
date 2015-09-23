@@ -625,81 +625,6 @@ if(!this.wa)
 	
 })();
 /**
- * controller for the error log that is universal to all tabs
- * Also includes the service for logging errors
- */
-(function(){
-	angular.module('weaveAnalyst.errorLog', []);
-	
-	/////////////////////
-	//CONTROLLERS
-	/////////////////////
-	
-	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
-
-	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
-	function analystErrorLogController($modal, errorLogService){
-		var aEl = this;
-		aEl.errorLogService = errorLogService;
-		aEl.openErrorLog = function(){
-			$modal.open(aEl.errorLogService.errorLogModalOptions);
-		};
-	}
-	
-	
-	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
-	errorLogInstanceController.$inject= ['errorLogService'];
-	function errorLogInstanceController(errorLogService){
-		var inst_Ctrl = this;
-		
-		inst_Ctrl.errorLogService = errorLogService;
-	};
-	
-	/////////////////
-	//SERVICES
-	/////////////////
-	
-	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
-	errorLogService.$inject = ['$modal'];
-	
-	function errorLogService ($modal){
-
-		var that = this;
-		that.logs = "";
-		
-		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
-				 backdrop: true,
-		         backdropClick: true,
-		         dialogFade: true,
-		         keyboard: true,
-		         templateUrl: 'src/errorLog/analystErrorLog.html',
-		         controller: 'errorLogInstanceController',
-		         controllerAs : 'inst_Ctrl',
-		         windowClass : 'erroLog-modal'
-			};
-		
-		that.showErrorLog = false;
-		//function to pop open the error log when required
-		that.openErrorLog = function(error){
-			that.logInErrorLog(error);
-			$modal.open(that.errorLogModalOptions);
-		};
-
-		/**
-		 *this is the function that will be used over all tabs to log errors to the error log
-		 *@param the string you want to log to the error log
-		 */
-		that.logInErrorLog = function(error){
-			this.logs += error  + new Date().toLocaleTimeString();
-		};
-		
-	};
-	
-})();//end of IIFE
-
-
-
-/**
  * this directive contains the UI and logic for the correlation Matrix
 @author spurushe
  */
@@ -716,41 +641,41 @@ if(!this.wa)
 			},
 			link: function(scope, elem, attrs){
 				var dom_element_to_append_to = document.getElementById('corrMatrixContainer');
-//				var array1 = [1,6,9,4];
-//				var array2= [6.6,2,5,10];
-//				var array3= [2,7,8,1];
-//				var array4= [4,5,3,1.9];
-//				var array5= [1,3.4,5,10];
-//				var mydata = [array1, array2, array3, array4];
-//				var labels = ["one", "two", "three", "four"];
-//				
-//				
-//				var config = {
-//						data: mydata,
-//						labels : labels,
-//						container : dom_element_to_append_to
-//					};
-//					
-//					var hm = new window.wa.d3_viz.heatMap();//create
-//					hm.initialize_heatMap(config);//initialize
-//					hm.render_heatMap();//render
+				var array1 = [1,6,9,4];
+				var array2= [6.6,2,5,10];
+				var array3= [2,7,8,1];
+				var array4= [4,5,3,1.9];
+				var array5= [1,3.4,5,10];
+				var mydata = [array1, array2, array3, array4];
+				var labels = ["one", "two", "three", "four"];
+				
+				
+				var config = {
+						data: mydata,
+						labels : labels,
+						container : dom_element_to_append_to
+					};
+					
+					var hm = new window.wa.d3_viz.heatMap();//create
+					hm.initialize_heatMap(config);//initialize
+					hm.render_heatMap();//render
 //					
 				
-				scope.$watch(function(){
-					return scope.data;
-				}, function(){
-					if(scope.data){
-						var config = {
-							data: scope.data.input_data,
-							labels : scope.data.labels,
-							container : dom_element_to_append_to
-						};
-						
-						var hm = new window.wa.d3_viz.heatMap();//create
-						hm.initialize_heatMap(config);//initialize
-						hm.render_heatMap();//render
-					}
-				});
+//				scope.$watch(function(){
+//					return scope.data;
+//				}, function(){
+//					if(scope.data){
+//						var config = {
+//							data: scope.data.input_data,
+//							labels : scope.data.labels,
+//							container : dom_element_to_append_to
+//						};
+//						
+//						var hm = new window.wa.d3_viz.heatMap();//create
+//						hm.initialize_heatMap(config);//initialize
+//						hm.render_heatMap();//render
+//					}
+//				});
 				
 
 			}//end of link function
@@ -1045,6 +970,81 @@ if(!this.wa)
 	};
 			
 })();
+/**
+ * controller for the error log that is universal to all tabs
+ * Also includes the service for logging errors
+ */
+(function(){
+	angular.module('weaveAnalyst.errorLog', []);
+	
+	/////////////////////
+	//CONTROLLERS
+	/////////////////////
+	
+	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
+
+	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
+	function analystErrorLogController($modal, errorLogService){
+		var aEl = this;
+		aEl.errorLogService = errorLogService;
+		aEl.openErrorLog = function(){
+			$modal.open(aEl.errorLogService.errorLogModalOptions);
+		};
+	}
+	
+	
+	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
+	errorLogInstanceController.$inject= ['errorLogService'];
+	function errorLogInstanceController(errorLogService){
+		var inst_Ctrl = this;
+		
+		inst_Ctrl.errorLogService = errorLogService;
+	};
+	
+	/////////////////
+	//SERVICES
+	/////////////////
+	
+	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
+	errorLogService.$inject = ['$modal'];
+	
+	function errorLogService ($modal){
+
+		var that = this;
+		that.logs = "";
+		
+		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: true,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/errorLog/analystErrorLog.html',
+		         controller: 'errorLogInstanceController',
+		         controllerAs : 'inst_Ctrl',
+		         windowClass : 'erroLog-modal'
+			};
+		
+		that.showErrorLog = false;
+		//function to pop open the error log when required
+		that.openErrorLog = function(error){
+			that.logInErrorLog(error);
+			$modal.open(that.errorLogModalOptions);
+		};
+
+		/**
+		 *this is the function that will be used over all tabs to log errors to the error log
+		 *@param the string you want to log to the error log
+		 */
+		that.logInErrorLog = function(error){
+			this.logs += error  + new Date().toLocaleTimeString();
+		};
+		
+	};
+	
+})();//end of IIFE
+
+
+
 /**
  *this tree is an d3 interactive interface for creating the nested query object. 
  *@shwetapurushe
@@ -4142,6 +4142,136 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
 
 }]);
 /**
+ * Created by Shweta on 8/5/15.
+ * this component represents one ui crumb in the hierarchy
+ * TODO import this as bower module from GITHUB
+ * */
+(function (){
+    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
+
+    selectorPillComponent.$inject= [];
+    function selectorPillComponent () {
+        return {
+            restrict: 'E',
+            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
+            controller: sPillController,
+            controllerAs: 'p_Ctrl',
+            bindToController: true,
+            link: function (scope, elem, attrs) {
+
+            }
+        };//end of directive definition
+    }
+
+    sPillController.$inject = ['$scope', 'WeaveService'];
+    function sPillController (scope, WeaveService){
+       var p_Ctrl = this;
+        p_Ctrl.WeaveService = WeaveService;
+        p_Ctrl.display_Children = display_Children;
+        p_Ctrl.display_Siblings = display_Siblings;
+        p_Ctrl.add_init_Crumb = add_init_Crumb;
+        p_Ctrl.manage_Crumbs = manage_Crumbs;
+
+        p_Ctrl.showList = false;
+
+        //is the previously added node in the stack, needed for comparison
+        //structure of each node should be {w_node //actual node ; label: its label}
+        p_Ctrl.weave_node = {};
+        p_Ctrl.crumbTrail = [];
+        p_Ctrl.crumbLog = [];
+
+
+        function manage_Crumbs(i_node){
+            /*1. check if it is the previously added node*/
+            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
+                /*2. check if it in the trail already */
+                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
+                    /* for the very first crumb added; happens only once*/
+                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
+                       // console.log("first WeaveDataSource crumb added...");
+                        p_Ctrl.crumbTrail.push(i_node);
+                        p_Ctrl.crumbLog.push(i_node.label);
+                    }
+                    //remaining iterations
+                    else{
+                        /*3. check if previous crumb in trail is parent*/
+                        var p_name = i_node.w_node.parent.getLabel();
+                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
+                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
+
+                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
+                            /*4. check if a sibling is present after parent */
+                            if(p_Ctrl.crumbTrail[p_ind + 1]){
+                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
+                                var sib_parent_name = sib_node.w_node.parent.getLabel();
+                                if(p_name == sib_parent_name){
+                                    //if yes
+                                    //remove sibling and is trail
+                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
+                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
+                                    //add it
+                                    p_Ctrl.crumbTrail.push(i_node);
+                                    p_Ctrl.crumbLog.push(i_node.label);
+                                    //console.log("replacing sibling and updating ...");
+
+                                }
+                            }
+                            else{
+                                //if no then add
+                                //console.log("new child added after parent...");
+                                p_Ctrl.crumbTrail.push(i_node);
+                                p_Ctrl.crumbLog.push(i_node.label);
+                            }
+                        }
+                        else{}//don't add it anywhere in trail
+                    }
+                }
+                else{}//if it already exists in the trail
+            }
+            else{}// if it is old
+            p_Ctrl.weave_node = i_node;
+
+            //p_Ctrl.toggleList = false;
+            if(i_node.w_node.isBranch()){
+                if(i_node.label == 'WeaveDataSource')
+                    p_Ctrl.showList = false;
+                else{
+                    p_Ctrl.display_Children(i_node);
+                    p_Ctrl.showList = true;
+                }
+            }
+            else
+                p_Ctrl.showList = false;
+        }
+
+
+        //this function adds the data source initial pill, done only once as soon as weave loads
+        function add_init_Crumb (){
+            if(p_Ctrl.WeaveService.request_WeaveTree()){
+                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
+
+                var init_node = {};
+                init_node.label = ds[0].getLabel();
+                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
+                p_Ctrl.manage_Crumbs(init_node);
+                //scope.$apply();//because digest completes by the time the tree root is fetched
+            }
+            else
+                setTimeout(p_Ctrl.add_init_Crumb, 300);
+        }
+
+        function display_Children(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
+        }
+
+        function display_Siblings(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node)
+        }
+    }
+})();
+/**
  * this is a modified collapsible tree written in d3
  * reference : http://bl.ocks.org/mbostock/4339083
  */
@@ -4406,9 +4536,8 @@ if(!this.wa.d3_viz){
 		//toolTip
 		this._toolTip = d3.select(this._container)
 		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
 		.style("visibility", "hidden")
+		.attr("class", "toolTip")
 		.text("");
 	};
 	
@@ -4480,7 +4609,7 @@ if(!this.wa.d3_viz){
 		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
 
 		this._colorScale = d3.scale.linear()
-		     .domain([0, 0.5, 1.0])//TODO parameterize this according to the matrix  
+		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
 		     .range([colorLow, colorMed, colorHigh]);
 	};
 })();
@@ -6230,136 +6359,6 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 		WeaveWrapper.weave.path(object_name).remove();
 	};
 
-})();
-/**
- * Created by Shweta on 8/5/15.
- * this component represents one ui crumb in the hierarchy
- * TODO import this as bower module from GITHUB
- * */
-(function (){
-    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
-
-    selectorPillComponent.$inject= [];
-    function selectorPillComponent () {
-        return {
-            restrict: 'E',
-            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
-            controller: sPillController,
-            controllerAs: 'p_Ctrl',
-            bindToController: true,
-            link: function (scope, elem, attrs) {
-
-            }
-        };//end of directive definition
-    }
-
-    sPillController.$inject = ['$scope', 'WeaveService'];
-    function sPillController (scope, WeaveService){
-       var p_Ctrl = this;
-        p_Ctrl.WeaveService = WeaveService;
-        p_Ctrl.display_Children = display_Children;
-        p_Ctrl.display_Siblings = display_Siblings;
-        p_Ctrl.add_init_Crumb = add_init_Crumb;
-        p_Ctrl.manage_Crumbs = manage_Crumbs;
-
-        p_Ctrl.showList = false;
-
-        //is the previously added node in the stack, needed for comparison
-        //structure of each node should be {w_node //actual node ; label: its label}
-        p_Ctrl.weave_node = {};
-        p_Ctrl.crumbTrail = [];
-        p_Ctrl.crumbLog = [];
-
-
-        function manage_Crumbs(i_node){
-            /*1. check if it is the previously added node*/
-            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
-                /*2. check if it in the trail already */
-                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
-                    /* for the very first crumb added; happens only once*/
-                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
-                       // console.log("first WeaveDataSource crumb added...");
-                        p_Ctrl.crumbTrail.push(i_node);
-                        p_Ctrl.crumbLog.push(i_node.label);
-                    }
-                    //remaining iterations
-                    else{
-                        /*3. check if previous crumb in trail is parent*/
-                        var p_name = i_node.w_node.parent.getLabel();
-                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
-                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
-
-                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
-                            /*4. check if a sibling is present after parent */
-                            if(p_Ctrl.crumbTrail[p_ind + 1]){
-                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
-                                var sib_parent_name = sib_node.w_node.parent.getLabel();
-                                if(p_name == sib_parent_name){
-                                    //if yes
-                                    //remove sibling and is trail
-                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
-                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
-                                    //add it
-                                    p_Ctrl.crumbTrail.push(i_node);
-                                    p_Ctrl.crumbLog.push(i_node.label);
-                                    //console.log("replacing sibling and updating ...");
-
-                                }
-                            }
-                            else{
-                                //if no then add
-                                //console.log("new child added after parent...");
-                                p_Ctrl.crumbTrail.push(i_node);
-                                p_Ctrl.crumbLog.push(i_node.label);
-                            }
-                        }
-                        else{}//don't add it anywhere in trail
-                    }
-                }
-                else{}//if it already exists in the trail
-            }
-            else{}// if it is old
-            p_Ctrl.weave_node = i_node;
-
-            //p_Ctrl.toggleList = false;
-            if(i_node.w_node.isBranch()){
-                if(i_node.label == 'WeaveDataSource')
-                    p_Ctrl.showList = false;
-                else{
-                    p_Ctrl.display_Children(i_node);
-                    p_Ctrl.showList = true;
-                }
-            }
-            else
-                p_Ctrl.showList = false;
-        }
-
-
-        //this function adds the data source initial pill, done only once as soon as weave loads
-        function add_init_Crumb (){
-            if(p_Ctrl.WeaveService.request_WeaveTree()){
-                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
-
-                var init_node = {};
-                init_node.label = ds[0].getLabel();
-                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
-                p_Ctrl.manage_Crumbs(init_node);
-                //scope.$apply();//because digest completes by the time the tree root is fetched
-            }
-            else
-                setTimeout(p_Ctrl.add_init_Crumb, 300);
-        }
-
-        function display_Children(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
-        }
-
-        function display_Siblings(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node)
-        }
-    }
 })();
 /**
  * controls the attribute menu visualization tool  widget

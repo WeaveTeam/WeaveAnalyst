@@ -66,9 +66,8 @@ if(!this.wa.d3_viz){
 		//toolTip
 		this._toolTip = d3.select(this._container)
 		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
 		.style("visibility", "hidden")
+		.attr("class", "toolTip")
 		.text("");
 	};
 	
@@ -140,7 +139,7 @@ if(!this.wa.d3_viz){
 		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
 
 		this._colorScale = d3.scale.linear()
-		     .domain([0, 0.5, 1.0])//TODO parameterize this according to the matrix  
+		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
 		     .range([colorLow, colorMed, colorHigh]);
 	};
 })();
