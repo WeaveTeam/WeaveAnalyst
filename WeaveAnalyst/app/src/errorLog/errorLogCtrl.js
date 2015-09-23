@@ -20,10 +20,13 @@
 		};
 	}
 	
-	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
 	
-	function errorLogInstanceController(){
+	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
+	errorLogInstanceController.$inject= ['errorLogService'];
+	function errorLogInstanceController(errorLogService){
+		var inst_Ctrl = this;
 		
+		inst_Ctrl.errorLogService = errorLogService;
 	};
 	
 	/////////////////
@@ -45,6 +48,7 @@
 		         keyboard: true,
 		         templateUrl: 'src/errorLog/analystErrorLog.html',
 		         controller: 'errorLogInstanceController',
+		         controllerAs : 'inst_Ctrl',
 		         windowClass : 'erroLog-modal'
 			};
 		

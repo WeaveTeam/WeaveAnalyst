@@ -451,9 +451,7 @@
 		        {	
 		        	console.log(JSON.stringify(response, null, 3));
 		        	//log the error
-		        	errorLogService.logInErrorLog(response.error.message);
-		        	//open the error log
-		        	//$modal.open(errorLogService.errorLogModalOptions);
+		        	errorLogService.openErrorLog(response.error.message);
 		        	if(errorHandler){
 		        		return errorHandler(response.error, queryId);
 		        	}
