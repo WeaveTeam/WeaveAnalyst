@@ -624,6 +624,735 @@ if(!this.wa)
 	}//end of controller definition
 	
 })();
+/** this controller controls the project tab 
+ * @author spurushe
+ * 
+ **/
+(function(){
+	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
+	
+	ProjectManagementController.$inject = ['$scope', '$modal', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
+	
+	function ProjectManagementController ($scope,$modal, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
+		var prjtCtrl = this;
+		
+		prjtCtrl.projectService = projectService;
+		prjtCtrl.WeaveService = WeaveService;
+		prjtCtrl.queryService = queryService;
+		
+		prjtCtrl.checkQOTableExits = checkQOTableExits;
+		prjtCtrl.construct_view = construct_view;
+		prjtCtrl.deleteProject = deleteProject;
+		prjtCtrl.openAdditionPanel = openAdditionPanel;
+		
+		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
+		prjtCtrl.nameOfQueryObjectToDelete = "";
+		prjtCtrl.view_modes = ['List', 'Compact', 'Detail'];
+		
+		//options needed for creating the modal instance window
+		 //communicating with the modal
+		prjtCtrl.pjtModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: false,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/project/projectAdditionModal.html',
+		         controller: 'pjtAddtionInstanceController',
+		         controllerAs : 'pam',
+		         resolve :{
+		        	 projectNameEntered : function(){
+		        		 return $scope.projectNameEntered;
+		        		 },
+		        	 userNameEntered : function(){
+		        		 return $scope.userNameEntered;
+		        		 },
+		        	 projectDescriptionEntered : function(){
+		        		 return $scope.projectDescriptionEntered;
+		        		 }
+		        	 
+		         }
+			};
+		
+		//check for table 
+		prjtCtrl.checkQOTableExits();
+		//create table with dummy project and queries
+		
+		
+		//when a project is selected or changed
+		$scope.$watch(function(){
+			return prjtCtrl.projectService.cache.project.selected;
+		},function(){
+			if(prjtCtrl.projectService.cache.project.selected){
+				console.log("project Selected", prjtCtrl.projectService.cache.project.selected.Name);
+				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected.Name);
+			}
+		});
+		
+		//Watch for when record is inserted in db
+	     $scope.$watch(function(){
+	     	return prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
+	      }, function(){ 
+	    	  prjtCtrl.insertQueryObjectStatus = prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
+	     	if(!(angular.isUndefined(prjtCtrl.insertQueryObjectStatus)))
+			 {
+			 	if(prjtCtrl.insertQueryObjectStatus != 0)
+			 		{
+	    		 		alert("Query Object has been added");
+	    		 		prjtCtrl.queryService.cache.listofQueryObjectsInProject = [];
+	    		 		prjtCtrl.queryService.getListOfQueryObjectsInProject(prjtCtrl.projectService.cache.project.selected);//makes a new call
+			 		}
+			 }
+		 
+	     	prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus = 0;//reset
+	      });
+	     
+	     //this function alters the three kinds of views for viewing projects and query objects
+	     function construct_view (){
+	    	 var mode = prjtCtrl.projectService.viewMode;
+	    	 
+	    	 if(mode == 'List')
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the projects and its query obejcts as a list. Select Compact to view a project in detail. Select Detail to view a project's query objects in detail.";
+	    	 else if(mode == 'Compact')
+	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
+	    	 else 
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail.";
+	    		 
+	     };
+		
+	     //checks if a table is created for storing query objects
+	     function checkQOTableExits (){
+	    	var	pS = prjtCtrl.projectService;
+	    	
+	    	pS.checkQOTableExits().then(function(projExists){
+		    	 console.log("stored_query_objects table exists",projExists );
+		    	 if(projExists){
+		    		 pS.getListOfProjects().then(function(projectList){
+		    			 if(projectList.length == 0)
+		    				 alert("There are no stored query objects");
+		    		 });//retrives project list
+		    	 }
+		    	 else{
+			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
+			    		 		+ "Create a table to store query objects?");
+			    		 if(conf == true){
+			    			 pS.createQOTable().then(function(status){
+			    				 if(status){
+			    					 console.log("status", status);
+			    				 }
+			    					 alert("Table \"stored_query_objects\" has been successfully created");
+			    			 });
+			    		 }
+			    		 else
+			    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
+		    	 }
+	    	});
+	     };
+	     
+		//deletes an entire Project along with all queryObjects within
+		function deleteProject (){
+			prjtCtrl.deleteProjectConfirmation(prjtCtrl.projectService.cache.project.selected);
+		};
+		
+		//additional checks for confirming deletion
+		function deleteProjectConfirmation (projectSelected){
+			var deletePopup = confirm("Are you sure you want to delete project " + projectSelected + "?");
+			if(deletePopup == true){
+				prjtCtrl.projectService.deleteProject(projectSelected);
+			}
+		};
+		
+		
+		//button click event that creates the modal
+		function openAdditionPanel(){
+			var saveNewProject = $modal.open(prjtCtrl.pjtModalOptions);
+			
+			//called when modal is being closed
+			saveNewProject.result.then(function(additionParams){//then function takes a single object
+				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
+				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
+				 console.log("userName", additionParams.userNameEntered);
+			});
+		};
+		
+	};
+	
+	
+	//Modal instance controller
+	angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceController', additionController);
+	additionController.$inject= ['$scope', '$modalInstance','projectService', 'projectNameEntered','projectDescriptionEntered', 'userNameEntered'];
+	
+	function additionController ($scope, $modalInstance,projectService, projectNameEntered,projectDescriptionEntered, userNameEntered){
+		var pam = this;
+		
+		pam.projectService = projectService;
+		pam.uploadStatus = "";
+		pam.queryObjectJsons = [];
+		pam.queryObjectTitles = [];
+		pam.saveQueryObjects = saveQueryObjects;
+		pam.remove = remove;
+		
+		//object representation of a SINGLE file uploaded, changed everytime a file is uploaded
+		pam.uploaded = {
+				QueryObject : {
+					filename : "",
+					content : ""			
+				}
+		};
+		
+		pam.uploadedObjects = {
+				
+			queryObjectJsons : [],//contains the content of all query objects uploaded (json strings)
+			queryObjectTitles : []//contains the titles of all query Objects uploaded
+		};
+		
+		
+		//whenever a file is uploaded
+		$scope.$watch(function(){
+			return pam.uploaded.QueryObject.filename;
+		}, function(){
+			
+			if(pam.uploaded.QueryObject.filename)
+				{
+					//check if the file had been uploaded before
+					if($.inArray(pam.uploaded.QueryObject.filename, pam.uploadedObjects.queryObjectTitles) == -1)
+						{
+							//managing the title of queryObject (json )uploaded
+							var title = pam.uploaded.QueryObject.filename;
+							pam.uploadedObjects.queryObjectTitles.push(title);
+							
+							//managing the content of queryObject (json )uploaded
+							var content = pam.uploaded.QueryObject.content;
+							pam.uploadedObjects.queryObjectJsons.push(content);
+							
+							
+							var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+							pam.uploadStatus = countUploaded + " file(s) uploaded";
+						}
+				}
+			
+		});
+		
+		//called when save button is hit.;
+		function saveQueryObjects (projectNameEntered,projectDescriptionEntered, userNameEntered) {
+			if(!projectNameEntered)
+				projectNameEntered = "Example Project";
+			if(!projectDescriptionEntered)
+				projectDescriptionEntered = "These query object(s) belong to " + projectNameEntered;
+			if(!userNameEntered)
+				userNameEntered = "Awesome User";
+			
+			var additionParams = {
+					projectNameEntered : projectNameEntered,
+					userNameEntered :userNameEntered,
+					projectDescriptionEntered : projectDescriptionEntered,
+					uploadedObjects : $scope.uploadedObjects
+			};
+			
+			if(additionParams.uploadedObjects.queryObjectJsons.length > 0){//only if something is uploaded, save it
+				
+				pam.projectService.createNewProject(additionParams.userNameEntered,
+						additionParams.projectNameEntered,
+						additionParams.projectDescriptionEntered,
+						additionParams.uploadedObjects.queryObjectTitles,
+						additionParams.uploadedObjects.queryObjectJsons,
+						null);
+				
+				$modalInstance.close(additionParams);
+			}
+			else{
+				alert("Please upload a query object to create a project");
+			}
+			
+		 };
+		 
+	 	function remove (file){
+		 //removes the file from the uploaded collection
+		 var index = $.inArray(file, pam.uploadedObjects.queryObjectTitles);
+		 console.log("index", index);
+		 pam.uploadedObjects.queryObjectTitles.splice(index, 1);
+		 pam.uploadedObjects.queryObjectJsons.splice(index, 1);
+		 
+		 var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+		 pam.uploadStatus = countUploaded + " file(s) uploaded";
+		 if(countUploaded == 0){
+			 pam.uploadStatus = "";
+			 pam.uploaded.QueryObject.filename = null;
+			 pam.uploaded.QueryObject.content = null;
+			 
+		 }
+	 };
+	};
+})();//end of IIFE
+
+
+
+
+
+/**
+ * contains all the functions required for project management 
+ * @author spurushe
+ */
+(function(){
+	
+	angular.module('weaveAnalyst.project').service('projectService', projectService);
+	projectService.$inject = ['$q', '$rootScope', 'WeaveService', 'runQueryService','queryService', 'projectManagementURL'];
+	
+	function projectService ($q, rootScope, WeaveService, runQueryService,queryService, projectManagementURL){
+		var that = this;
+		
+		that.cache= {
+				project: {selected : null},
+				listOfProjectsFromDatabase : [],
+				returnedQueryObjects : [],
+				columnstring : null, 
+				projectDescription : null, 
+				userName : null, 
+				weaveSessionState : null,
+				deleteProjectStatus : null, 
+				deleteQueryObjectStatus : null, 
+				insertQueryObjectStatus : null,
+				no_of_projects : 0
+		};
+
+		/**
+		 *this function checks if the table 'stored_query_objects' has already been created
+		 */
+		that.checkQOTableExits = function(){
+			var deferred = $q.defer();
+			
+			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
+				deferred.resolve(result);
+			});
+			return deferred.promise;
+		};
+		
+		/**
+		 *this function creates the table 'stored_query_objects' if it has not been created before
+		 */
+		that.createQOTable = function(){
+			var deferred = $q.defer();
+				
+			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
+				deferred.resolve(result);
+			});
+			return deferred.promise;
+		};
+		
+		
+		/**
+	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
+	     * So that the UI asynchronously wait for the data to be available...
+	     */
+	   
+	    that.getListOfProjects = function() {
+	    	var deferred = $q.defer();
+	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
+				that.cache.listOfProjectsFromDatabase = result;
+				that.cache.no_of_projects = result.length;
+				deferred.resolve(result);
+			});
+	    	
+	    	return deferred.promise;
+	    };
+	    
+	    /**
+	     * This function wraps the async aws getQueryObjectsInProject function into an angular defer/promise
+	     * So that the UI asynchronously wait for the data to be available...
+	     */
+	    that.getListOfQueryObjects = function(projectName) {
+	    	var deferred = $q.defer();
+	    	runQueryService.queryRequest(projectManagementURL, 'getListOfQueryObjects', [projectName], function(AWSQueryObjectCollection){
+	    		that.cache.returnedQueryObjects = [];
+	    		if(!(angular.isUndefined(AWSQueryObjectCollection)))
+	    			{    			
+	        			var countOfJsons = AWSQueryObjectCollection.length;
+	        			for(var i = 0; i < countOfJsons; i++)
+	        			{
+	        				var singleObject= {};
+	        				singleObject.queryObject = JSON.parse(AWSQueryObjectCollection[i].finalQueryObject);//json content of the query object
+	        				singleObject.queryObjectName = AWSQueryObjectCollection[i].queryObjectName;//title of the query object
+	        				singleObject.projectDescription = AWSQueryObjectCollection[i].projectDescription;
+	        				singleObject.author = AWSQueryObjectCollection[i].author;
+	        				
+	        				that.cache.projectDescription = AWSQueryObjectCollection[i].projectDescription;//handling description
+	        				
+	        				if(angular.isUndefined(AWSQueryObjectCollection[i].thumbnail)){//handling visualization generated by a query object
+	        					singleObject.thumbnail = undefined;
+	        					console.log("This queryObject does not contain any stored visualizations");
+	        				}
+	        				else{
+	        					
+	        					singleObject.thumbnail = "data:image/png;base64," + AWSQueryObjectCollection[i].thumbnail;
+	        				}
+	        				
+	        				
+	        				that.cache.columnstring = "";
+	        				var columns = singleObject.queryObject.scriptOptions;
+	        				for(var j in columns){
+	        					var title = columns[j].metadata.title;
+	        					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
+	        				}
+	        				singleObject.columns = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
+	        				that.cache.returnedQueryObjects[i] = singleObject;
+	        			}
+	        			
+	    			}else{
+	    				that.cache.project.selected = "";
+	    				that.cache.projectDescription = "";
+	    				that.cache.userName = "";
+	    			}
+	    		
+	                deferred.resolve(that.cache.returnedQueryObjects);
+	                rootScope.$apply();
+	        	
+	        });
+	    	
+	    	return deferred.promise;
+	    };
+	    
+	    /**
+	     * returns the base64 encoded session state of the visualizations generated by a query object
+	     */
+	    that.getBase64SessionState = function(params){
+	    	if(!(WeaveService.weaveWindow.closed)){
+	    		var base64SessionState = WeaveService.getBase64SessionState();
+	    		queryService.queryObject.weaveSessionState = WeaveService.getSessionStateObjects();//TODO fix this adding properties dynamically not GOOD
+	    		that.writeSessionState(base64SessionState, params);
+	    	}
+	    };
+	   
+	    that.writeSessionState = function(base64String, params){
+	    	var projectName;
+	    	var userName;
+	    	var queryObjectTitles;
+	    	var projectDescription;
+	    	
+	    	if(angular.isDefined(params.projectEntered))
+	    		{
+		    		projectName = params.projectEntered;
+		    		projectDescription = "This project belongs to " + projectName;
+	    		}
+	    	else
+	    		{
+		    		projectName = "Other";
+		    		projectDescription = "These query objects do not belong to any project"; 
+	    		}
+	    	if(angular.isDefined(params.queryTitleEntered)){
+	    		queryObjectTitles = params.queryTitleEntered;
+	    		queryService.queryObject.title = queryObjectTitles;
+	    	}
+	    	else
+	    		 queryObjectTitles = queryService.queryObject.title;
+	    	if(angular.isDefined(params.userName)){
+	    		userName = params.userName;
+	    		queryService.queryObject.author = userName;
+	    	}
+	    	else
+	    		userName = "Awesome User";
+	    	
+
+	    	var queryObjectJsons = angular.toJson(queryService.queryObject);
+	    	var resultVisualizations = base64String;
+	    	
+	    	
+	    	runQueryService.queryRequest(projectManagementURL, 'writeSessionState', [userName, projectDescription, queryObjectTitles, queryObjectJsons, resultVisualizations, projectName], function(result){
+	    		console.log("adding status", result);
+	    		alert(queryObjectTitles + " has been added");
+	    	});
+	    };
+	    
+	    
+	    /**
+	     * this function returns the session state corresponding to the thumbnail of a query object that was clicked
+	     */
+	    that.returnSessionState = function(queryObject){
+	   	 var deferred = $q.defer();
+	   	 queryObject = angular.toJson(queryObject);
+	   	 //console.log("stringified queryObject", queryObject);
+	   	 
+	   	 runQueryService.queryRequest(projectManagementURL, 'getSessionState', [queryObject], function(result){
+	   		 that.cache.weaveSessionState = result;
+	   		 deferred.resolve(result);
+	        	
+	   	 });
+	    		
+			return deferred.promise;
+	   };
+	   
+	   	//as soon as service returns deleteStatus
+		//1. report status
+		//2. reset required variables
+		//3. updates required lists
+	   /**
+	    * This function wraps the async aws deleteproject function into an angular defer/promise
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.deleteProject = function(projectName) {
+	   	var deferred = $q.defer();
+	   	runQueryService.queryRequest(projectManagementURL, 'deleteProjectFromDatabase', [projectName], function(result){
+	           
+	       	that.cache.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
+	       	
+	      	 if(! (that.cache.deleteProjectStatus == 0 )){
+	      		 
+	      		that.cache.returnedQueryObjects = [];//reset
+	      		that.cache.projectDescription = "";
+	      		 alert("The Project " + projectName + " has been deleted");
+	      		 that.getListOfProjects();//call the updated projects list
+	      	 }
+	      	 
+	      	 that.cache.deleteProjectStatus = 0;//reset 
+	      	 deferred.resolve(result);
+	       	
+	       });
+	       return deferred.promise;
+	   };
+	   
+	   /**
+	    * This function wraps the async aws deleteQueryObject function into an angular defer/promise
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.deleteQueryObject = function(projectName, queryObjectTitle){
+		   var deferred = $q.defer();
+		   runQueryService.queryRequest(projectManagementURL, 'deleteQueryObjectFromProject', [projectName, queryObjectTitle], function(result){
+		       	that.cache.deleteQueryObjectStatus = result;
+		       	console.log("in the service",that.cache.deleteQueryObjectStatus );
+		       	
+		       	alert("Query Object " + queryObjectTitle + " has been deleted");
+		       	
+		       	that.cache.returnedQueryObjects = [];//clears list
+		       	
+		       	that.getListOfQueryObjects(projectName);//fetches new list
+		       	
+		       	//if the project contained only one QO which was deleted , retrive the new updated lists of projects
+		       	if(that.cache.returnedQueryObjects.length == 0){
+		       		that.getListOfProjects();
+		       		that.cache.project.selected = "";
+		       	}
+		       	deferred.resolve(result);
+		       	
+		       });
+		       
+		       return deferred.promise;
+	   };
+	   
+	   /**
+	    * This function wraps the async aws insertQueryObjectToProject function into an angular defer/promise
+	    * adds a query object (row) to the specified project in the database
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.insertQueryObjectToProject = function(userName, projectName, projectDescription,queryObjectTitles,queryObjectJsons, resultVisualizations){
+	 
+	   	var deferred = $q.defer();
+
+	   	runQueryService.queryRequest(projectManagementURL, 'insertMultipleQueryObjectInProjectFromDatabase', [userName,
+	   	                                                                                          projectName,
+	   	                                                                                          projectDescription,
+	   	                                                                                          queryObjectTitles,
+	   	                                                                                          queryObjectJsons,
+	   	                                                                                          resultVisualizations], function(result){
+	   		that.cache.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
+	       	console.log("insertQueryObjectStatus", that.cache.insertQueryObjectStatus);
+	       	if(that.cache.insertQueryObjectStatus != 0){
+	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
+	       	}
+	       	
+	       	deferred.resolve(result);
+	       	
+	       });
+	       return deferred.promise;
+	       
+	   };
+	   
+	   that.createNewProject = function(userNameEntered, projectNameEntered,projectDescriptionEntered, queryObjectTitles, queryObjectJsons){
+		   that.insertQueryObjectToProject(userNameEntered,
+				   						   projectNameEntered,
+				   						   projectDescriptionEntered,
+				   						   queryObjectTitles,
+				   						   queryObjectJsons,
+				   						   null)
+		   .then(function(){
+			   that.cache.listOfProjectsFromDatabase = [];//clear
+			   that.getListOfProjects();//fetch new list
+		   });
+
+	   };
+
+	};
+})();
+
+
+/**
+ *this directive contains the logic for managing the list view of projects and its query objects
+ *@author spurushe 
+ */
+
+(function(){
+	angular.module('weaveAnalyst.project').directive('projectGrid', projectGrid);
+	
+	function projectGrid (){
+		return{
+			restrict : 'E',
+			controller : projectGridController,
+			scope:{
+				data : '='
+			},
+			template : '<div ui-grid = "pGrid_Ctrl.gridOptions" ui-grid-pinning ui-grid-expandable></div>',
+			controllerAs : 'pGrid_Ctrl',
+			bindToController : true,
+			link : function(){
+
+			}
+		};
+	};//end of directive defintion
+	
+	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants', '$scope'];
+	function projectGridController (projectService, uiGridTreeViewConstants, $scope){
+		var pGrid_Ctrl = this;
+		
+		
+		pGrid_Ctrl.projectService = projectService;
+
+		pGrid_Ctrl.gridOptions = {
+		          expandableRowTemplate : 'src/project/subGrid.html',  //This is the template that will be used to render subgrid.
+		          expandableRowHeight : 150, //This will be the height of the subgrid
+		          expandableRowScope : {
+		              subGridVariable : 'subGridScopeVariable'  //Variables of object expandableScope will be available in the scope of the expanded subgrid
+		          },
+		          onRegisterApi: function (gridApi) {
+		              gridApi.expandable.on.rowExpandedStateChanged($scope, function (row) {
+		                  if (row.isExpanded) {
+		                    row.entity.subGridOptions = {
+		                      columnDefs: [
+		                      { name: 'author'},
+		                      { name: 'queryObjectName'},
+		                      { name: 'columns'}
+		                    ]};
+		                    
+		                    pGrid_Ctrl.projectService.getListOfQueryObjects(row.entity.Name).then(function(childQos){
+		                    	
+		                    	row.entity.subGridOptions.data = childQos;
+		                    });
+		                    
+		                  }
+		              });
+		          },
+				  data : pGrid_Ctrl.data//sets the data of the parent grid
+        };
+		
+		//defining the columns of the parent grid
+		pGrid_Ctrl.gridOptions.columnDefs = [
+		                                { name: 'Name', width: '35%'  },
+		                                { name: 'Description', width: '60%' }
+		                            ];
+		
+			
+	};//end of grid controller
+		
+})();
+/**
+ * this directive represents a single query object and its respective controls.
+ * @spurushe
+ */
+
+(function(){
+	angular.module('weaveAnalyst.project').directive('queryCard', queryCard);
+	function queryCard(){
+		return {
+			restrict : 'E',
+			scope :{
+				item : '='
+			},
+			templateUrl : 'src/project/query_card.tpl.html',
+			controller : queryCardController,
+			controllerAs : 'q_cardCtrl',
+			bindToControler : true,
+			link : function(){
+				
+			}
+		};
+	}//end of directive definition
+	
+	queryCardController.$inject = ['$scope', 'projectService'];
+	function queryCardController(scope, projectService){
+		var q_cardCtrl = this;
+		q_cardCtrl.projectService = projectService;
+		q_cardCtrl.item = scope.item;
+		q_cardCtrl.editMode = false;
+		
+		
+		q_cardCtrl.returnSessionState = returnSessionState;
+		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
+		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
+		q_cardCtrl.openInAnalysis = openInAnalysis;
+		q_cardCtrl.edit = edit;
+		q_cardCtrl.save = save;
+
+		//toggles the edit mode for editing a query card
+		function edit (){
+			q_cardCtrl.editMode = true;
+		};
+		
+		//saves a modified query card to the server
+		function save (item){
+			//save the edited state
+			//if saved make the edit mode false
+			alert(item.queryObject.title + " has been saved");
+			q_cardCtrl.editMode = false;
+		};
+		
+		
+		//deletes a single queryObject within the currently selected Project
+		function deleteSpecificQueryObject(item){
+			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
+			q_cardCtrl.deleteQueryConfirmation(q_cardCtrl.projectService.cache.project.selected, q_cardCtrl.nameOfQueryObjectToDelete);
+		};
+		
+		function deleteQueryConfirmation (currentProject, currentQueryFileName){
+			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
+			if(deletePopup == true){
+				q_cardCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
+			}
+		};
+		
+		function openInAnalysis (incoming_queryObject) {
+			$scope.$emit("queryObjectloaded", incoming_queryObject);
+			$location.path('/analysis'); 
+		};
+
+		//called when the thumb-nail is clicked
+		/**
+		 *@param given a query object
+		 *@returns it returns the weave visualizations for it.
+		 */
+		function returnSessionState (queryObject){
+//			q_cardCtrl.projectService.returnSessionState(queryObject).then(function(weaveSessionState){
+//				var newWeave;
+//				if(!(angular.isUndefined(weaveSessionState))){
+//					
+//			   		 if (!newWeave || newWeave.closed) {
+//							newWeave = window
+//									.open("/weave.html?",
+//											"abc",
+//											"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
+//						}
+//			   		 
+//			   		q_cardCtrl.WeaveService.setWeaveWindow(newWeave);
+//				   		
+//				   		$scope.$watch(function(){
+//				   			return q_cardCtrl.WeaveService.weave;
+//				   		},function(){
+//				   			if(q_cardCtrl.WeaveService.checkWeaveReady()) 
+//				   				q_cardCtrl.WeaveService.setBase64SessionState(weaveSessionState);
+//				   		});
+//			   		}
+//				else{
+//					console.log("Session state was not returned");
+//				}
+//			});
+		};
+	}
+})();
 /**
  * this directive contains the UI and logic for the correlation Matrix
 @author spurushe
@@ -641,11 +1370,11 @@ if(!this.wa)
 			},
 			link: function(scope, elem, attrs){
 				var dom_element_to_append_to = document.getElementById('corrMatrixContainer');
-//				var array1 = [1,6,9,4,5];
-//				var array2= [6.6,2,5,3,10];
-//				var array3= [2,7,8,6.3,1];
-//				var array4= [4,2,5,3,1.9];
-//				var array5= [1,3.4,5,3,10];
+//				var array1 = [1,6,9,4];
+//				var array2= [6.6,2,5,10];
+//				var array3= [2,7,8,1];
+//				var array4= [4,5,3,1.9];
+//				var array5= [1,3.4,5,10];
 //				var mydata = [array1, array2, array3, array4];
 //				var labels = ["one", "two", "three", "four"];
 //				
@@ -659,7 +1388,7 @@ if(!this.wa)
 //					var hm = new window.wa.d3_viz.heatMap();//create
 //					hm.initialize_heatMap(config);//initialize
 //					hm.render_heatMap();//render
-					
+//					
 				
 				scope.$watch(function(){
 					return scope.data;
@@ -1899,735 +2628,6 @@ if(!this.wa)
 		
 	}
 })();
-/** this controller controls the project tab 
- * @author spurushe
- * 
- **/
-(function(){
-	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
-	
-	ProjectManagementController.$inject = ['$scope', '$modal', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
-	
-	function ProjectManagementController ($scope,$modal, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
-		var prjtCtrl = this;
-		
-		prjtCtrl.projectService = projectService;
-		prjtCtrl.WeaveService = WeaveService;
-		prjtCtrl.queryService = queryService;
-		
-		prjtCtrl.checkQOTableExits = checkQOTableExits;
-		prjtCtrl.construct_view = construct_view;
-		prjtCtrl.deleteProject = deleteProject;
-		prjtCtrl.openAdditionPanel = openAdditionPanel;
-		
-		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
-		prjtCtrl.nameOfQueryObjectToDelete = "";
-		prjtCtrl.view_modes = ['List', 'Compact', 'Detail'];
-		
-		//options needed for creating the modal instance window
-		 //communicating with the modal
-		prjtCtrl.pjtModalOptions = {//TODO find out how to push error log to bottom of page
-				 backdrop: true,
-		         backdropClick: false,
-		         dialogFade: true,
-		         keyboard: true,
-		         templateUrl: 'src/project/projectAdditionModal.html',
-		         controller: 'pjtAddtionInstanceController',
-		         controllerAs : 'pam',
-		         resolve :{
-		        	 projectNameEntered : function(){
-		        		 return $scope.projectNameEntered;
-		        		 },
-		        	 userNameEntered : function(){
-		        		 return $scope.userNameEntered;
-		        		 },
-		        	 projectDescriptionEntered : function(){
-		        		 return $scope.projectDescriptionEntered;
-		        		 }
-		        	 
-		         }
-			};
-		
-		//check for table 
-		prjtCtrl.checkQOTableExits();
-		//create table with dummy project and queries
-		
-		
-		//when a project is selected or changed
-		$scope.$watch(function(){
-			return prjtCtrl.projectService.cache.project.selected;
-		},function(){
-			if(prjtCtrl.projectService.cache.project.selected){
-				console.log("project Selected", prjtCtrl.projectService.cache.project.selected.Name);
-				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected.Name);
-			}
-		});
-		
-		//Watch for when record is inserted in db
-	     $scope.$watch(function(){
-	     	return prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
-	      }, function(){ 
-	    	  prjtCtrl.insertQueryObjectStatus = prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
-	     	if(!(angular.isUndefined(prjtCtrl.insertQueryObjectStatus)))
-			 {
-			 	if(prjtCtrl.insertQueryObjectStatus != 0)
-			 		{
-	    		 		alert("Query Object has been added");
-	    		 		prjtCtrl.queryService.cache.listofQueryObjectsInProject = [];
-	    		 		prjtCtrl.queryService.getListOfQueryObjectsInProject(prjtCtrl.projectService.cache.project.selected);//makes a new call
-			 		}
-			 }
-		 
-	     	prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus = 0;//reset
-	      });
-	     
-	     //this function alters the three kinds of views for viewing projects and query objects
-	     function construct_view (){
-	    	 var mode = prjtCtrl.projectService.viewMode;
-	    	 
-	    	 if(mode == 'List')
-	    		 prjtCtrl.projectService.view_Desc = "This mode displays the projects and its query obejcts as a list. Select Compact to view a project in detail. Select Detail to view a project's query objects in detail.";
-	    	 else if(mode == 'Compact')
-	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
-	    	 else 
-	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail.";
-	    		 
-	     };
-		
-	     //checks if a table is created for storing query objects
-	     function checkQOTableExits (){
-	    	var	pS = prjtCtrl.projectService;
-	    	
-	    	pS.checkQOTableExits().then(function(projExists){
-		    	 console.log("stored_query_objects table exists",projExists );
-		    	 if(projExists){
-		    		 pS.getListOfProjects().then(function(projectList){
-		    			 if(projectList.length == 0)
-		    				 alert("There are no stored query objects");
-		    		 });//retrives project list
-		    	 }
-		    	 else{
-			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
-			    		 		+ "Create a table to store query objects?");
-			    		 if(conf == true){
-			    			 pS.createQOTable().then(function(status){
-			    				 if(status){
-			    					 console.log("status", status);
-			    				 }
-			    					 alert("Table \"stored_query_objects\" has been successfully created");
-			    			 });
-			    		 }
-			    		 else
-			    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
-		    	 }
-	    	});
-	     };
-	     
-		//deletes an entire Project along with all queryObjects within
-		function deleteProject (){
-			prjtCtrl.deleteProjectConfirmation(prjtCtrl.projectService.cache.project.selected);
-		};
-		
-		//additional checks for confirming deletion
-		function deleteProjectConfirmation (projectSelected){
-			var deletePopup = confirm("Are you sure you want to delete project " + projectSelected + "?");
-			if(deletePopup == true){
-				prjtCtrl.projectService.deleteProject(projectSelected);
-			}
-		};
-		
-		
-		//button click event that creates the modal
-		function openAdditionPanel(){
-			var saveNewProject = $modal.open(prjtCtrl.pjtModalOptions);
-			
-			//called when modal is being closed
-			saveNewProject.result.then(function(additionParams){//then function takes a single object
-				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
-				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
-				 console.log("userName", additionParams.userNameEntered);
-			});
-		};
-		
-	};
-	
-	
-	//Modal instance controller
-	angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceController', additionController);
-	additionController.$inject= ['$scope', '$modalInstance','projectService', 'projectNameEntered','projectDescriptionEntered', 'userNameEntered'];
-	
-	function additionController ($scope, $modalInstance,projectService, projectNameEntered,projectDescriptionEntered, userNameEntered){
-		var pam = this;
-		
-		pam.projectService = projectService;
-		pam.uploadStatus = "";
-		pam.queryObjectJsons = [];
-		pam.queryObjectTitles = [];
-		pam.saveQueryObjects = saveQueryObjects;
-		pam.remove = remove;
-		
-		//object representation of a SINGLE file uploaded, changed everytime a file is uploaded
-		pam.uploaded = {
-				QueryObject : {
-					filename : "",
-					content : ""			
-				}
-		};
-		
-		pam.uploadedObjects = {
-				
-			queryObjectJsons : [],//contains the content of all query objects uploaded (json strings)
-			queryObjectTitles : []//contains the titles of all query Objects uploaded
-		};
-		
-		
-		//whenever a file is uploaded
-		$scope.$watch(function(){
-			return pam.uploaded.QueryObject.filename;
-		}, function(){
-			
-			if(pam.uploaded.QueryObject.filename)
-				{
-					//check if the file had been uploaded before
-					if($.inArray(pam.uploaded.QueryObject.filename, pam.uploadedObjects.queryObjectTitles) == -1)
-						{
-							//managing the title of queryObject (json )uploaded
-							var title = pam.uploaded.QueryObject.filename;
-							pam.uploadedObjects.queryObjectTitles.push(title);
-							
-							//managing the content of queryObject (json )uploaded
-							var content = pam.uploaded.QueryObject.content;
-							pam.uploadedObjects.queryObjectJsons.push(content);
-							
-							
-							var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
-							pam.uploadStatus = countUploaded + " file(s) uploaded";
-						}
-				}
-			
-		});
-		
-		//called when save button is hit.;
-		function saveQueryObjects (projectNameEntered,projectDescriptionEntered, userNameEntered) {
-			if(!projectNameEntered)
-				projectNameEntered = "Example Project";
-			if(!projectDescriptionEntered)
-				projectDescriptionEntered = "These query object(s) belong to " + projectNameEntered;
-			if(!userNameEntered)
-				userNameEntered = "Awesome User";
-			
-			var additionParams = {
-					projectNameEntered : projectNameEntered,
-					userNameEntered :userNameEntered,
-					projectDescriptionEntered : projectDescriptionEntered,
-					uploadedObjects : $scope.uploadedObjects
-			};
-			
-			if(additionParams.uploadedObjects.queryObjectJsons.length > 0){//only if something is uploaded, save it
-				
-				pam.projectService.createNewProject(additionParams.userNameEntered,
-						additionParams.projectNameEntered,
-						additionParams.projectDescriptionEntered,
-						additionParams.uploadedObjects.queryObjectTitles,
-						additionParams.uploadedObjects.queryObjectJsons,
-						null);
-				
-				$modalInstance.close(additionParams);
-			}
-			else{
-				alert("Please upload a query object to create a project");
-			}
-			
-		 };
-		 
-	 	function remove (file){
-		 //removes the file from the uploaded collection
-		 var index = $.inArray(file, pam.uploadedObjects.queryObjectTitles);
-		 console.log("index", index);
-		 pam.uploadedObjects.queryObjectTitles.splice(index, 1);
-		 pam.uploadedObjects.queryObjectJsons.splice(index, 1);
-		 
-		 var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
-		 pam.uploadStatus = countUploaded + " file(s) uploaded";
-		 if(countUploaded == 0){
-			 pam.uploadStatus = "";
-			 pam.uploaded.QueryObject.filename = null;
-			 pam.uploaded.QueryObject.content = null;
-			 
-		 }
-	 };
-	};
-})();//end of IIFE
-
-
-
-
-
-/**
- * contains all the functions required for project management 
- * @author spurushe
- */
-(function(){
-	
-	angular.module('weaveAnalyst.project').service('projectService', projectService);
-	projectService.$inject = ['$q', '$rootScope', 'WeaveService', 'runQueryService','queryService', 'projectManagementURL'];
-	
-	function projectService ($q, rootScope, WeaveService, runQueryService,queryService, projectManagementURL){
-		var that = this;
-		
-		that.cache= {
-				project: {selected : null},
-				listOfProjectsFromDatabase : [],
-				returnedQueryObjects : [],
-				columnstring : null, 
-				projectDescription : null, 
-				userName : null, 
-				weaveSessionState : null,
-				deleteProjectStatus : null, 
-				deleteQueryObjectStatus : null, 
-				insertQueryObjectStatus : null,
-				no_of_projects : 0
-		};
-
-		/**
-		 *this function checks if the table 'stored_query_objects' has already been created
-		 */
-		that.checkQOTableExits = function(){
-			var deferred = $q.defer();
-			
-			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
-				deferred.resolve(result);
-			});
-			return deferred.promise;
-		};
-		
-		/**
-		 *this function creates the table 'stored_query_objects' if it has not been created before
-		 */
-		that.createQOTable = function(){
-			var deferred = $q.defer();
-				
-			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
-				deferred.resolve(result);
-			});
-			return deferred.promise;
-		};
-		
-		
-		/**
-	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
-	     * So that the UI asynchronously wait for the data to be available...
-	     */
-	   
-	    that.getListOfProjects = function() {
-	    	var deferred = $q.defer();
-	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
-				that.cache.listOfProjectsFromDatabase = result;
-				that.cache.no_of_projects = result.length;
-				deferred.resolve(result);
-			});
-	    	
-	    	return deferred.promise;
-	    };
-	    
-	    /**
-	     * This function wraps the async aws getQueryObjectsInProject function into an angular defer/promise
-	     * So that the UI asynchronously wait for the data to be available...
-	     */
-	    that.getListOfQueryObjects = function(projectName) {
-	    	var deferred = $q.defer();
-	    	runQueryService.queryRequest(projectManagementURL, 'getListOfQueryObjects', [projectName], function(AWSQueryObjectCollection){
-	    		that.cache.returnedQueryObjects = [];
-	    		if(!(angular.isUndefined(AWSQueryObjectCollection)))
-	    			{    			
-	        			var countOfJsons = AWSQueryObjectCollection.length;
-	        			for(var i = 0; i < countOfJsons; i++)
-	        			{
-	        				var singleObject= {};
-	        				singleObject.queryObject = JSON.parse(AWSQueryObjectCollection[i].finalQueryObject);//json content of the query object
-	        				singleObject.queryObjectName = AWSQueryObjectCollection[i].queryObjectName;//title of the query object
-	        				singleObject.projectDescription = AWSQueryObjectCollection[i].projectDescription;
-	        				singleObject.author = AWSQueryObjectCollection[i].author;
-	        				
-	        				that.cache.projectDescription = AWSQueryObjectCollection[i].projectDescription;//handling description
-	        				
-	        				if(angular.isUndefined(AWSQueryObjectCollection[i].thumbnail)){//handling visualization generated by a query object
-	        					singleObject.thumbnail = undefined;
-	        					console.log("This queryObject does not contain any stored visualizations");
-	        				}
-	        				else{
-	        					
-	        					singleObject.thumbnail = "data:image/png;base64," + AWSQueryObjectCollection[i].thumbnail;
-	        				}
-	        				
-	        				
-	        				that.cache.columnstring = "";
-	        				var columns = singleObject.queryObject.scriptOptions;
-	        				for(var j in columns){
-	        					var title = columns[j].metadata.title;
-	        					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
-	        				}
-	        				singleObject.columns = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
-	        				that.cache.returnedQueryObjects[i] = singleObject;
-	        			}
-	        			
-	    			}else{
-	    				that.cache.project.selected = "";
-	    				that.cache.projectDescription = "";
-	    				that.cache.userName = "";
-	    			}
-	    		
-	                deferred.resolve(that.cache.returnedQueryObjects);
-	                rootScope.$apply();
-	        	
-	        });
-	    	
-	    	return deferred.promise;
-	    };
-	    
-	    /**
-	     * returns the base64 encoded session state of the visualizations generated by a query object
-	     */
-	    that.getBase64SessionState = function(params){
-	    	if(!(WeaveService.weaveWindow.closed)){
-	    		var base64SessionState = WeaveService.getBase64SessionState();
-	    		queryService.queryObject.weaveSessionState = WeaveService.getSessionStateObjects();//TODO fix this adding properties dynamically not GOOD
-	    		that.writeSessionState(base64SessionState, params);
-	    	}
-	    };
-	   
-	    that.writeSessionState = function(base64String, params){
-	    	var projectName;
-	    	var userName;
-	    	var queryObjectTitles;
-	    	var projectDescription;
-	    	
-	    	if(angular.isDefined(params.projectEntered))
-	    		{
-		    		projectName = params.projectEntered;
-		    		projectDescription = "This project belongs to " + projectName;
-	    		}
-	    	else
-	    		{
-		    		projectName = "Other";
-		    		projectDescription = "These query objects do not belong to any project"; 
-	    		}
-	    	if(angular.isDefined(params.queryTitleEntered)){
-	    		queryObjectTitles = params.queryTitleEntered;
-	    		queryService.queryObject.title = queryObjectTitles;
-	    	}
-	    	else
-	    		 queryObjectTitles = queryService.queryObject.title;
-	    	if(angular.isDefined(params.userName)){
-	    		userName = params.userName;
-	    		queryService.queryObject.author = userName;
-	    	}
-	    	else
-	    		userName = "Awesome User";
-	    	
-
-	    	var queryObjectJsons = angular.toJson(queryService.queryObject);
-	    	var resultVisualizations = base64String;
-	    	
-	    	
-	    	runQueryService.queryRequest(projectManagementURL, 'writeSessionState', [userName, projectDescription, queryObjectTitles, queryObjectJsons, resultVisualizations, projectName], function(result){
-	    		console.log("adding status", result);
-	    		alert(queryObjectTitles + " has been added");
-	    	});
-	    };
-	    
-	    
-	    /**
-	     * this function returns the session state corresponding to the thumbnail of a query object that was clicked
-	     */
-	    that.returnSessionState = function(queryObject){
-	   	 var deferred = $q.defer();
-	   	 queryObject = angular.toJson(queryObject);
-	   	 //console.log("stringified queryObject", queryObject);
-	   	 
-	   	 runQueryService.queryRequest(projectManagementURL, 'getSessionState', [queryObject], function(result){
-	   		 that.cache.weaveSessionState = result;
-	   		 deferred.resolve(result);
-	        	
-	   	 });
-	    		
-			return deferred.promise;
-	   };
-	   
-	   	//as soon as service returns deleteStatus
-		//1. report status
-		//2. reset required variables
-		//3. updates required lists
-	   /**
-	    * This function wraps the async aws deleteproject function into an angular defer/promise
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.deleteProject = function(projectName) {
-	   	var deferred = $q.defer();
-	   	runQueryService.queryRequest(projectManagementURL, 'deleteProjectFromDatabase', [projectName], function(result){
-	           
-	       	that.cache.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
-	       	
-	      	 if(! (that.cache.deleteProjectStatus == 0 )){
-	      		 
-	      		that.cache.returnedQueryObjects = [];//reset
-	      		that.cache.projectDescription = "";
-	      		 alert("The Project " + projectName + " has been deleted");
-	      		 that.getListOfProjects();//call the updated projects list
-	      	 }
-	      	 
-	      	 that.cache.deleteProjectStatus = 0;//reset 
-	      	 deferred.resolve(result);
-	       	
-	       });
-	       return deferred.promise;
-	   };
-	   
-	   /**
-	    * This function wraps the async aws deleteQueryObject function into an angular defer/promise
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.deleteQueryObject = function(projectName, queryObjectTitle){
-		   var deferred = $q.defer();
-		   runQueryService.queryRequest(projectManagementURL, 'deleteQueryObjectFromProject', [projectName, queryObjectTitle], function(result){
-		       	that.cache.deleteQueryObjectStatus = result;
-		       	console.log("in the service",that.cache.deleteQueryObjectStatus );
-		       	
-		       	alert("Query Object " + queryObjectTitle + " has been deleted");
-		       	
-		       	that.cache.returnedQueryObjects = [];//clears list
-		       	
-		       	that.getListOfQueryObjects(projectName);//fetches new list
-		       	
-		       	//if the project contained only one QO which was deleted , retrive the new updated lists of projects
-		       	if(that.cache.returnedQueryObjects.length == 0){
-		       		that.getListOfProjects();
-		       		that.cache.project.selected = "";
-		       	}
-		       	deferred.resolve(result);
-		       	
-		       });
-		       
-		       return deferred.promise;
-	   };
-	   
-	   /**
-	    * This function wraps the async aws insertQueryObjectToProject function into an angular defer/promise
-	    * adds a query object (row) to the specified project in the database
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.insertQueryObjectToProject = function(userName, projectName, projectDescription,queryObjectTitles,queryObjectJsons, resultVisualizations){
-	 
-	   	var deferred = $q.defer();
-
-	   	runQueryService.queryRequest(projectManagementURL, 'insertMultipleQueryObjectInProjectFromDatabase', [userName,
-	   	                                                                                          projectName,
-	   	                                                                                          projectDescription,
-	   	                                                                                          queryObjectTitles,
-	   	                                                                                          queryObjectJsons,
-	   	                                                                                          resultVisualizations], function(result){
-	   		that.cache.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
-	       	console.log("insertQueryObjectStatus", that.cache.insertQueryObjectStatus);
-	       	if(that.cache.insertQueryObjectStatus != 0){
-	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
-	       	}
-	       	
-	       	deferred.resolve(result);
-	       	
-	       });
-	       return deferred.promise;
-	       
-	   };
-	   
-	   that.createNewProject = function(userNameEntered, projectNameEntered,projectDescriptionEntered, queryObjectTitles, queryObjectJsons){
-		   that.insertQueryObjectToProject(userNameEntered,
-				   						   projectNameEntered,
-				   						   projectDescriptionEntered,
-				   						   queryObjectTitles,
-				   						   queryObjectJsons,
-				   						   null)
-		   .then(function(){
-			   that.cache.listOfProjectsFromDatabase = [];//clear
-			   that.getListOfProjects();//fetch new list
-		   });
-
-	   };
-
-	};
-})();
-
-
-/**
- *this directive contains the logic for managing the list view of projects and its query objects
- *@author spurushe 
- */
-
-(function(){
-	angular.module('weaveAnalyst.project').directive('projectGrid', projectGrid);
-	
-	function projectGrid (){
-		return{
-			restrict : 'E',
-			controller : projectGridController,
-			scope:{
-				data : '='
-			},
-			template : '<div ui-grid = "pGrid_Ctrl.gridOptions" ui-grid-pinning ui-grid-expandable></div>',
-			controllerAs : 'pGrid_Ctrl',
-			bindToController : true,
-			link : function(){
-
-			}
-		};
-	};//end of directive defintion
-	
-	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants', '$scope'];
-	function projectGridController (projectService, uiGridTreeViewConstants, $scope){
-		var pGrid_Ctrl = this;
-		
-		
-		pGrid_Ctrl.projectService = projectService;
-
-		pGrid_Ctrl.gridOptions = {
-		          expandableRowTemplate : 'src/project/subGrid.html',  //This is the template that will be used to render subgrid.
-		          expandableRowHeight : 150, //This will be the height of the subgrid
-		          expandableRowScope : {
-		              subGridVariable : 'subGridScopeVariable'  //Variables of object expandableScope will be available in the scope of the expanded subgrid
-		          },
-		          onRegisterApi: function (gridApi) {
-		              gridApi.expandable.on.rowExpandedStateChanged($scope, function (row) {
-		                  if (row.isExpanded) {
-		                    row.entity.subGridOptions = {
-		                      columnDefs: [
-		                      { name: 'author'},
-		                      { name: 'queryObjectName'},
-		                      { name: 'columns'}
-		                    ]};
-		                    
-		                    pGrid_Ctrl.projectService.getListOfQueryObjects(row.entity.Name).then(function(childQos){
-		                    	
-		                    	row.entity.subGridOptions.data = childQos;
-		                    });
-		                    
-		                  }
-		              });
-		          },
-				  data : pGrid_Ctrl.data//sets the data of the parent grid
-        };
-		
-		//defining the columns of the parent grid
-		pGrid_Ctrl.gridOptions.columnDefs = [
-		                                { name: 'Name', width: '35%'  },
-		                                { name: 'Description', width: '60%' }
-		                            ];
-		
-			
-	};//end of grid controller
-		
-})();
-/**
- * this directive represents a single query object and its respective controls.
- * @spurushe
- */
-
-(function(){
-	angular.module('weaveAnalyst.project').directive('queryCard', queryCard);
-	function queryCard(){
-		return {
-			restrict : 'E',
-			scope :{
-				item : '='
-			},
-			templateUrl : 'src/project/query_card.tpl.html',
-			controller : queryCardController,
-			controllerAs : 'q_cardCtrl',
-			bindToControler : true,
-			link : function(){
-				
-			}
-		};
-	}//end of directive definition
-	
-	queryCardController.$inject = ['$scope', 'projectService'];
-	function queryCardController(scope, projectService){
-		var q_cardCtrl = this;
-		q_cardCtrl.projectService = projectService;
-		q_cardCtrl.item = scope.item;
-		q_cardCtrl.editMode = false;
-		
-		
-		q_cardCtrl.returnSessionState = returnSessionState;
-		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
-		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
-		q_cardCtrl.openInAnalysis = openInAnalysis;
-		q_cardCtrl.edit = edit;
-		q_cardCtrl.save = save;
-
-		//toggles the edit mode for editing a query card
-		function edit (){
-			q_cardCtrl.editMode = true;
-		};
-		
-		//saves a modified query card to the server
-		function save (item){
-			//save the edited state
-			//if saved make the edit mode false
-			alert(item.queryObject.title + " has been saved");
-			q_cardCtrl.editMode = false;
-		};
-		
-		
-		//deletes a single queryObject within the currently selected Project
-		function deleteSpecificQueryObject(item){
-			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
-			q_cardCtrl.deleteQueryConfirmation(q_cardCtrl.projectService.cache.project.selected, q_cardCtrl.nameOfQueryObjectToDelete);
-		};
-		
-		function deleteQueryConfirmation (currentProject, currentQueryFileName){
-			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
-			if(deletePopup == true){
-				q_cardCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
-			}
-		};
-		
-		function openInAnalysis (incoming_queryObject) {
-			$scope.$emit("queryObjectloaded", incoming_queryObject);
-			$location.path('/analysis'); 
-		};
-
-		//called when the thumb-nail is clicked
-		/**
-		 *@param given a query object
-		 *@returns it returns the weave visualizations for it.
-		 */
-		function returnSessionState (queryObject){
-//			q_cardCtrl.projectService.returnSessionState(queryObject).then(function(weaveSessionState){
-//				var newWeave;
-//				if(!(angular.isUndefined(weaveSessionState))){
-//					
-//			   		 if (!newWeave || newWeave.closed) {
-//							newWeave = window
-//									.open("/weave.html?",
-//											"abc",
-//											"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
-//						}
-//			   		 
-//			   		q_cardCtrl.WeaveService.setWeaveWindow(newWeave);
-//				   		
-//				   		$scope.$watch(function(){
-//				   			return q_cardCtrl.WeaveService.weave;
-//				   		},function(){
-//				   			if(q_cardCtrl.WeaveService.checkWeaveReady()) 
-//				   				q_cardCtrl.WeaveService.setBase64SessionState(weaveSessionState);
-//				   		});
-//			   		}
-//				else{
-//					console.log("Session state was not returned");
-//				}
-//			});
-		};
-	}
-})();
 /**
  * This Service is designed to receive a query object, pre-process an analysis query and processes its results.
  * @author spurushe
@@ -3703,39 +3703,6 @@ treeUtils.getSelectedNodes = function(treeId) {
 	};
 })();//end of IIFE
 
-angular.module('weaveAnalyst.configure.script', []);
-
-var tryParseJSON = function(jsonString){
-    try {
-        var o = JSON.parse(jsonString);
-
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
-        // so we must check for that, too.
-        if (o && typeof o === "object" && o !== null) {
-            return o;
-        }
-    }
-    catch (e) { }
-
-    return false;
-};
-
-angular.module('weaveAnalyst.configure.script').controller("ScriptManagerCtrl", function() {
-
-
-    
-});
-
-//this controller deals with the script wizard
-angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInstanceCtrl', function () {
-
-
-});
-angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
-
-}]);
 (function(){
 	angular.module('weaveAnalyst.configure.metadata', []);
 	
@@ -4139,6 +4106,39 @@ angular.module('weaveAnalyst.configure.metadata').directive('dynatree', function
 	};
 	
 })();//end of IIFE
+angular.module('weaveAnalyst.configure.script', []);
+
+var tryParseJSON = function(jsonString){
+    try {
+        var o = JSON.parse(jsonString);
+
+        // Handle non-exception-throwing cases:
+        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
+        // so we must check for that, too.
+        if (o && typeof o === "object" && o !== null) {
+            return o;
+        }
+    }
+    catch (e) { }
+
+    return false;
+};
+
+angular.module('weaveAnalyst.configure.script').controller("ScriptManagerCtrl", function() {
+
+
+    
+});
+
+//this controller deals with the script wizard
+angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInstanceCtrl', function () {
+
+
+});
+angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
+
+}]);
 /**
  * Created by Shweta on 8/5/15.
  * this component represents one ui crumb in the hierarchy
@@ -4512,11 +4512,11 @@ if(!this.wa.d3_viz){
 	//initializes the heat map 
 	p.initialize_heatMap = function(config){
 		
-		this._margin =  {top: 100, right: 20, bottom: 20, left: 100};
+		this._margin =  {top: 50, right: 200, bottom: 50, left: 50};
 		this._container = config.container;
 		
-		this._width = this._container.offsetWidth - this._margin.left - this._margin.right;
-		this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		this._width = this._container.offsetWidth - this._margin.left;
+		this._height = this._container.offsetHeight - this._margin.top;
 
 		//original SVG
 		this._heatMapSvg = d3.select(this._container).append("svg")
@@ -4527,9 +4527,9 @@ if(!this.wa.d3_viz){
 		this._labels = config.labels;
 		
 		  // Scaling Functions
-		this._rowScale = d3.scale.linear().range([0, this._width]).domain([0,this._data.length]);
+		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
 
-		this._colScale = d3.scale.linear().range([0, this._height]).domain([0,this._data.length]);
+		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
 
 		//toolTip
 		this._toolTip = d3.select(this._container)
@@ -4568,13 +4568,15 @@ if(!this.wa.d3_viz){
 	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
 						.data(hmObj._data)
 						.enter().append("svg:g")
+						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
 						.attr("class", "row");
 		
 		//appending text for row
 	    hmObj._rowObjects.append("text")
 	      .attr("x", -1)
 	      .attr("y", function(d, i) { return hmObj._colScale(i); })
-	      .attr("dy", "1")
+	      .attr("dy", "0.25")
+	      .attr("fill", 'darkOrange')
 	      .attr("text-anchor", "end")
 	      .text(function(d, i) { return hmObj._labels[i]; });
 

@@ -44,11 +44,11 @@ if(!this.wa.d3_viz){
 	//initializes the heat map 
 	p.initialize_heatMap = function(config){
 		
-		this._margin =  {top: 100, right: 20, bottom: 20, left: 100};
+		this._margin =  {top: 50, right: 200, bottom: 50, left: 50};
 		this._container = config.container;
 		
-		this._width = this._container.offsetWidth - this._margin.left - this._margin.right;
-		this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		this._width = this._container.offsetWidth - this._margin.left;
+		this._height = this._container.offsetHeight - this._margin.top;
 
 		//original SVG
 		this._heatMapSvg = d3.select(this._container).append("svg")
@@ -59,9 +59,9 @@ if(!this.wa.d3_viz){
 		this._labels = config.labels;
 		
 		  // Scaling Functions
-		this._rowScale = d3.scale.linear().range([0, this._width]).domain([0,this._data.length]);
+		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
 
-		this._colScale = d3.scale.linear().range([0, this._height]).domain([0,this._data.length]);
+		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
 
 		//toolTip
 		this._toolTip = d3.select(this._container)
@@ -100,13 +100,15 @@ if(!this.wa.d3_viz){
 	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
 						.data(hmObj._data)
 						.enter().append("svg:g")
+						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
 						.attr("class", "row");
 		
 		//appending text for row
 	    hmObj._rowObjects.append("text")
 	      .attr("x", -1)
 	      .attr("y", function(d, i) { return hmObj._colScale(i); })
-	      .attr("dy", "1")
+	      .attr("dy", "0.25")
+	      .attr("fill", 'darkOrange')
 	      .attr("text-anchor", "end")
 	      .text(function(d, i) { return hmObj._labels[i]; });
 
