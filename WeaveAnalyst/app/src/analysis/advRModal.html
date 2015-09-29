@@ -1,0 +1,27 @@
+<div class="modal-header">
+         	<button type="button" class="close" ng-click="$dismiss()">
+					&times;
+	</button>
+         	<h4>Advanced R Utilities</h4>
+</div>
+
+<div class="modal-body">
+		<table style = "width: 90%">
+			<tr>
+				<td>Specify the path to your installed R libraries</td>
+				<td><input class= "form-control" type= "text" placeholder="for e.g C:\\Program Files\\R\\R-3.1.2\\library"/></td>
+				<td><button class ="btn btn-info" ng-click = "adCtrl.getInstalled_R_Packages()">Go</button></td>
+			</tr>
+		</table>
+		<br/>
+		
+		
+		<p>List of installed R packages </p>
+		<div ui-grid = "adCtrl.gridOptions"></div> 
+
+</div>
+
+<div class="modal-footer">
+			<!-- <button ng-click="close(projectEntered, queryTitleEntered, userName)" class="btn btn-primary" >Save</button> -->
+			<button ng-click="$dismiss()" class="btn btn-primary" >Cancel</button>
+</div>
