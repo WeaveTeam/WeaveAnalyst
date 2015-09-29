@@ -46,22 +46,7 @@ if(!this.wa)
 		gh.addGroupedCallback({}, function (){
 			$rootScope.$apply();
 		});
-		
-		gh.requestObject("qo1",  wa.QueryObject);
-		var active_qo = gh.requestObject("active_qo",  weavecore.LinkableString);
-		active_qo.value = "qo1";
-//		$rootScope.$safeApply = function(fn, $scope) {
-//				if($scope == undefined){
-//					$scope = $rootScope;
-//				}
-//				fn = fn || function() {};
-//				if ( !$scope.$$phase ) {
-//	        	$scope.$apply( fn );
-//	    	}
-//	    	else {
-//	        	fn();
-//	    	}
-//		};
+
 	}]);
 	
 	angular.module('weaveAnalyst').config(function($stateProvider, $urlRouterProvider) {
@@ -197,15 +182,73 @@ if(!this.wa)
 	//Analysis Controller
 	/////////////////////
 	angular.module('weaveAnalyst.AnalysisModule').controller('AnalysisController', analysisController);
-	analysisController.$inject = ['$scope','$filter', '$window', 'analysisService', 'WeaveService'];
+	analysisController.$inject = ['$scope','$filter','$modal', '$window', 'queryService', 'rUtils'];
 	
-	function analysisController ($scope,$filter, $window, WeaveService ){
+	function analysisController ($scope,$filter,$modal, $window, queryService, rUtils ){
 		$scope.isCollapsed = false;
 		var anaCtrl = this;
 		
-		anaCtrl.WeaveService = WeaveService;
+		anaCtrl.queryService = queryService;
+		anaCtrl.rUtils = rUtils;
+		anaCtrl.getaActive_QO = getaActive_QO;
+		anaCtrl.openAdvRModal = openAdvRModal;
 		
+		anaCtrl.advR_modal_opts = {
+		          backdrop: true,
+		          backdropClick: true,
+		          dialogFade: true,
+		          keyboard: true,
+		          templateUrl: 'src/analysis/advRModal.html',
+		          windowClass : 'errorLog-modal',
+		          controller: 'advRModalController',
+		          controllerAs: 'adCtrl',
+		          resolve:
+		          {
+//		                      projectEntered: function() {return $scope.projectEntered;},
+//		                      queryTitleEntered : function(){return $scope.queryTitleEntered;},
+//		                      userName : function(){return $scope.userName;}
+		          }
+		};
 		
+		anaCtrl.active_qoName = anaCtrl.queryService.active_qoName;
+		anaCtrl.active_qoName.addImmediateCallback(null, anaCtrl.getaActive_QO, true);
+		
+		function getaActive_QO (){
+			anaCtrl.active_qo = anaCtrl.queryService.queryObjectCollection.getObject(anaCtrl.active_qoName.value);
+		};
+		
+		function openAdvRModal(){
+			var modalInst = $modal.open(anaCtrl.advR_modal_opts);
+		};
+	};
+	
+	
+	///////////////////
+	// ADVANCED R MODAL controller
+	///////////////////
+	angular.module('weaveAnalyst.AnalysisModule').controller('advRModalController', advRModalController);
+	advRModalController.$inject = ['$scope','rUtils'];
+	function advRModalController($scope, rUtils){
+		
+		var adCtrl = this;
+		adCtrl.rUtils = rUtils;
+		adCtrl.getInstalled_R_Packages = getInstalled_R_Packages;
+		
+		adCtrl.gridOptions = {
+			columnDefs : [
+                            { field: 'Package', width: '35%' },
+                            { field: 'Version', width: '60%' }
+                         ],
+            enableFiltering : true
+		};
+		
+		function getInstalled_R_Packages (){
+			adCtrl.rUtils.getInstalled_R_Packages().then(function(result){
+				console.log("result", result);
+				adCtrl.gridOptions.data = result;
+			});
+				//process results for grid here
+		}
 	};
 })();
 
@@ -357,12 +400,13 @@ if(!this.wa)
 	    }, function(n, o) {
 			if(qo_btnsCtrl.queryObjectUploaded.file.content)
 			{
-				qo_btnsCtrl.queryService.queryObject = angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content);
-				if(qo_btnsCtrl.WeaveService.weave)
-				{
-					qo_btnsCtrl.WeaveService.weave.path().state(qo_btnsCtrl.queryService.queryObject.sessionState);
-					delete qo_btnsCtrl.queryService.queryObject.sessionState;
-				}
+				qo_btncCtrl.queryService.populate_qo(angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content));
+				//qo_btnsCtrl.analysisService.active_qo = angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content);
+//				if(qo_btnsCtrl.WeaveService.weave)
+//				{
+//					qo_btnsCtrl.WeaveService.weave.path().state(qo_btnsCtrl.queryService.queryObject.sessionState);
+//					delete qo_btnsCtrl.queryService.queryObject.sessionState;
+//				}
 			}
 	    }, true);
 	    
@@ -457,165 +501,60 @@ if(!this.wa)
 	function scriptController ($scope, queryService, $filter, analysisService){
 		var scriptCtrl = this;
 		
-		scriptCtrl.active_qoName = WeaveAPI.globalHashMap.getObject("active_qo");
-		scriptCtrl.active_qo = WeaveAPI.globalHashMap.getObject(scriptCtrl.active_qoName.value);
-		
-		
-		scriptCtrl.scriptOptions = [];
-		
 		scriptCtrl.queryService = queryService;
 		scriptCtrl.analysisService = analysisService;
 		
 		scriptCtrl.getScriptMetadata = getScriptMetadata;
-		scriptCtrl.autoFillDefaults = autoFillDefaults;
-		scriptCtrl.validateQuery = validateQuery;
-		scriptCtrl.toggleButton = toggleButton;
+		scriptCtrl.active_qo = $scope.anaCtrl.active_qo;
 		
 		scriptCtrl.values = [];
+		scriptCtrl.openAdvRModal = openAdvRModal;
 		scriptCtrl.columnToRemap = {
 				value : {}
 		};
 	
-		//this function checks if the script inputs have any user specified defaults in the script input metadata
-		function autoFillDefaults (){
-			var sc_metadata = scriptCtrl.analysisService.cache.scriptMetadata;
-			
-			if(sc_metadata){
-				var columns = scriptCtrl.queryService.cache.columns;
-				var scriptOptions= scriptCtrl.queryService.queryObject.scriptOptions;
-				
-				if(sc_metadata && columns) {
-					if(!scriptOptions)//create scriptoptions object so that properties can be added dynamically later
-						scriptOptions = {};
-					
-					if(sc_metadata.hasOwnProperty("inputs")) {
-						for(var i in sc_metadata.inputs) {//
-							var input = sc_metadata.inputs[i];
-							if(input.type == "column") {
-								for(var j in columns) {//loop thru columns to find match for defaults
-									var column = columns[j];
-									if(input.hasOwnProperty("defaults")) {//check if input has default property
-										if(column.metadata.title == input['defaults']) {//if match is found
-											scriptOptions[input.param] = column;//assign column
-											break;
-										}
-									}
-									else{//if no default is specified
-										scriptOptions[input.param] = null;//empty object without default value filled in
-									}
-								}// end of column iteration
-							} 
-							else if(input.type == "value" || input.type == "options") {
-								scriptOptions[input.param] = input['defaults'];
-							}
-							
-							//scriptCtrl.validatequery();
-						}// end of metadata input iteration
-						
-						//scriptCtrl.validatequery();
-					}
-				}
-			}
-		};
-		
-		function validateQuery(){
-			var qo = scriptCtrl.queryService.queryObject;
-			
-			var isQueryValid = true;
-			var validationStatus= "Query is valid.";
-			//validate datatable
-			if(!qo.dataTable){
-				validationStatus = "Input data has not been selected";
-				isQueryValid = false;//setting false
-				setQueryObjectParams();
-				return;
-			}
-			
-			//validate script
-			//if script has not been selected
-			if(qo.scriptSelected == null || qo.scriptSelected == "")
-			{
-				validationStatus = "Script has not been selected.";
-				isQueryValid = false;
-				setQueryObjectParams();//setting false
-				return;
-			}
-			
-			
-			//validate options
-			if(qo.scriptOptions){//if they exist validate them
-				var g = 0;
-				var counter = Object.keys(scriptCtrl.analysisService.cache.scriptMetadata.inputs).length;
-				for(var f = 0; f < counter; f++) {
-					var tempObj = scriptCtrl.queryService.cache.scriptMetadata.inputs[f];
-					if(!qo.scriptOptions[tempObj.param]) {
-						validationStatus = "'" + f + "'" + " has not been selected";
-						isQueryValid = false;
-						setQueryObjectParams();//setting false
-						return;
-					}
-					else
-						g++;
-				}
-			}
-			else{
-				validationStatus = "Script - Options has not been set.";
-				isQueryValid = false;
-				setQueryObjectParams();//setting false
-				return;
-				
-			}
-			
-			setQueryObjectParams();//to set true status
-			
-			function setQueryObjectParams (){//closure function, do not move
-				
-				qo.properties.validationStatus = validationStatus;
-				qo.isQueryValid = isQueryValid;
-			};
-			
-		};
-		function toggleButton (input) {
-			
-			if (scriptCtrl.queryService.queryObject.scriptOptions[input.param] == input.options[0]) {
-				scriptCtrl.queryService.queryObject.scriptOptions[input.param] = input.options[1];
-			} else {
-				scriptCtrl.queryService.queryObject.scriptOptions[input.param] = input.options[0];
-			}
-		};
-		
 		//watches for change in computation engine
-		$scope.$watch(function(){
-			return scriptCtrl.active_qo.Computation_Engine.value;
-		}, function(){
-			if(scriptCtrl.active_qo.Computation_Engine.value)
-				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
-		});
-		
-		//USING WEAVECOREJS
-//		scriptCtrl.active_qo.Computation_Engine.addImmediateCallback(this, function(){
-//			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.Computation_Engine.value);
+//		$scope.$watch(function(){
+//			return scriptCtrl.active_qo.ComputationEngine.value;
+//		}, function(){
+//			if(scriptCtrl.active_qo.ComputationEngine.value)
+//				scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.ComputationEngine.value);
 //		});
 		
+		//USING WEAVECOREJS
+		scriptCtrl.active_qo.ComputationEngine.addImmediateCallback(this, function(){
+			scriptCtrl.analysisService.getListOfScripts(true, scriptCtrl.active_qo.ComputationEngine.value);
+		}, true);
 		
+		function openAdvRModal () {
+			$scope.anaCtrl.openAdvRModal();
+		} ;
 		
 		//watches for change in script selected
 		$scope.$watch(function(){
-			return scriptCtrl.active_qo.script_Selected.value;
+			return scriptCtrl.active_qo.scriptSelected.value;
 		}, function() {
-			if(scriptCtrl.active_qo.script_Selected.value)
-				scriptCtrl.getScriptMetadata(scriptCtrl.active_qo.script_Selected.value, true);
+			if(scriptCtrl.active_qo.scriptSelected.value)
+				scriptCtrl.getScriptMetadata(scriptCtrl.active_qo.scriptSelected.value, true);
 		});
 		
 		
 		//clears scrip options when script clear button is hit
 		function getScriptMetadata (scriptSelected, forceUpdate){
 			if(scriptSelected)
-				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
-				then(function(result){
-					scriptCtrl.scriptOptions = [];//clear
-					scriptCtrl.scriptOptions = result.inputs;
-				});
+//				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
+//				then(function(result){
+//					scriptCtrl.scriptOptions = [];//clear
+//					scriptCtrl.scriptOptions = result.inputs;
+//				});
+				scriptCtrl.scriptOptions =[{
+					"type": "column",
+					"param": "Year",
+					"description": "Time variable",
+					"columnType": "time",
+					"defaults": "year",
+					"dataSource" : null
+				}];
 			else
 				scriptCtrl.analysisService.cache.scriptMetadata = {};
 		};
@@ -624,6 +563,81 @@ if(!this.wa)
 	}//end of controller definition
 	
 })();
+/**
+ * controller for the error log that is universal to all tabs
+ * Also includes the service for logging errors
+ */
+(function(){
+	angular.module('weaveAnalyst.errorLog', []);
+	
+	/////////////////////
+	//CONTROLLERS
+	/////////////////////
+	
+	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
+
+	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
+	function analystErrorLogController($modal, errorLogService){
+		var aEl = this;
+		aEl.errorLogService = errorLogService;
+		aEl.openErrorLog = function(){
+			$modal.open(aEl.errorLogService.errorLogModalOptions);
+		};
+	}
+	
+	
+	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
+	errorLogInstanceController.$inject= ['errorLogService'];
+	function errorLogInstanceController(errorLogService){
+		var inst_Ctrl = this;
+		
+		inst_Ctrl.errorLogService = errorLogService;
+	};
+	
+	/////////////////
+	//SERVICES
+	/////////////////
+	
+	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
+	errorLogService.$inject = ['$modal'];
+	
+	function errorLogService ($modal){
+
+		var that = this;
+		that.logs = "";
+		
+		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: true,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/errorLog/analystErrorLog.html',
+		         controller: 'errorLogInstanceController',
+		         controllerAs : 'inst_Ctrl',
+		         windowClass : 'errorLog-modal'
+			};
+		
+		that.showErrorLog = false;
+		//function to pop open the error log when required
+		that.openErrorLog = function(error){
+			that.logInErrorLog(error);
+			$modal.open(that.errorLogModalOptions);
+		};
+
+		/**
+		 *this is the function that will be used over all tabs to log errors to the error log
+		 *@param the string you want to log to the error log
+		 */
+		that.logInErrorLog = function(error){
+			this.logs += error  + new Date().toLocaleTimeString();
+		};
+		
+	};
+	
+})();//end of IIFE
+
+
+
 /**
  * this directive contains the UI and logic for the correlation Matrix
 @author spurushe
@@ -971,81 +985,6 @@ if(!this.wa)
 			
 })();
 /**
- * controller for the error log that is universal to all tabs
- * Also includes the service for logging errors
- */
-(function(){
-	angular.module('weaveAnalyst.errorLog', []);
-	
-	/////////////////////
-	//CONTROLLERS
-	/////////////////////
-	
-	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
-
-	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
-	function analystErrorLogController($modal, errorLogService){
-		var aEl = this;
-		aEl.errorLogService = errorLogService;
-		aEl.openErrorLog = function(){
-			$modal.open(aEl.errorLogService.errorLogModalOptions);
-		};
-	}
-	
-	
-	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
-	errorLogInstanceController.$inject= ['errorLogService'];
-	function errorLogInstanceController(errorLogService){
-		var inst_Ctrl = this;
-		
-		inst_Ctrl.errorLogService = errorLogService;
-	};
-	
-	/////////////////
-	//SERVICES
-	/////////////////
-	
-	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
-	errorLogService.$inject = ['$modal'];
-	
-	function errorLogService ($modal){
-
-		var that = this;
-		that.logs = "";
-		
-		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
-				 backdrop: true,
-		         backdropClick: true,
-		         dialogFade: true,
-		         keyboard: true,
-		         templateUrl: 'src/errorLog/analystErrorLog.html',
-		         controller: 'errorLogInstanceController',
-		         controllerAs : 'inst_Ctrl',
-		         windowClass : 'erroLog-modal'
-			};
-		
-		that.showErrorLog = false;
-		//function to pop open the error log when required
-		that.openErrorLog = function(error){
-			that.logInErrorLog(error);
-			$modal.open(that.errorLogModalOptions);
-		};
-
-		/**
-		 *this is the function that will be used over all tabs to log errors to the error log
-		 *@param the string you want to log to the error log
-		 */
-		that.logInErrorLog = function(error){
-			this.logs += error  + new Date().toLocaleTimeString();
-		};
-		
-	};
-	
-})();//end of IIFE
-
-
-
-/**
  *this tree is an d3 interactive interface for creating the nested query object. 
  *@shwetapurushe
  */
@@ -1365,6 +1304,16 @@ if(!this.wa)
 	{
 		
 		var that = this; // point to this for async responses
+		that.queryObjectCollection;
+		that.active_qo;
+		that.active_qoName;
+		
+		this.cache = {
+				columns : [],
+				dataTableList : [],
+				filterArray : [],
+				numericalColumns : []
+		};
 		
 		this.queryObject = {
 				title : "Beta Query Object",
@@ -1439,12 +1388,32 @@ if(!this.wa)
 		};    		
 	    
 		
-		this.cache = {
-				columns : [],
-				dataTableList : [],
-				filterArray : [],
-				numericalColumns : []
+		
+		that.init_sessioned_qos = function(){
+			
+			/**************
+			******** QUERY OBJECT COLLECTION
+			**************/
+			that.queryObjectCollection = WeaveAPI.globalHashMap.requestObject("queryObjects",  weavecore.LinkableHashMap);
+			
+			//TODO call this line to the UI for creation of new QO and addition to collection
+			/**************
+			******** DEFAULT QUERY OBJECT
+			**************/
+			that.active_qo = that.queryObjectCollection.requestObject("",  wa.QueryObject);//dynamically create name every time
+			
+			that.active_qoName = WeaveAPI.globalHashMap.requestObject("active_qo", weavecore.LinkableString);//value is empty
+			that.active_qoName.value = that.queryObjectCollection.getName(that.active_qo);//setting the value here
 		};
+		
+		//INIT QUERY OBJECT COLLECTION
+		that.init_sessioned_qos();
+		
+		that.populate_qo = function(in_qo){
+			WeaveAPI.SessionManager.setSessionState(that.active_qo, in_qo);
+		};
+		
+		
 		/**
 	     * This function wraps the async aws runScript function into an angular defer/promise
 	     * So that the UI asynchronously wait for the data to be available...
@@ -3338,11 +3307,85 @@ angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compi
   };
 });
 /**
+ *this file contains utlity functions for making the weave analyst support features present in the R GUI
+ * @shweta purushe 
+ */
+
+(function(){
+	angular.module('weaveAnalyst.utils').service('rUtils', rUtils);
+	
+	rUtils.$inject = ['$q', 'runQueryService', 'computationServiceURL'];
+	function rUtils($q, runQueryService, computationServiceURL){
+		var that = this; 
+		that.rPath; //stores the path of the user's R installation 
+		that.rInstalled_pkgs = [];
+		
+		that.getRMirrors = function(){
+			
+		};
+		
+		//gets a list from the library folder of the installed R version
+		that.getInstalled_R_Packages = function(){
+			console.log("retreiving installed R packages");
+			
+			var deferred = $q.defer();
+			var rpath = "C:\\Program Files\\R\\R-3.1.2\\library";//hard coded for now
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackages.R", {path: rpath}],function (result){ 
+				var data = result.resultData;
+				for(var i = 0; i < data[0].length; i++){//figure way around hard coding
+					var obj = {};
+					obj.Package = data[0][i];
+					obj.Version = data[1][i];
+					that.rInstalled_pkgs.push(obj);
+				}
+				
+				deferred.resolve(that.rInstalled_pkgs);
+			}, 
+			function (error){ deferred.reject(error);}
+			);
+			
+			return deferred.promise;
+		};
+		
+		that.get_package_funcs = function(package_name){
+			
+		};
+	}
+})();
+/**
  *this object represents the over arching global object for the Weave Analyst
  *@author shweta purushe 
  */
 if(!this.wa)
 	this.wa = {};
+
+
+(function(){
+	
+	Object.defineProperty(ScriptInputs, 'NS', {
+        value: 'wa'
+    });
+
+	Object.defineProperty(ScriptInputs, 'CLASS_NAME', {
+        value: 'ScriptInputs'
+	});
+	
+	function ScriptInputs (){
+		
+		 Object.defineProperty(this, 'sessionable', {
+	           value: true
+	       });
+		 
+		 Object.defineProperty(this, 'columns', {
+			 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableVariable([]))
+		 });
+		 
+	}
+	
+	window.wa.ScriptInputs = ScriptInputs;
+})();
+
+
 
 (function(){
 	
@@ -3369,17 +3412,22 @@ if(!this.wa)
 		 value : new Date()
 	 });
 	 
-	 Object.defineProperty(this, 'Computation_Engine', {
+	 Object.defineProperty(this, 'ComputationEngine', {
            value: WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
        });
 	 
-	 Object.defineProperty(this, 'script_Selected', {
+	 Object.defineProperty(this, 'scriptSelected', {
 		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
 	 });
 		
 	 Object.defineProperty(this, 'title', {
 		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
 	 });
+	 
+	 Object.defineProperty(this, 'scriptOptions', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new wa.ScriptInputs())
+	 });
+	 
 		
 	}
 	
@@ -3388,10 +3436,6 @@ if(!this.wa)
 })();
 
 
-
-angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
-
-});
 angular.module('weaveAnalyst.AnalysisModule').controller('byVariableCtrl', function(){
 
 }); 
@@ -3660,6 +3704,9 @@ treeUtils.getSelectedNodes = function(treeId) {
 	return selectedNodes;
 };
 
+angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
+
+});
 /**
  * this service deals with login credentials
  */
@@ -4146,6 +4193,7 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
  * this component represents one ui crumb in the hierarchy
  * TODO import this as bower module from GITHUB
  * */
+var shanti;
 (function (){
     angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
 
@@ -4153,6 +4201,9 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
     function selectorPillComponent () {
         return {
             restrict: 'E',
+            scope:{
+            	column :'='
+            },
             templateUrl:"src/utils/crumbs/crumbPartial.html" ,
             controller: sPillController,
             controllerAs: 'p_Ctrl',
@@ -4171,6 +4222,8 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
         p_Ctrl.display_Siblings = display_Siblings;
         p_Ctrl.add_init_Crumb = add_init_Crumb;
         p_Ctrl.manage_Crumbs = manage_Crumbs;
+        p_Ctrl.populate_Defaults = populate_Defaults;
+        p_Ctrl.get_trail_from_column = get_trail_from_column;
 
         p_Ctrl.showList = false;
 
@@ -4180,6 +4233,24 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
         p_Ctrl.crumbTrail = [];
         p_Ctrl.crumbLog = [];
 
+        shanti = p_Ctrl;
+        scope.$watch('p_Ctrl.column', function(){
+        	if(p_Ctrl.column.defaults)
+        		p_Ctrl.populate_Defaults();
+        });
+        
+        function populate_Defaults (){
+        	//clear existing logs and trails
+        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
+        	//create the new trail starting from the column
+        };
+        
+        function get_trail_from_column (in_column){
+        	var trailObj = {trail : [], logs : []};
+        	
+        	
+        	return trailObj;
+        };
 
         function manage_Crumbs(i_node){
             /*1. check if it is the previously added node*/
@@ -4267,7 +4338,7 @@ angular.module('weaveAnalyst.configure.script').service("scriptManagerService", 
 
         function display_Siblings(i_node){
             p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node)
+            p_Ctrl.WeaveService.display_Options(i_node);
         }
     }
 })();
@@ -4514,7 +4585,7 @@ if(!this.wa.d3_viz){
 	//initializes the heat map 
 	p.initialize_heatMap = function(config){
 		
-		this._margin =  {top: 50, right: 200, bottom: 50, left: 50};
+		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
 		this._container = config.container;
 		
 		this._width = this._container.offsetWidth - this._margin.left;
@@ -4580,6 +4651,7 @@ if(!this.wa.d3_viz){
 	      .attr("fill", 'darkOrange')
 	      .attr("text-anchor", "end")
 	      .text(function(d, i) { return hmObj._labels[i]; });
+	    
 
 	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
 		    			.data(function (d,i)
@@ -4588,7 +4660,7 @@ if(!this.wa.d3_viz){
 				    				{ 
 				    					return {value: a, row: i};} ) ;
 							})//returning a key function
-			           .enter().append("svg:rect")
+			            .enter().append("svg:rect")
 			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
 			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
 			             .attr("width", hmObj._rowScale(1))
@@ -4602,6 +4674,30 @@ if(!this.wa.d3_viz){
 			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
 			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
 			             							 d3.select(this).style('stroke-opacity', 0);});
+	    
+	    //TEMPORARY SOLUTION for getting column names
+	    var btm_Label_g = hmObj._rowObjects[0][3];
+	    
+	   console.log("entire g element", btm_Label_g);
+	   console.log("the object", d3.select(btm_Label_g));
+	    
+	   var x = d3.select(btm_Label_g)
+	    .data(hmObj._labels)
+	    .enter()
+	    .append('g');
+	   
+	   
+	   console.log("four gs", x);
+	    
+	    
+//	    .append("text")
+//	    .attr("x", -1)
+//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
+//	    .attr("dy", "0.25")
+//	    .attr("fill", 'darkOrange')
+//	    .text(function(d, i) {
+//	    	console.log(d);
+//	    	return hmObj._labels[i]; });
 	};
 	
 	//sets the color of the heat map
@@ -6060,6 +6156,7 @@ if(!this.wa.d3_viz){
             {
                 if(!that.weave_Tree){
                     that.weave_Tree = new that.weave.WeaveTreeNode();
+                    console.log("creating new Weave Tree");
                     return that.weave_Tree;
                 }
                 else

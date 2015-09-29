@@ -49,7 +49,7 @@
 		         templateUrl: 'src/errorLog/analystErrorLog.html',
 		         controller: 'errorLogInstanceController',
 		         controllerAs : 'inst_Ctrl',
-		         windowClass : 'erroLog-modal'
+		         windowClass : 'errorLog-modal'
 			};
 		
 		that.showErrorLog = false;
