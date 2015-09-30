@@ -62,9 +62,11 @@ public class AwsRService implements IScriptEngine//TODO extends RserviceUsingRse
 	
 			rConnection.assign("scriptPath", scriptAbsPath);
 			
-			for(String key : scriptInputs.keySet()) {
-				REXP check = getREXP(scriptInputs.get(key));
-				rConnection.assign(key, check);
+			if(scriptInputs != null){
+				for(String key : scriptInputs.keySet()) {
+					REXP check = getREXP(scriptInputs.get(key));
+					rConnection.assign(key, check);
+				}
 			}
 			
 			Vector<String> names = null;
