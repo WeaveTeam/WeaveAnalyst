@@ -11,9 +11,26 @@
 		var that = this; 
 		that.rPath; //stores the path of the user's R installation 
 		that.rInstalled_pkgs = [];
+		that.cran_mirrors = [];
 		
 		that.getRMirrors = function(){
-			
+			if(that.cran_mirrors.length > 1)
+				return that.cran_mirrors;
+			else{
+				console.log("retrieving CRAN mirrors");
+				var deferred = $q.defer();
+				
+				runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts',["getMirrors.R", null], function(result){
+					that.cran_mirrors = result.resultData[0];
+					console.log("result", that.cran_mirrors);
+					deferred.resolve(that.cran_mirrors);
+				},
+				function(error){
+					deferred.reject(error);
+				});
+				
+				return deferred.promise;
+			}
 		};
 		
 		//gets a list from the library folder of the installed R version

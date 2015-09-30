@@ -21,7 +21,7 @@
 		anaCtrl.openAdvRModal = openAdvRModal;
 		
 		anaCtrl.advR_modal_opts = {
-		          backdrop: true,
+				backdrop: false,
 		          backdropClick: true,
 		          dialogFade: true,
 		          keyboard: true,
@@ -60,6 +60,8 @@
 		var adCtrl = this;
 		adCtrl.rUtils = rUtils;
 		adCtrl.getInstalled_R_Packages = getInstalled_R_Packages;
+		
+		adCtrl.rUtils.getRMirrors();//getting list of CRAN mirrors
 		
 		adCtrl.gridOptions = {
 			columnDefs : [

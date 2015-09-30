@@ -2062,6 +2062,11 @@ li:hover{
     border: none;
 }
 
+.pkg_grid{
+	width: 100%;
+	height: 200px;
+}
+
 
 /* contains the styles for the data_stats module*/
 
