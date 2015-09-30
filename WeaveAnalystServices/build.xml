@@ -1,22 +1,23 @@
 <project name="WeaveAnalystServices" basedir="." default="dist">
-	<property environment="env"/>
-    <property name="TOMCAT_HOME" value="${env.TOMCAT_HOME}"/>
     <echo message="Start ant build"/>
+	
 	<path id="classpath">
         <fileset dir="lib" includes="**/*.jar"/>
 		<fileset dir="../Weave/WeaveServices/lib/" includes="**/*.jar"/>
         <fileset dir="../Weave/WeaveServletUtils/lib/" includes="**/*.jar"/>
 		<pathelement path="../Weave/WeaveServletUtils/bin/classes"/>
         <pathelement path="../Weave/WeaveServices/bin/classes"/>
- 		<pathelement path="${TOMCAT_HOME}/lib/servlet-api.jar"/>
+        <fileset dir="lib" includes="servlet-api.jar"/>
     </path>
 	<echo message="Done setting path"/>
+	
     <target name="clean">
     	<echo message="Deleting..."/>
         <!--<delete dir="build"/>-->
 		<delete dir="bin"/>
     </target>
 	<echo message="Done cleaning"/>
+	
     <target name="build" depends="clean">
 		<echo message="Compiling ${ant.project.name}..."/>
         <mkdir dir="bin/classes"/>
@@ -26,9 +27,9 @@
     	
         <copy file="../Weave/WeaveServices/src/weave/config/sqlconfig.dtd" tofile="build/classes/weave/config/sqlconfig.dtd"/>
     </target>
+	
     <target name="dist" depends="build">
-    	
-        <mkdir dir="bin"/>
+    	<mkdir dir="bin"/>
         <war destfile="bin/WeaveAnalystServices.war" webxml="WebContent/WEB-INF/web.xml">
             <lib dir="lib/"/>
 			<lib dir="../Weave/WeaveServices/lib"/>
@@ -40,6 +41,7 @@
             <metainf dir="WebContent/META-INF"/>
         </war>
     </target>
+	
     <target name="doc">
         <echo message="Building docs for ${ant.project.name}..."/>
         <mkdir dir="${basedir}/javadoc/"/>
@@ -50,4 +52,5 @@
             <fileset dir="${basedir}/../Weave/WeaveServletUtils/" includes="**/*.java"/>
         </javadoc>
     </target>
+	
 </project>

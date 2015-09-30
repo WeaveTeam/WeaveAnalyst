@@ -1,0 +1,62 @@
+<div class="modal-header">
+	<button type="button" class="close" ng-click="$dismiss()">
+					&times;
+	</button>
+          	<h4 style="color: #3276B1">Create a new project</h4>
+          	<h5>Choose query object(s) to add to a project</h5>
+</div>
+
+<div class="modal-body" >
+	<table style = "width:100%">
+		<tr>
+			<td>Name of the Project</td>
+			<td><input style = "width:100%; padding-bottom : 5px"
+					   ng-model = "pam.projectNameEntered" type = "text"></td>
+		</tr>
+		
+		<tr>
+			<td>Username for the Project</td>
+			<td><input style = "width:100%; padding-bottom : 5px"
+					   ng-model = "pam.userNameEntered" type = "text"></td>
+		</tr>
+		
+		<tr>
+			<td>Project Description</td>
+			<td><textarea style = "width:100%; overflow-y : scroll; resize : none" type = "text"
+					  ng-model = "pam.projectDescriptionEntered" >
+			</textarea></td>
+		</tr>
+		
+		<tr>
+			<td>Add query objects (.json) files</td>
+<!-- 			<td ng-if= "!uploadStatus"><font color="red" >No file uploaded</font></td> -->
+<!-- 			<td>{{uploadStatus}}</td>  -->
+			
+			<td> <label class='btn btn-primary' style = "width: 80px; height: 30px; float:left">Upload<input fileread="pam.uploaded.QueryObject" class='file-upload' type='file'/></label></td>
+		</tr>
+		
+	
+		
+		
+		<tr>
+		<td>
+			<ul ng-repeat="file in pm.uploadedObjects.queryObjectTitles">
+				<li>
+					<span class="prj-txt-lbl"> {{file}}</span> 
+					<button type="button" class="close" ng-click ="pam.remove(file)"><i class="fa fa-times"></i></button>
+				</li>
+			</ul>
+		</td>
+		</tr>
+		
+		
+	</table>
+</div>
+
+<div class="modal-footer">
+			{{uploadStatus}}
+			<button type="button" class= "btn btn-primary" ng-click = "pam.saveQueryObjects(pam.projectNameEntered, pam.projectDescriptionEntered, pam.userNameEntered)">
+			Save
+			</button>
+		<div ng-if= "!pam.uploadStatus"><font color="red" >No file uploaded</font></div>
+</div>

@@ -1,0 +1,82 @@
+<div class="panel-body" ng-controller = "AttributeMenuController">
+		
+		<ul class="input-controls">
+		<table>
+			<tr>	
+				<td>
+					<input   type="checkbox"
+							 ng-model="tool.enabled"/>
+				</td>
+				
+				<td style="padding-left: 5px;">
+					Enable
+				</td>
+			</tr>
+			<tr>
+				<td>
+					 Title:
+				</td>
+				<td style="padding-left: 5px;">
+					<input  style = "width : 100%" type="text"
+							placeholder="Default" 
+							ng-model="tool.title"/>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>Visualization tool</td>
+				<td style="padding-left: 5px;">
+					<ui-select ng-model="tool.selectedVizTool" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select a tool...">{{$select.selected}}</ui-select-match>
+						<ui-select-choices  repeat="tool in WeaveService.toolsEnabled| filter : $select.search">
+				       		 <div ng-bind-html="tool | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>Tool attribute</td>
+				<td style="padding-left: 5px;">
+					<ui-select ng-model="tool.vizAttribute" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select attribute...">{{$select.selected.title}}</ui-select-match>
+						<ui-select-choices group-by="'plotLayer'"  repeat="attr in vizAttributeColl | filter : {title: $select.search}">
+				       		 <div ng-bind-html="attr.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+			
+			<tr>
+			
+				<td>
+					Attributes
+				</td>
+			
+				<td style="padding-left: 5px;">
+					<ui-select ng-model="tool.columns" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" >{{$item.title}}</ui-select-match>
+						<ui-select-choices group-by="'dataSourceName'" repeat="column in queryService.queryObject.resultSet | filter : { title : $select.search }">
+				       		 <div ng-bind-html="column.title | highlight: $select.search"></div>
+				        </ui-select-choices>
+					</ui-select>
+					
+				</td>
+			</tr>
+			
+			<tr>
+				<td>List Control</td>
+				<td>
+					<ul ng-repeat = "attr in tool.columns">
+					<li ng-class = "{'activeListItem' :status}" ng-mouseenter = "status= true" ng-mouseleave = "status = false"
+					ng-click = "setAttributes(attr)">
+					{{attr.title}}</li>
+					</ul>
+				</td>
+			</tr>
+			
+		
+		</table>
+	</ul>
+</div>
+

@@ -1,58 +1,90 @@
 'use strict';
+//                                 
+//                                 'ui.sortable',
+//Using IIFEs
 
-var app = angular.module('aws', [//'aws.router', // for app structure (can be cleaned)
-                                 //'aws.analysis', 
-                                 'ngAnimate', // Angular Library
-                                 'ngSanitize',
-                                 'angularSpinner',
-                                 'mgcrea.ngStrap',
-                                 'ui.select',
-                                 'ui.bootstrap',
-                                 'ui.sortable', // Shweta Needs, comes from angular-strap???
-                                 //'ngRoute',
-                                 'ngGrid', // Angular UI library
-                                 'ui.router',
-                                 'mk.editablespan', // Directive for editing values.
-                                 'aws.configure', //Both script and metadata managers
-                                 'aws.dataStatistics',
-                                 'aws.directives', // high level directives don't agree with current location
-                                 'aws.queryObject', // queryService.. this needs to be reconciled                               
-                                 'aws.queryObjectEditor', // Shweta's module
-                                 'aws.project',  // shweta's module
-                                 'aws.errorLog',
-                                 'aws.AnalysisModule',
-                                 'aws.WeaveModule',
-                                 'aws.QueryHandlerModule'
-                               ]); 
+if(!this.wa)
+	this.wa = {};
+(function($stateProvider, $urlRouterProvider, $rootScope){
 
-app.run(['$rootScope', function($rootScope){
-	$rootScope.$safeApply = function(fn, $scope) {
-			if($scope == undefined){
-				$scope = $rootScope;
-			}
-			fn = fn || function() {};
-			if ( !$scope.$$phase ) {
-        	$scope.$apply( fn );
-    	}
-    	else {
-        	fn();
-    	}
-	};
-}])
-.config(function($stateProvider, $urlRouterProvider, $parseProvider) {
+	angular.module('weaveAnalyst',['ui.router',
+	                               'ui.grid',
+	                               'ui.grid.treeView',
+	                               'ui.grid.expandable',
+	                               'ui.grid.pinning',
+	                               'ui.grid.selection',
+	                               'ui.layout',
+	                               'ui.select',
+	                               'ui.tree', 
+	                               'mk.editablespan',
+	                               'ngAnimate',
+	                               'mgcrea.ngStrap',
+	                               'ui.bootstrap',
+	                               'angularSpinner',
+	                               'ngSanitize',
+	                               'weaveAnalyst.utils',
+	                               'weaveAnalyst.configure',
+	                               'weaveAnalyst.dataStatistics',
+	                               //'weaveAnalyst.queryObjectEditor', 
+	                               'weaveAnalyst.project',
+	                               'weaveAnalyst.errorLog',
+	                               'weaveAnalyst.nested_qo',
+	                               'weaveAnalyst.AnalysisModule',
+	                               'weaveAnalyst.WeaveModule',
+	                               'weaveAnalyst.run']);
+
 	
-	$parseProvider.unwrapPromises(true);
+	angular.module('weaveAnalyst.configure', ['weaveAnalyst.configure.auth',
+	                                          'weaveAnalyst.configure.metadata',
+	                                          'weaveAnalyst.configure.script']);
+	
+	angular.module('weaveAnalyst').run(['$rootScope', function($rootScope){
+		
+		var x = $rootScope;
+		var gh = WeaveAPI.globalHashMap;
+		
+		gh.addGroupedCallback({}, function (){
+			$rootScope.$apply();
+		});
+		
+		gh.requestObject("qo1",  wa.QueryObject);
+		var active_qo = gh.requestObject("active_qo",  weavecore.LinkableString);
+		active_qo.value = "qo1";
+//		$rootScope.$safeApply = function(fn, $scope) {
+//				if($scope == undefined){
+//					$scope = $rootScope;
+//				}
+//				fn = fn || function() {};
+//				if ( !$scope.$$phase ) {
+//	        	$scope.$apply( fn );
+//	    	}
+//	    	else {
+//	        	fn();
+//	    	}
+//		};
+	}]);
+	
+	angular.module('weaveAnalyst').config(function($stateProvider, $urlRouterProvider) {
+	
+	//$parseProvider.unwrapPromises(true);
 	
 	$urlRouterProvider.otherwise('/index');
 	
 	$stateProvider
 		.state('index', {
-			url : '/index'
+			url:'/projects',//projects is the entry point into the app
+	    	templateUrl : 'src/project/projectManagementPanel.html',
+	    	controller : 'ProjectManagementController',
+	    	controllerAs : 'prjtCtrl',
+	    	data: {
+	    		activetab : 'project'
+	    	}
 		})
 		.state('metadata', {
 			url:'/metadata',
 			templateUrl : 'src/configure/metadata/metadataManager.html',
-			controller: 'MetadataManagerCtrl',
+			controller: 'MetadataManagerController',
+			controllerAs : 'mDataCtrl',
 			data : {
 				activetab : 'metadata'
 			}
@@ -60,7 +92,7 @@ app.run(['$rootScope', function($rootScope){
 	    .state('script_management', {
 	    	url:'/scripts',
 	    	templateUrl : 'src/configure/script/scriptManager.html',
-	    	controller : 'ScriptManagerCtrl',
+	    	//controller : 'ScriptManagerCtrl',
 	    	data:{
 	    		activetab : 'script_management'
 	    	}
@@ -68,7 +100,8 @@ app.run(['$rootScope', function($rootScope){
 	    .state('analysis', {
 	    	url:'/analysis',
 	    	templateUrl : 'src/analysis/analysis.tpl.html',
-	    	controller: 'AnalysisCtrl',
+	    	controller: 'AnalysisController',
+	    	controllerAs : 'anaCtrl',
 	    	data : {
 	    		activetab : 'analysis'
 	    	}
@@ -76,7 +109,8 @@ app.run(['$rootScope', function($rootScope){
 	    .state('project', {
 	    	url:'/projects',
 	    	templateUrl : 'src/project/projectManagementPanel.html',
-	    	controller : 'ProjectManagementCtrl',
+	    	controller : 'ProjectManagementController',
+	    	controllerAs : 'prjtCtrl',
 	    	data: {
 	    		activetab : 'project'
 	    	}
@@ -91,7 +125,8 @@ app.run(['$rootScope', function($rootScope){
 	    .state('data_stats',{
 	    	url:'/dataStatistics',
 	    	templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-    		controller : 'dataStatsCtrl',
+    		controller : 'data_StatisticsController',
+    		controllerAs : 'ds_Ctrl',
     		data :{
     			activetab : 'data_stats'
     		}
@@ -120,105 +155,33 @@ app.run(['$rootScope', function($rootScope){
 		
 	    
 });
-
-/**********************Using ng-route***************************************/
-//.config(function($parseProvider, $routeProvider){
-//	$parseProvider.unwrapPromises(true);
-//	
-//	$routeProvider.when('/analysis', {
-//		templateUrl : 'src/analysis/analysis.tpl.html',
-//		controller : 'AnalysisCtrl',
-//		activetab : 'analysis'
-//	}).when('/metadata', {
-//		templateUrl : 'src/configure/metadata/metadataManager.html',
-//		controller : 'MetadataManagerCtrl',
-//		activetab : 'metadata'
-//	}).when('/script_management', {
-//		templateUrl : 'src/configure/script/scriptManager.html',
-//		controller : 'ScriptManagerCtrl',
-//		activetab : 'script_management'
-//	}).when('/project_management', {
-//		templateUrl : 'src/project/projectManagementPanel.html',
-//		controller : 'ProjectManagementCtrl',
-//		activetab : 'project_management'
-//	}).when('/data_stats', {
-//		templateUrl : 'src/dataStatistics/dataStatisticsMain.tpl.html',
-//		controller : 'dataStatsCtrl',
-//		activetab : 'data_stats'
-//	}).otherwise({
-//        redirectTo: '/analysis'
-//    });
-//
-//});
-/**********************Using ng-route***************************************/
-
-angular.module('aws.directives', ['aws.directives.dualListBox',
-                                  'aws.directives.fileUpload',
-                                  'aws.directives.popover-with-tpl']);
-angular.module('aws.configure', ['aws.configure.auth',
-                                 'aws.configure.metadata',
-                                 'aws.configure.script']);
-
-//using the value provider recipe 
-app.value("dataServiceURL", '/WeaveServices/DataService');
-app.value('adminServiceURL', '/WeaveServices/AdminService');
-app.value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
-app.value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
-app.value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
-app.value('WeaveDataSource', 'WeaveDataSource');
-
-app.controller('AWSController', function($scope,$rootScope, $state, authenticationService,usSpinnerService, queryService, WeaveService) {
-	//for ng-route
-	//$scope.$route = $route;
+	
+	angular.module('weaveAnalyst').controller('weaveAnalystController',weaveAnalystController );
+	
+	weaveAnalystController.$inject = ['$state','authenticationService', 'WeaveService'];
+	function weaveAnalystController ($state,authenticationService, WeaveService){//treating controllers as a constructor
+		
+		var wa_main = this;
+		
+		wa_main.state = $state;
+		wa_main.authenticationService = authenticationService;
+		wa_main.WeaveService = WeaveService;
+		
+		//launching Weave
+		wa_main.WeaveService.launch_Weave();
+	};
 	
 	
-	 $scope.startSpin = function() {
-    if (!$scope.spinneractive) {
-    	console.log("starting spinner");
-      usSpinnerService.spin('spinner-1');
-    }
-  };
+	//using the value provider recipe 
+	angular.module('weaveAnalyst').value("dataServiceURL", '/WeaveServices/DataService');
+	angular.module('weaveAnalyst').value('adminServiceURL', '/WeaveServices/AdminService');
+	angular.module('weaveAnalyst').value('projectManagementURL', '/WeaveAnalystServices/ProjectManagementServlet');
+	angular.module('weaveAnalyst').value('scriptManagementURL', '/WeaveAnalystServices/ScriptManagementServlet');
+	angular.module('weaveAnalyst').value('computationServiceURL', '/WeaveAnalystServices/ComputationalServlet');
+	angular.module('weaveAnalyst').value('WeaveDataSource', 'WeaveDataSource');
 
-  $scope.stopSpin = function() {
-    if ($scope.spinneractive) {
-    	console.log("stoppingg spinner");
-      usSpinnerService.stop('spinner-1');
-    }
-  };
-  $scope.spinneractive = false;
 
-  $rootScope.$on('us-spinner:spin', function(event, key) {
-    $scope.spinneractive = true;
-  });
 
-  $rootScope.$on('us-spinner:stop', function(event, key) {
-    $scope.spinneractive = false;
-  });
+})();//end of IIFE
 
-	$scope.state = $state;
-	$scope.authenticationService = authenticationService;
-	
-	$scope.$on('queryObjectloaded', function(event,incoming_queryObject){
-		queryService.queryObject = incoming_queryObject;
-		if(WeaveService.checkWeaveReady()){
-			if(incoming_queryObject.weaveSessionState)
-				WeaveService.weave.path().state(incoming_queryObject.weaveSessionState);
-		}
-			
-	});
-	
-	$scope.$watch(function() {
-		return WeaveService.weave;
-	}, function() {
-		if(WeaveService.checkWeaveReady()) 
-		{
-			//$scope.showToolMenu = true;
-			
-			if(queryService.queryObject.weaveSessionState) {
-				WeaveService.weave.path().state(queryService.queryObject.weaveSessionState);
-			}
-		}
-	});
-	
 
-});

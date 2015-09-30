@@ -14,6 +14,7 @@ import weave.config.AwsContextParams;
 import weave.config.WeaveContextParams;
 import weave.models.computations.AwsRService;
 import weave.models.computations.AwsStataService;
+import weave.models.computations.ScriptResult;
 import weave.utils.AWSUtils;
 import weave.utils.SQLUtils.WhereClause.NestedColumnFilters;
 
@@ -38,6 +39,7 @@ public class ComputationalServlet extends WeaveServlet
 	private String tempDirPath = "";
 	private String stataScriptsPath = "";
 	private String rScriptsPath = "";
+	private String built_inScriptsPath = "";
 	private AwsRService rService = null;
 	private StringMap<Object> scriptInputs = new StringMap<Object>();
 	
@@ -54,10 +56,24 @@ public class ComputationalServlet extends WeaveServlet
 		
 		stataScriptsPath = AwsContextParams.getInstance(config.getServletContext()).getStataScriptsPath();
 		rScriptsPath = AwsContextParams.getInstance(config.getServletContext()).getRScriptsPath();
+		built_inScriptsPath = rScriptsPath + "/built/";
 	}
 
 	private static final long serialVersionUID = 1L;
-
+	
+	public String [] getInstalledPackages(String scriptName) throws Exception
+	{
+		String [] packages = null;
+		try {
+			runScript(scriptName);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return packages;
+	}
+	
 	/**
 	 * 
 	 * @param scriptInputs the columns to be sent as parameters to the script
@@ -131,6 +147,25 @@ public class ComputationalServlet extends WeaveServlet
  		
 		return numRows;
 	}
+	
+	
+	//TODO create a concise version of runScripts to run user defined scripts and built in scripts
+	public Object runBuiltScripts( String scriptName, StringMap<Object> inputs) throws Exception {
+		Object result = null;
+		
+		try{
+			rService = new AwsRService();
+			result = rService.runScript(FilenameUtils.concat(built_inScriptsPath, scriptName), inputs);
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		};
+		
+		scriptInputs.clear();
+		return result;
+	}
+	
 	
 	public Object runScript(String scriptName) throws Exception
 	{

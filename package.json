@@ -1,0 +1,30 @@
+{
+  "name": "WeaveAnalyst",
+  "version": "0.9.0",
+  "description": "This app is a peer software to the visualization environment 'Weave'. It enhaces the analytic support to Weave through external open source computational engines.",
+  "main": "index.js",
+  "dependencies": {
+    "gulp": "^3.9.0"
+  },
+  "devDependencies": {
+    "gulp-concat": "^2.6.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WeaveTeam/WeaveAnalyst"
+  },
+  "keywords": [
+    "Visualization",
+    "Analysis",
+    "Weave"
+  ],
+  "author": "Shweta Purushe and Franck Kamayou",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WeaveTeam/WeaveAnalyst/issues"
+  },
+  "homepage": "https://github.com/WeaveTeam/WeaveAnalyst"
+}

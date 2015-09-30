@@ -1,0 +1,87 @@
+<div class= "dd3-content d-list-content" ng-if ="!q_cardCtrl.editMode">
+	<button class = "query-card-edit-btn" popover = "Edit Query Card" popover-trigger="mouseenter"  popover-placement="top"
+			ng-click = "q_cardCtrl.edit()" ><i class = "fa fa-pencil-square-o"></i></button>
+	
+	<div style='display : table'; inline-block;>
+	
+		<div style="width : 85%; display : table-cell">
+			<ul style="list-style:initial; padding-bottom: 20px">
+				<li>
+					<span class="prj-txt-lbl">Title: </span> 
+					<span class="prj-txt-val"> {{q_cardCtrl.item.queryObject.title}} </span>
+				</li>
+				<li>
+					<span class="prj-txt-lbl">Date: </span>
+					<span class="prj-txt-val">{{q_cardCtrl.item.queryObject.date}}</span>
+				</li>
+				<li>
+					<span class="prj-txt-lbl">Datatable: </span>
+					<span class="prj-txt-val">{{q_cardCtrl.item.queryObject.dataTable.title}}</span>
+				</li>
+				<li>
+					<span class="prj-txt-lbl">Script: </span>
+					<span class="prj-txt-val">{{q_cardCtrl.item.queryObject.scriptSelected}}</span>
+				</li>
+				<li>
+					<span class="prj-txt-lbl">Columns: </span>
+					<span class="prj-txt-val">{{q_cardCtrl.item.columns}}</span>
+				</li>
+			</ul>
+		</div>
+<!-- Contains the picture -->
+			<div>
+				<img width = "150" height = "100" 
+					 ng-src= "{{q_cardCtrl.item.thumbnail || 'css/img/ImageUnavailable.png'}}" 
+					 
+					 ng-click = "q_cardCtrl.returnSessionState(item.queryObject)">
+				 </img>
+			</div>
+	</div>
+</div>
+
+<!-- DURING EDIT MODE -->
+<div class= "dd3-content d-list-content q_cardEdit" ng-if ="q_cardCtrl.editMode">
+	Modifying : {{q_cardCtrl.item.queryObject.title}}
+	<button class = "query-card-save-btn" popover = "Save Query Card" popover-trigger="mouseenter"  popover-placement="top"
+			ng-click = "q_cardCtrl.save(q_cardCtrl.item)" ><i class = "fa fa-pencil-square-o"></i></button>
+	<div style='display : table'; inline-block;>
+	
+		<div style="width : 85%; display : table-cell">
+			<ul style="list-style:initial">
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+				<li>
+					BLah
+				</li>
+			</ul>
+		</div>
+<!-- Contains the picture -->
+			<div>
+				<img width = "150" height = "100" style = "padding-right : 10px"
+					 ng-src= "{{q_cardCtrl.item.thumbnail || 'css/img/ImageUnavailable.png'}}" 
+					 
+					 ng-click = "q_cardCtrl.returnSessionState(item.queryObject)">
+				 </img>
+			</div>
+	</div>
+		
+ 	<div class="query-btn-holder"> 
+			<button ng-click = "q_cardCtrl.deleteSpecificQueryObject(item)" class="btn btn-sm query-button">
+				Delete
+			</button>
+		
+			<button ng-click = "q_cardCtrl.openInAnalysis(item.queryObject)" class ="btn btn-sm query-button">
+				Open
+			</button>
+	</div>
+</div>

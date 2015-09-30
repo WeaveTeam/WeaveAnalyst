@@ -1,0 +1,15 @@
+<ul class="input-controls">
+		<tr>	
+			<td><input ng-model="dtCtrl.config.checked"  type="checkbox"/></td>
+			
+			<td style="padding-left: 5px;">Enable</td>
+		</tr>
+		<div class="portlet-content">
+			<ui-select multiple ng-model = "dtCtrl.config.columns" theme="select2" style="width: 100%;">
+				<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in dtCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+			</ui-select>
+		</div>
+</ul>

@@ -1,0 +1,94 @@
+<ul class="input-controls">
+		<table>
+			<tr>	
+				<td><input   type="checkbox" ng-model="bcCtrl.config.checked"/></td>
+				
+				<td style="padding-left: 5px;">Enable</td>
+			</tr>
+			<tr>
+				<td>Title:</td>
+				<td style="padding-left: 5px;">
+					<input  style = "width : 100%" type="text" placeholder="Default" ng-model="bcCtrl.config.toolName"/>
+				</td>
+			</tr>
+			
+			<tr>
+			
+				<td>Heights</td>
+			
+				<td style="padding-left: 5px;">
+					<ui-select ng-model="bcCtrl.config.heights" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+					</ui-select>
+				</td>
+			</tr>
+		
+		<tr>
+			<td>Positive Errors</td>
+			
+			<td style="padding-left: 5px;">
+				<ui-select ng-model="bcCtrl.config.posErr" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+					</ui-select>
+			</td>
+		</tr>
+			
+		<tr>
+			<td>Negative Errors</td>
+			
+			<td style="padding-left: 5px;">
+
+				<ui-select ng-model="bcCtrl.config.negErr" theme="select2" style="width: 100%;">
+				    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+					</ui-select>
+			</td>
+		</tr>	
+			
+		<tr>
+			<td>Sort</td>
+			
+			<td style="padding-left: 5px;">
+
+				<ui-select ng-model="bcCtrl.config.sort" theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+				</ui-select>
+			</td>
+		</tr>
+		
+		<tr>
+			<td>Label</td>
+			
+			<td style="padding-left: 5px;">
+
+				<ui-select ng-model=bcCtrl.config.label theme="select2" style="width: 100%;">
+			    	<ui-select-match allow-clear="true" placeholder="Select Script...">{{$item}}</ui-select-match>
+						<ui-select-choices repeat="item in bcCtrl.items | filter : $select.search">
+			       			 {{item}}
+			        	</ui-select-choices>
+				</ui-select>
+			</td>
+		</tr>
+		<tr>	
+			<td>
+				<input   type="checkbox"
+						 ng-model="tool.showAllLabels" 
+						 ng-init="tool.showAllLabels = true"/>
+			</td>
+			
+			<td style="padding-left: 5px;">Show All Axis Labels</td>
+		</tr>
+		</table>
+</ul>
+

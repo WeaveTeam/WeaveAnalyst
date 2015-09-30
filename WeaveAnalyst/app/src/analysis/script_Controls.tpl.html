@@ -1,0 +1,49 @@
+<!--Calculations -->
+<div class="databox" style="width: 80%">
+	
+	<div class="header panel-heading">
+		<h2>Calculations</h2>
+	</div>
+	
+	<div class="body">
+		<div style = "width:100%; height: 100%; float:left;">
+			<div style = "float:left" class="btn-group">
+     					<label class="btn btn-primary btn-sm" ng-model="scriptCtrl.active_qo.Computation_Engine.value" btn-radio="'R'" uncheckable>R</label>
+     					<label class="btn btn-primary btn-sm" ng-model="scriptCtrl.active_qo.Computation_Engine.value" btn-radio="'STATA'" uncheckable>Stata</label>
+<!--        					    <label class="btn btn-primary btn-sm" ng-model="scriptCtrl.queryService.queryObject.ComputationEngine" btn-radio="'PYTHON'" uncheckable>Python</label> -->
+			</div>
+			<!-- Script Select-->		
+			<div style = "width: 75%; float:left; padding-left: 5px">
+				<div style = "width: 90%; float: left" ng-class="{'unvalidatedUI' : !scriptCtrl.active_qo.script_Selected.value, 'validatedUI' : scriptCtrl.active_qo.script_Selected.value}"
+					title = "Red flags indicate required selections for query validation">
+					
+						<ui-select ng-model="scriptCtrl.active_qo.script_Selected.value" ng-change="clearScriptOptions()" theme="select2" style="width: 97%;">
+				    		<ui-select-match allow-clear="true" placeholder="Select Script...">{{$select.selected}}</ui-select-match>
+							<ui-select-choices repeat="script in scriptCtrl.analysisService.cache.scriptList | filter : $select.search">
+				       			 {{script}}
+				        	</ui-select-choices>
+						</ui-select>
+				</div>
+<!-- 										<button style = "float:left; margin-left: 10px" ><i class="fa fa-info-circle fa-lg"  -->
+<!-- 										popover = "1.This selects a script (computation) to be executed on the data. &#10;2.This must be followed by selection of script input parameters." ></i></button> -->
+			</div><!-- script select ends -->
+		
+			<br><br>
+			<!-- Script options -->	
+				<div class = 'dataNav'>
+				    <!--ONE PER SCRIPT OPTION-->
+				    <div class = "sp_pills" ng-repeat="i in scriptCtrl.scriptOptions">
+				        <!--CRUMB CONTAINER-->
+				       <!--  {{i.param}}-->
+				        <crumb-Selector></crumb-Selector>
+				    </div>
+				</div>	
+				<!-- <div ng-repeat="input in scriptCtrl.analysisService.cache.scriptMetadata.inputs">
+					<column-Menu input = "input" scriptoptions = "scriptCtrl.queryService.queryObject.scriptOptions"> </column-Menu>
+				</div> -->
+
+	</div>
+<!-- TODO enable remapping -->			
+
+	</div><!-- end of body -->
+</div>

@@ -1,94 +1,72 @@
 <div class="project-management">
-	<div >
-		<div class="prj-contents" style="width: 100%; padding-left: 40px;">
-			<div style="width: 90%;  height: 100%;" class="panel panel-default">
-
-<span us-spinner="{radius:30, width:8, length: 16}" spinner-key="spinner-1"></span>
+	<div>
+		<div class="prj-contents">
+			<div style="width: 97%;  height: 100%;" class="panel panel-default">
 
 				<div class="panel-heading">
 					<h2>Manage Query Object and Projects</h2>
 				</div>
+				
 				<div class="widget-selectors">
-<!-- Project List -->	
-						<ui-select ng-model="projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
-					    	<ui-select-match allow-clear="true" placeholder="Choose Indicator...">{{$select.selected}}</ui-select-match>
-							<ui-select-choices repeat="project in projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
-					       		 <div ng-bind-html="project | highlight: $select.search"></div>
+					<div style = "width:50%; display: inline-block">
+					Projects :({{prjtCtrl.projectService.cache.no_of_projects}})
+						<!-- View options -->
+						<ui-select ng-model="prjtCtrl.projectService.viewMode" theme="select2" ng-change = "prjtCtrl.construct_view()">
+							    	<ui-select-match placeholder="Choose view">{{$select.selected}}</ui-select-match>
+									<ui-select-choices repeat="view in prjtCtrl.view_modes | filter : $select.search ">{{view}}</ui-select-choices>
+						</ui-select>
+						
+						<!-- Project List	 -->
+						<ui-select 	ng-if = "prjtCtrl.projectService.viewMode == 'Compact' || prjtCtrl.projectService.viewMode == 'Detail'"
+									ng-model="prjtCtrl.projectService.cache.project.selected" popover-trigger="mouseenter" theme="select2" style="width : 100%">
+					    	<ui-select-match allow-clear="true" placeholder="Choose Project">{{$select.selected.Name}}</ui-select-match>
+							<ui-select-choices repeat="project in prjtCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
+					       		 <div ng-bind-html="project.Name | highlight: $select.search"></div>
 					        </ui-select-choices>
-						</ui-select>			
-
-						<div style="display: inline-block; margin-left: 90px;">
-
-							<button ng-controller = 'projectAdditionController' id = "newProjectButton"  type="button" class="btn btn-sm new-project-button" ng-click = "openAdditionPanel()">
-								Create a project
-							</button>
-							<button  ng-click = "deleteEntireProject()"  class="btn btn-sm new-project-button" data-trigger="hover" data-title="Delete this project">
-								Delete selected project
-							</button>
-						</div>
-
+						</ui-select>	
+					</div>
+					<!-- Buttons  -->
+					<div style="display: inline-block; margin-left: 90px;">
+						<button  type="button" class="btn btn-sm new-project-button" popover = "Create new project"
+								popover-trigger="mouseenter" ng-click = "prjtCtrl.openAdditionPanel()">New
+						</button>
+						<button  ng-click = "prjtCtrl.deleteProject()" class="btn btn-sm new-project-button" data-trigger="hover" popover = "Delete current project" popover-trigger="mouseenter">
+							Delete
+						</button>
+						<button class="btn btn-sm new-project-button" data-trigger="hover" popover = "Copy current project" popover-trigger="mouseenter">
+							Copy
+						</button>
+						<button class="btn btn-sm new-project-button" data-trigger="hover" popover = "Rename current project" popover-trigger="mouseenter">
+							Rename
+						</button>
+					</div>
 				</div>
+				
+<!-- View description -->
 				<div style="width: 100%; height: 40px;">
-					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i> {{projectService.cache.projectDescription}}</h5>
+					<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign"></i>{{prjtCtrl.projectService.view_Desc}} </h5>
 
 				</div>
 
-				<div class="dd" id="nestable3">
-					<ol ui-sortable class="dd-list" ng-model="projectService.cache.returnedQueryObjects" id="queryObjectChoicesUI">
-							<li class="dd-item dd3-item" data-id = "15"  ng-repeat="item in projectService.cache.returnedQueryObjects">
-							<div class="dd-handle dd3-handle">
-								<!--Drag-->
-							</div>
-							<div class= "dd3-content d-list-content">
-								<div style='display : table'; inline-block; >
-								
-<!---Contains the list of query Objects in a project	-->	
-									<div style="width : 85%; display : table-cell">
-										<ul style="list-style:initial">
-											<li>
-												<span class="prj-txt-lbl">Title: </span> 
-												<span class="prj-txt-val"> {{item.queryObject.title}} </span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Date: </span>
-												<span class="prj-txt-val">{{item.queryObject.date}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Datatable: </span>
-												<span class="prj-txt-val">{{item.queryObject.dataTable.title}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Script: </span>
-												<span class="prj-txt-val">{{item.queryObject.scriptSelected}}</span>
-											</li>
-											<li>
-												<span class="prj-txt-lbl">Columns: </span>
-												<span class="prj-txt-val">{{item.columnstring}}</span>
-											</li>
-										</ul>
-									</div>
- <!-- Contains the picture -->		<!-- div style="display : table-cell" ng-repeat = "pic in thumbnailsToDisplay"  ng-class = "{'clickMe' : status}" ng-mouseenter = "status = true" ng-mouseLeave = "status =false"-->
-										<div id = "blah">
-											<img width = "150" height = "100" 
-												 ng-src= "{{item.thumbnail || 'css/img/ImageUnavailable.png'}}" 
-												 
-												 ng-click = "returnSessionState(item.queryObject)">
-											 </img>
-										</div>
-								</div>
-								<div class="query-btn-holder">
-										<button ng-click = "deleteSpecificQueryObject(item)" class="btn btn-sm query-button">
-											Delete
-										</button>
-									
-										<button ng-click = "openInAnalysis(item.queryObject)" class ="btn btn-sm query-button">
-											Open
-										</button>
-								</div>
-							</div>
-				</li>
-				</ol>
-			</div>
+<!-- CONTENT OF DIFFERENT VIEWS -->
+				<!--LIST VIEW  -- displays the list of projects as a grid -->
+				<div ng-if = "prjtCtrl.projectService.viewMode == 'List'">
+					<project-Grid data = "prjtCtrl.projectService.cache.listOfProjectsFromDatabase"></project-Grid>
+				</div>
+				
+				<!-- COMPACT VIEW -- displays the query object cards per project-->
+				<div ng-if = "prjtCtrl.projectService.viewMode == 'Compact'">
+					<div class="dd" id="nestable3">
+							<ol ui-sortable class="dd-list">
+									<li class="dd-item dd3-item" data-id = "15"  ng-repeat="item in prjtCtrl.projectService.cache.returnedQueryObjects">
+										<query-card item ="item"></query-card>
+									</li>
+							</ol>
+					</div>
+				</div>
+				
+				
+
 		</div>
 	</div>
 </div>

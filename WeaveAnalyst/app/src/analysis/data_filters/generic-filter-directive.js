@@ -1,4 +1,4 @@
-AnalysisModule.directive('filter', function(queryService) {
+angular.module('weaveAnalyst.AnalysisModule').directive('filter', function() {
 	
 	function link($scope, element, attrs, ngModelCtrl) {
 //		element.draggable({ containment: "parent" }).resizable({
@@ -28,41 +28,41 @@ AnalysisModule.directive('filter', function(queryService) {
 					comboboxModel : [],
 					multiselectModel : [],
 					sliderModel : [],
-					nestedFilter : {},
+					nestedFilter : {}
 			};
 			$scope.filterType = "";
 			$scope.filterOptions = [];
 			
 			$scope.$watch('ngModel.column',  function(newVal, oldVal) {
 				if($scope.ngModel.column && $scope.ngModel.column.hasOwnProperty("id")) {
-					queryService.getEntitiesById([$scope.ngModel.column.id], true).then(function(entity) {
-						entity = entity[0];
-						if(entity && entity.publicMetadata.hasOwnProperty("aws_metadata")) {
-							var metadata = angular.fromJson(entity.publicMetadata.aws_metadata);
-							if(metadata.hasOwnProperty("varType")) {
-								if(metadata.varType == "continuous") {
-									$scope.filterType = "slider";
-									var min = angular.fromJson(metadata.varRange)[0];
-									var max = angular.fromJson(metadata.varRange)[1];
-									$scope.sliderOptions = { range:true, min:min, max:max }; // todo. put the slider values on top of the slider
-									$scope.ngModel.sliderModel = [Math.floor((max - min) / 3), Math.floor(2*(max - min) / 3)];
-								} else if(metadata.varType == "categorical") {
-									if(metadata.varValues) {
-										queryService.getDataMapping(metadata.varValues).then(function(varValues) {
-											$scope.filterOptions = varValues;
-											if($scope.filterOptions.length < 10) {
-												$scope.filterType = "combobox";
-											} else {
-												$scope.filterType = "multiselect";
-											}
-										});
-									}
-								}
-							} else {
-								$scope.filterType = "";
-							}
-						}
-					});
+//					queryService.getEntitiesById([$scope.ngModel.column.id], true).then(function(entity) {
+//						entity = entity[0];
+//						if(entity && entity.publicMetadata.hasOwnProperty("aws_metadata")) {
+//							var metadata = angular.fromJson(entity.publicMetadata.aws_metadata);
+//							if(metadata.hasOwnProperty("varType")) {
+//								if(metadata.varType == "continuous") {
+//									$scope.filterType = "slider";
+//									var min = angular.fromJson(metadata.varRange)[0];
+//									var max = angular.fromJson(metadata.varRange)[1];
+//									$scope.sliderOptions = { range:true, min:min, max:max }; // todo. put the slider values on top of the slider
+//									$scope.ngModel.sliderModel = [Math.floor((max - min) / 3), Math.floor(2*(max - min) / 3)];
+//								} else if(metadata.varType == "categorical") {
+//									if(metadata.varValues) {
+//										queryService.getDataMapping(metadata.varValues).then(function(varValues) {
+//											$scope.filterOptions = varValues;
+//											if($scope.filterOptions.length < 10) {
+//												$scope.filterType = "combobox";
+//											} else {
+//												$scope.filterType = "multiselect";
+//											}
+//										});
+//									}
+//								}
+//							} else {
+//								$scope.filterType = "";
+//							}
+//						}
+//					});
 				}
 			}, true);
 			

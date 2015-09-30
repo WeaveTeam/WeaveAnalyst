@@ -32,7 +32,9 @@
  *
  */
 .project-management .prj-contents {
-  margin-top: 25px;
+  margin-top: 5px;
+  width: 100%;
+  padding-left: 2%;
 }
 
 .project-management .prj-contents .project-username {
@@ -122,7 +124,7 @@
   float: right;
   display: inline-block;
   margin-right: 10px;
-  background-color: rgb(139, 148, 163);
+  background-color: #474949;
   color: white;
 }
 
@@ -161,8 +163,6 @@
 .dd {
   position: relative;
   display: block;
-  margin: 0;
-  padding: 0;
   list-style: none;
   font-size: 13px;
   line-height: 20px
@@ -170,9 +170,6 @@
 .dd-list {
   display: block;
   position: relative;
-  margin: 0;
-  padding: 0;
-  list-style: none
 }
 .dd-list .dd-list {
   padding-left: 30px
@@ -181,13 +178,15 @@
   display: none
 }
 .dd-empty, .dd-item, .dd-placeholder {
-  display: block;
   position: relative;
-  margin: 0;
-  padding: 0;
-  min-height: 20px;
-  font-size: 13px;
-  line-height: 20px
+	float: left;
+	width: 45%;
+	height: auto;
+	margin: 1%;
+	display: block;
+	min-height: 20px;
+	font-size: 13px;
+	line-height: 20px;
 }
 .dd-handle {
   display: block;
@@ -293,16 +292,15 @@
   display: block;
   margin: 5px 0;
   margin-bottom: 0px;
-  padding: 6px 10px 0px 40px;
+  padding: 6px 10px 0px 10px;
   font-size: 15px;
   color: #333;
   text-decoration: none;
-  border: 1px solid #cfcfcf;
+  border: 5px solid #cfcfcf;
   background: #fbfbfb
 }
 .dd3-content:hover {
-  color: #2ea8e5;
-  background: #fff
+   border: 5px solid #B2E6FF
 }
 .dd-dragel > .dd3-item > .dd3-content {
   margin: 0
@@ -460,4 +458,28 @@
 
 }
 
+.q_cardEdit {
+	 border: 5px solid #FFCCCC;
+}
+
+
+.query-card-edit-btn{
+	font-size :20px;
+	width : 30px;
+	height:30px;
+	border-radius: 5px;
+	float:left;
+	border: none;
+	background :rgb(205,245,245);
+}
+
+.query-card-save-btn{
+	font-size :20px;
+	width : 30px;
+	height:30px;
+	border-radius: 5px;
+	float:right;
+	border: none;
+	background :rgb(255, 204, 204);
+}
 

@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html ng-app="weaveApp">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<title>WeaveApp</title>
+		<link href="../../../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+		<link href="../../../bower_components/angular-ui-select/dist/select.css" rel="stylesheet" />
+		<link href="../../../lib/ui-select2/select2.css"  rel="stylesheet"/>
+		<link href="../../../css/weaveApp.css" rel="stylesheet">
+	</head>
+
+
+<body>
+
+<!--Contains the widgets and weave  -->
+		<div id= "parentDiv" ng-controller = "appCtrl as c">
+		<!-- Viz tool widgets -->
+			<div id= "widgetContainer">
+				<accordion close-others="oneAtATime">
+   					 <accordion-group heading="Scatterplot">
+     					 <scatter-Plot></scatter-Plot>
+    				 </accordion-group>
+   					 <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
+     					 {{group.content}}
+    				 </accordion-group>
+   			   		 <accordion-group heading="Dynamic Body Content">
+      					<p>The body of the accordion group grows to fit the contents</p>
+      				 	 <button class="btn btn-small" ng-click="addItem()">Add Item</button>
+       				 <div ng-repeat="item in items">{{item}}</div>
+    				</accordion-group>
+ 				 </accordion>
+			</div>
+			
+		<!-- WEAVE -->
+			<div id="flashContent"></div>
+		</div>
+		<!--Angular  -->
+		<script type="text/javascript" src="../../../bower_components/angular/angular.min.js"></script>
+		<script src="../../../bower_components/jquery/dist/jquery.min.js"></script>
+		
+  		
+  		<!-- Bootstrap -->
+		<script src= "../../../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="../../../bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+		<!-- Angular sanitize -->
+		<script src="../../../bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+		<!-- Angular animate -->
+		<script src="../../../bower_components/angular-animate/angular-animate.min.js"></script>
+		<!-- UI select-->
+       <script src= "../../../bower_components/angular-ui-select/dist/select.min.js"></script>
+		<script type = "text/javascript" src="WeaveWrapper.js"></script>		
+		<script type="text/javascript" src="/swfobject.js"></script>
+				
+		<script type="text/javascript">
+        		var loadFlashContent = function() {
+        			var swfVersionStr = "10.2.0";
+		            // To use express install, set to playerProductInstall.swf, otherwise the empty string. 
+		            var xiSwfUrlStr = "playerProductInstall.swf";
+		            var flashvars = {};
+		            var params = {};
+		            params.quality = "high";
+		            params.bgcolor = "#869ca7";
+		            params.allowscriptaccess = "sameDomain";
+		            params.allowfullscreen = "true";
+		            params.base = window.location.protocol+"//"+window.location.host;
+		            var attributes = {};
+		            attributes.id = "weave";
+		            attributes.name = "weave";
+		            attributes.align = "middle";
+		            swfobject.embedSWF(
+		                "/weave.swf", "flashContent", 
+		                "80%", "100%", 
+		                swfVersionStr, xiSwfUrlStr, 
+		                flashvars, params, attributes);
+		            // JavaScript enabled so display the flashContent div in case it is not replaced with a swf object.
+		            swfobject.createCSS("#flashContent", "display:block;text-align:left;");
+        		};
+	            $('#flashContent').ready(function() {
+	            	setTimeout(loadFlashContent, 100);
+	            });
+        </script>
+		
+		<script type = "text/javascript">
+			angular.module('weaveApp', [ 'ngAnimate',
+			                             'ui.select',
+		                              	 'ui.bootstrap',
+			                             'ngSanitize']);
+			
+			angular.module('weaveApp').controller('appCtrl', appCtrl);
+			appCtrl.$inject = ['$window', '$scope'];
+			function appCtrl($window, $scope){
+				
+				var c = this;
+				 $scope.oneAtATime = true;
+
+				  $scope.groups = [
+				    {
+				      title: "Dynamic Group Header - 1",
+				      content: "Dynamic Group Body - 1"
+				    },
+				    {
+				      title: "Dynamic Group Header - 2",
+				      content: "Dynamic Group Body - 2"
+				    }
+				  ];
+
+				  $scope.items = ['Item 1', 'Item 2', 'Item 3'];
+
+				  $scope.addItem = function() {
+				    var newItemNo = $scope.items.length + 1;
+				    $scope.items.push('Item ' + newItemNo);
+				  };
+			};
+		</script>
+		<script type= "text/javascript" src="tools/scatterPlot/scatter_plot_directive.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<!-- Nested node template -->
+<div class="row">
+  <div class="col-sm-6">
+    <div ui-tree id="tree-root">
+      <ol ui-tree-nodes ng-model="data">
+        <li ng-repeat="node in data" ui-tree-node ng-include="'src/nested_qo/nodes_renderer.html'"></li>
+      </ol>
+    </div>
+  </div>

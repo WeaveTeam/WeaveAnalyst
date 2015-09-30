@@ -1,0 +1,38 @@
+{
+ "name": "Nested QO",
+ "children": [
+  {
+   "name": "QO 1",
+   "children": [
+    {"name": "QO 1.1", "size": 17010},
+    {"name": "Function", "size": 5842},
+    {"name": "Tween", "size": 6006}
+   ]
+  },
+  {
+   "name": "QO 2",
+   "children": [
+    {"name": "QO 2.1", "size": 5833}
+   ]
+  },
+  {
+   "name": "QO 3",
+   "children": [
+    {
+     "name": "QO 3.1",
+     "children": [
+      {"name": "Axes", "size": 1302},
+      {"name": "Cart", "size": 6703}
+     ]
+    },
+    {
+     "name": "QO 3.2",
+     "children": [
+      {"name": "Tooltip", "size": 8435}
+     ]
+    },
+    {"name": "QO 3.3", "size": 16540}
+   ]
+  }
+ ]
+}

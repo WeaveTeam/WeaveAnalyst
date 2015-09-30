@@ -1,271 +1,230 @@
 /**
  * controllers and service for the 'Data Stats' tab and its nested tabs
+ * @author spurushe
  */
 //TODO create submodules corresponding to every nested tab
 //Module definition
-var dataStatsModule = angular.module('aws.dataStatistics', []);
+(function(){
+		//*******************************Value recipes********************************************
+	//Correlation coefficients
+	angular.module('weaveAnalyst.dataStatistics').value('pearsonCoeff', {label:"Pearson's Coefficent", algorithm : 'pearson' });
+	angular.module('weaveAnalyst.dataStatistics').value('spearmanCoeff', {label : "Spearman's Coefficient", algorithm:"spearman"});
 
-//*******************************Value recipes********************************************
-//Correlation coefficients
-dataStatsModule.value('pearsonCoeff', {label:"Pearson's Coefficent", scriptName : "getCorrelationMatrix.R"});
-dataStatsModule.value('spearmanCoeff', {label : "Spearman's Coefficient", scriptName:"getSpearmanCoefficient.R"});
+	//value recipes to be used in result handling of non-query statistics
+	//Summary statistics for each numerical data columns
+	angular.module('weaveAnalyst.dataStatistics').value('summaryStatistics', 'SummaryStatistics');
 
-//value recipes to be used in result handling of non-query statistics
-//Summary statistics for each numerical data columns
-dataStatsModule.value('summaryStatistics', 'SummaryStatistics');
-
-//correlation Matrices computed using different algorithms
-dataStatsModule.value('correlationMatrix', 'CorrelationMatrix');
+	//correlation Matrices computed using different algorithms
+	angular.module('weaveAnalyst.dataStatistics').value('correlationMatrix', 'CorrelationMatrix');
 
 
-//************************SERVICE***********************************************************
-dataStatsModule.service('statisticsService', ['$q','$rootScope', 'runQueryService', 'queryService', 'QueryHandlerService','computationServiceURL', 'scriptManagementURL',
-                                              'summaryStatistics','correlationMatrix',
-                                              function($q,scope, runQueryService, queryService, QueryHandlerService, computationServiceURL,  scriptManagementURL,
-                                              summaryStatistics, correlationMatrix){
+	//************************SERVICE***********************************************************
+	angular.module('weaveAnalyst.dataStatistics').service('statisticsService', data_statisticsService);
 	
-	
-	var that = this;
-	
-	//getting the list of datatables if they have not been retrieved yet
-	//that is if the person visits this tab directly
-	if(queryService.cache.dataTableList.length == 0){
-		queryService.getDataTableList(true);
-	}
-	
-	//cache object that will contain all diff analytic statistics for ONE datatable
-	this.cache= {
-			dataTableSelected : null,
-			statsInputMetadata:[],
+	data_statisticsService.$inject = ['$q', 'queryService','analysisService', 'QueryHandlerService','summaryStatistics', 'correlationMatrix' ];
+	function data_statisticsService($q, queryService,analysisService, QueryHandlerService, summaryStatistics, correlationMatrix){
+		var that = this;
+		
+		that.cache = {
+			dataTable : null,
 			summaryStats : {statsData:[], columnDefinitions:[]},
-			correlationMatrix : [],
 			sparklineData :{ breaks: [], counts: {}},
-			columnTitles:[]//column titles of the columns in current table 
-	};
-	
-	
-	/**
-	 * common function that runs various statistical tests and scripts and processes results accordingly
-	 * @param scriptName name of the script 
-	 * @param numercialColumns columns to be used in the script
-	 * @param name of the statistic to calculate 
-	 */
-	this.calculateStats = function(scriptName, numericalColumns, statToCalculate, forceUpdate){
+			heatMap :null,
+			columnTitles: null,//column titles of the columns in current table 
+			input_metadata : null
+		};
 		
-		//empty the cache of previously calculated stats
-		//TODO confirm if better way to do this
-//		this.cache.summaryStats.statsData = [];
-//		this.cache.summaryStats.columnDefinitions = [];
-//		this.cache.correlationMatrix = [];
-//		this.cache.columnTitles= [];
-//		this.sparklineData.breaks = [];
-//		this.sparklineData.counts = {};
-		
-		
-		var statsInputs = QueryHandlerService.handleScriptOptions(numericalColumns);//will return int[] ids
-		if(statsInputs){
-			//hack fix this
-			statsInputs[0].name = statToCalculate;
-			statsInputs[0].type = "DATACOLUMNMATRIX";
-			//getting the data
-			queryService.getDataFromServer(statsInputs, null).then(function(success){
-				
-				//executing the stats script
-				if(success){
-					queryService.runScript(scriptName).then(function(result){
-						if(result){
-							//handling different kinds of non -query results returned from R
-							for(var x = 0; x < statsInputs.length; x++){
-								
-								switch (statToCalculate)
-								{
-									case summaryStatistics:
-										//that.cache.summaryStats = result;
-										that.handleStatsAndSparklines(result.resultData, that.cache.statsInputMetadata.inputs );
-										break;
-									case correlationMatrix:
-										//that.cache.correlationMatrix = result;
-										that.handleCorrelationData(result.resultData);
-										break;
-									
-								}
-									
-								
-							}//end of loop for statsinputs
-						}
-					});
-				}
-			});
-		}
-	};
-	
-  	
-	/**
-	 * convenience function to get column titles
-	 * @param column objects 
-	 */
-	this.getColumnTitles = function(columns){
-		
-		for(var t=0; t < columns.length; t++){
-			this.cache.columnTitles[t] = columns[t].title;
-		}
-		
-		//return columnTitles;
-	};
-	
-	
+		/**
+		 * common function that runs various statistical tests and scripts and processes results accordingly
+		 * main purpose is to run NON_QUERY computations 
+		 * @param scriptName name of the script 
+		 * @param statsObject the input data
+		 * @param statistic to calculate 
+		 */
+		that.calculate_Statistics = function (scriptName, statsObject, statToCalculate, forceUpdate){
 
-	/**
-	 * gets the metadata for the a script
-	 * @param statsScript scriptName
-	 */
-	this.getStatsMetadata = function(statsScript){
-		var deferred = $q.defer();
-		runQueryService.queryRequest(scriptManagementURL, 'getScriptMetadata', [statsScript], function(result){
-			that.cache.statsInputMetadata = result;
-			scope.$safeApply(function() {
-				deferred.resolve(that.cache.statsInputMetadata);
-			});
-		});
-		
-		return deferred.promise;
-	};
-	
-	this.handleStatsAndSparklines = function(resultData, metadata){
-		var dataForStatsGrid = resultData[0];
-		var dataForSparklines = resultData[1];
-		
-		this.handleDataStats(dataForStatsGrid, metadata);
-		this.handleSparklineData(dataForSparklines);
-	};
-	
-	/**
-	 * this function populates the Summary statistics grid
-	 * @param resultData summary statistics of the numerical columns
-	 * @param metadata script metadata for the stats script
-	 */
-	this.handleDataStats = function(resultData, metadata){
-		if(resultData){
-			var data = [];
-			
-			var columnTitles = this.cache.columnTitles;
-			for(var x = 0; x < resultData.length; x++){// x number of numerical columns
-				
-				var oneStatsGridObject = {};
-				for(var y = 0; y < metadata.length; y++){//y number of metadata objects
+			var statsInputs = QueryHandlerService.handle_ScriptInput_Options(statsObject);//will return a dataColumnmatrix bean
+			if(statsInputs){
+				//getting the data
+				queryService.getDataFromServer(statsInputs, null).then(function(success){
 					
-					if(metadata[y].param == 'ColumnName'){//since the dataprovider for this entry is different i.e. columnTitles
-						oneStatsGridObject[metadata[y].param] = columnTitles[x];
-						continue;
-					}
-					
-					oneStatsGridObject[metadata[y].param] = resultData[x][y-1];
-				}
-				
-				data.push(oneStatsGridObject);
-				
-				//during the last iteration
-				if(x == (resultData.length - 1)){
-					this.cache.summaryStats.columnDefinitions = [];
-					for(var z = 0; z < metadata.length; z++){
-						//populates the column definitions of the grid
-						this.cache.summaryStats.columnDefinitions.push({
-							field: metadata[z].param,
-							displayName : metadata[z].param,
-							enableCellEdit:false
+					//executing the stats script
+					if(success){
+						queryService.runScript(scriptName).then(function(result){
+							if(result){
+								//handling different kinds of non -query results returned from R
+								for(var x = 0; x < 1; x++){
+									
+									switch (statToCalculate)
+									{
+										case summaryStatistics:
+											that.handle_DataStats(result.resultData[0], that.cache.input_metadata.inputs );
+											that.handle_SparklineData(result.resultData[1]);
+											break;
+										case correlationMatrix:
+											that.handle_CorrelationData(result.resultData[0]);
+											break;
+										
+									}
+									
+								}//end of loop for statsinputs
+							}
 						});
 					}
-					
-				}
-			}
-			
-			this.cache.summaryStats.statsData = [];//clear previous entries
-			this.cache.summaryStats.statsData = data;//populates the data displayed in the grid
-		}
-	};
-	
-	
-	/**
-	 * processes the sparklineData populates the data provider for the sparkline directives
-	 * @param result the sparkline data returned from R
-	 */
-	this.handleSparklineData = function(result){
-		//pre-process the sparklines
-		var sparklineData= {breaks:[], counts:{}};
-		
-		sparklineData.breaks  = result[0][0];//breaks are same for all columns needed only once
-		for(var x =0; x < result.length; x++){
-			sparklineData.counts[this.cache.columnTitles[x]] = result[x][1];//TODO get rid of hard code
-		}
-		
-		// used as the data provider for drawing the sparkline directives
-		this.cache.sparklineData = {};//clear the previous content
-		this.cache.sparklineData = sparklineData;
-	};
-	
-	this.handleCorrelationData = function(){
-		
-	};
-	
-	
-}]);
-
-
-//********************CONTROLLERS***************************************************************
-dataStatsModule.controller('dataStatsCtrl', function($scope,$filter, 
-													 queryService, statisticsService,
-													 summaryStatistics){
-	
-	$scope.queryService = queryService;//links it to the analysis datatable
-	$scope.statisticsService = statisticsService;
-	
-	
-/*******************************************************datagrid***********************************************/
-	$scope.columnDefinitions = [];//populates the stats grid
-	$scope.statsData = [];//the array that gets populated by the Column statistics
-		
-		
-	//defines the main grid that displays descriptive column statistics
-	$scope.statsGrid = { 
-	        data: 'statsData',
-	        rowHeight : 70,
-	        enableRowSelection: true,
-	        enableCellEdit: true,
-	        columnDefs: 'columnDefinitions',
-	        multiSelect : false
-	 };
-		
-	$scope.$watch(function(){
-		return $scope.statisticsService.cache.summaryStats.statsData;
-	}, function(){
-		
-		if($scope.statisticsService.cache.summaryStats.statsData &&  
-		   $scope.queryService.cache.numericalColumns && 
-		   $scope.statisticsService.cache.statsInputMetadata.inputs){
-			
-			$scope.columnDefinitions = $scope.statisticsService.cache.summaryStats.columnDefinitions;
-			$scope.statsData = $scope.statisticsService.cache.summaryStats.statsData;
-		}
-	});
-	
-	$('#singleContainer').on('scroll', function () {
-	    $('#datagridDiv').scrollTop($(this).scrollTop());
-	});
-	
-	
-	$scope.getStatistics = function(){
-		if($scope.statisticsService.cache.dataTableSelected.id)
-			{
-				console.log("Async call made for getting statistics");
-				$scope.statisticsService.getStatsMetadata("getStatistics.R");
-				
-				$scope.queryService.getDataColumnsEntitiesFromId($scope.statisticsService.cache.dataTableSelected.id, true).then(function(result){
-					//getting column titles
-					$scope.statisticsService.getColumnTitles($scope.queryService.cache.numericalColumns);
-					//call for displaying summary stats once numerical columns are returned
-					$scope.statisticsService.calculateStats("getStatistics.R", $scope.queryService.cache.numericalColumns, summaryStatistics, true);
 				});
 			}
+		};
+		
+		
+		//function calls for calculation data_stats
+		that.get_Summary_Statistics = function(dt){
+			//retrieve metadata for the built in canned stats script
+			analysisService.getScriptMetadata("getStatistics.R", true).then(function(){
+				that.cache.input_metadata = analysisService.cache.scriptMetadata;
+				
+				queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
+					var ncols = queryService.cache.numericalColumns;
+					
+					that.getColumnTitles(ncols);
+					
+					that.calculate_Statistics('getStatistics.R', {'SummaryStatistics':ncols}, summaryStatistics, true );
+				});
+			});
+		};
+		
+		
+		/**
+		 * this function populates the Summary statistics grid
+		 * @param resultData summary statistics of the numerical columns
+		 * @param metadata script metadata for the stats script
+		 */
+		that.handle_DataStats = function(resultData, metadata){
+			if(resultData){
+				var data = [];
+				
+				var columnTitles = this.cache.columnTitles;
+				for(var x = 0; x < resultData.length; x++){// x number of numerical columns
+					
+					var oneStatsGridObject = {};
+					for(var y = 0; y < metadata.length; y++){//y number of metadata objects
+						
+						if(metadata[y].param == 'ColumnName'){//since the dataprovider for this entry is different i.e. columnTitles
+							oneStatsGridObject[metadata[y].param] = columnTitles[x];
+							continue;
+						}
+						
+						oneStatsGridObject[metadata[y].param] = resultData[x][y-1];
+					}
+					
+					data.push(oneStatsGridObject);
+				}
+				
+				that.cache.summaryStats.statsData = [];//clear previous entries
+				that.cache.summaryStats.statsData = data;//populates the data displayed in the grid
+			}
+		};
+		
+		
+		/**
+		 * processes the sparklineData populates the data provider for the sparkline directives
+		 * @param result the sparkline data returned from R
+		 */
+		that.handle_SparklineData = function(result){
+			//pre-process the sparklines
+			var sparklineData= {breaks:[], counts:{}};
+			
+			sparklineData.breaks  = result[0][0];//breaks are same for all columns needed only once
+			for(var x =0; x < result.length; x++){
+				sparklineData.counts[this.cache.columnTitles[x]] = result[x][1];//TODO get rid of hard code
+			}
+			
+			// used as the data provider for drawing the sparkline directives
+			that.cache.sparklineData = {};//clear the previous content
+			that.cache.sparklineData = sparklineData;
+		};
+		
+		//function calls to calculate coefficients
+		//does not require a separate script metadata file
+		that.get_Coefficients = function(dt, algorithm){
+			
+			queryService.getDataColumnsEntitiesFromId(dt.id, true).then(function(){
+				var ncols = queryService.cache.numericalColumns;
+				
+				that.getColumnTitles(ncols);
+				
+				that.calculate_Statistics("getCorrelationMatrix.R", {'CorrelationMatrix' : ncols, 'algorithm' : algorithm}, correlationMatrix, true );
+			});
+		};
+		
+		/**
+		 * processes the correlation matrix data: populates the data provider for the correlation matrix directive
+		 * @param result the corr matrix data returned from R
+		 */
+		that.handle_CorrelationData = function(resultData){
+			var hm = that.cache.heatMap = {};
+			hm.input_data = resultData;
+			hm.labels = that.cache.columnTitles;
+			
+		};
+		
+		
+		/**
+		 * convenience function to get column titles
+		 * @param column objects 
+		 */
+		that.getColumnTitles = function(columns){
+			that.cache.columnTitles = [];//reset from previous run
+			
+			for(var t=0; t < columns.length; t++){
+				this.cache.columnTitles[t] = columns[t].title;
+			}
+		};
+		
 	};
+
+
+	//********************CONTROLLERS***************************************************************
+	angular.module('weaveAnalyst.dataStatistics').controller('data_StatisticsController', data_statisticsController );
 	
-});
+	data_statisticsController.$inject = ['$scope','queryService', 'statisticsService', 'pearsonCoeff', 'spearmanCoeff'];
+	function data_statisticsController ($scope, queryService, statisticsService, pearsonCoeff, spearmanCoeff){
+		var ds_Ctrl = this;
+		
+		ds_Ctrl.queryService = queryService;
+		ds_Ctrl.statisticsService = statisticsService;
+		
+		ds_Ctrl.statsData = [];//dataprovider for ui-grid
+		ds_Ctrl.selectedCoeff = {label : "", algorithm : ""};
+		ds_Ctrl.availableCoeffList = [pearsonCoeff, spearmanCoeff];
+		
+		ds_Ctrl.get_Summary_Statistics = get_Summary_Statistics;
+		ds_Ctrl.get_Coefficients = get_Coefficients;
+		
+		if(queryService.cache.dataTableList.length == 0)//getting the list of datatables if they have not been retrieved yet//that is if the person visits this tab directly
+			queryService.getDataTableList(true);
+		
+		/////////
+		//watches
+		//////////
+		$scope.$watch(function (){
+			return ds_Ctrl.statisticsService.cache.summaryStats.statsData;
+		}, function(){
+			ds_Ctrl.statsData = ds_Ctrl.statisticsService.cache.summaryStats.statsData;
+		});
+		
+		
+		function get_Summary_Statistics (){
+			var dt = ds_Ctrl.statisticsService.cache.dataTable; 
+				
+			if(dt)//if a datatable has been selected
+				ds_Ctrl.statisticsService.get_Summary_Statistics(dt);
+		};
+		
+		function get_Coefficients (algorithm){
+			var dt = ds_Ctrl.statisticsService.cache.dataTable;
+			if(dt)
+				ds_Ctrl.statisticsService.get_Coefficients(dt, algorithm);
+		
+		}; 
+	};
+})();

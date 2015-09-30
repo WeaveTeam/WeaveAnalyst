@@ -1,0 +1,65 @@
+<div class="nqo_parent">
+			<div class="panel panel-default nqo_matcher_panel">
+	
+					<div class="panel-heading">
+						<h2>Map Parameters</h2>
+					</div>
+					
+					<!-- <div style = "margin-left :1%; padding-top : 5px"> -->
+					
+					<!-- <button class = "btn btn-sm" popover = "Add query object to construct pipeline" type="button" ng-disabled = "!p_MCtrl.add_mode"
+						popover-trigger = "mouseenter" popover-placement = "right"><i style = "font-size :20px;"class="fa fa-plus-circle"></i></button>
+						
+					<input style = "display:inline-block" type = "radio" ng-model = "p_MCtrl.add_mode" value = "new"/> Add new query object
+					<input style = "display:inline-block" type = "radio" ng-model = "p_MCtrl.add_mode" value = "existing"/> Select existing query object
+		
+						<ui-select 	ng-if = "p_MCtrl.add_mode == 'existing'" ng-init = "p_MCtrl.projectService.getListOfProjects()"
+									ng-model="p_MCtrl.selected_prj" popover-trigger="mouseenter" theme="select2" style="margin-left : 33%;width : 30%">
+					    		<ui-select-match allow-clear="true" placeholder="Choose Project">{{$select.selected.Name}}</ui-select-match>
+								<ui-select-choices repeat="project in p_MCtrl.projectService.cache.listOfProjectsFromDatabase | filter : $select.search ">
+					       		 {{project.Name}}
+					       		 </ui-select-choices>
+						</ui-select>	
+						
+						<ui-select 	ng-if = "p_MCtrl.add_mode == 'existing'"
+									ng-model="p_MCtrl.selected_qo" popover-trigger="mouseenter" theme="select2" style="width : 30%">
+					    		<ui-select-match allow-clear="true" placeholder="Choose QueryObject">{{$select.selected.queryObjectName}}</ui-select-match>
+								<ui-select-choices repeat="qo in p_MCtrl.projectService.cache.returnedQueryObjects | filter : $select.search ">
+					       		 {{qo.queryObjectName}}
+					       		 </ui-select-choices>
+						</ui-select>
+					</div> -->
+					
+					
+					
+	<!-- View description -->
+					<div style="width: 100%; height: 40px;">
+						<h5 class="widget-description "><i style="font-size: 14px; padding-right: 5px" class="glyphicon glyphicon-info-sign">
+						</i>Link query objects in the nested query object and check for compatibility of parameters</h5>
+	
+					</div>
+					
+					<div style = "width: 4%; float:left; padding-left: 1%"><i style = "font-size :20px;"class="fa fa-minus-circle"></i></div>
+
+					<ui-select  droppable ng-model="cMenu_Ctrl.dataSource" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Source parameter">{{$select.selected.name}}</ui-select-match>
+						<ui-select-choices repeat="dSource in cMenu_Ctrl.WeaveService.dataSources | filter :$select.search">
+					      	</ui-select-choices>
+					</ui-select>
+					
+					<div style = "width: 4%; float:left;padding-left: 1%"><i style = "font-size :20px;"class="fa fa-chevron-circle-right"></i></div>
+					
+					<ui-select droppable ng-model="cMenu_Ctrl.dataTable" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Destination Query Objects">{{$select.selected.name}}</ui-select-match>
+						<ui-select-choices repeat="table in cMenu_Ctrl.WeaveService.dataTables | filter : $select.search">
+					      	</ui-select-choices>
+					</ui-select>
+					
+					<ui-select droppable ng-model="scriptCtrl.queryService.queryObject.scriptOptions[input.param]" theme="select2" style= "width: 30%; float:left">
+					  		<ui-select-match allow-clear="true" placeholder="Destination parameter">{{$select.selected.metadata.title}}</ui-select-match>
+						<ui-select-choices repeat="column in scriptCtrl.queryService.cache.columns | filter : $select.slected.metadata.title">
+					     			 <div ng-bind-html="column.metadata.title | highlight: $select.search"></div>
+					      	</ui-select-choices>
+					</ui-select>
+			</div>
+</div>
