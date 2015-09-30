@@ -39,6 +39,7 @@ public class ComputationalServlet extends WeaveServlet
 	private String tempDirPath = "";
 	private String stataScriptsPath = "";
 	private String rScriptsPath = "";
+	private String built_inScriptsPath = "";
 	private AwsRService rService = null;
 	private StringMap<Object> scriptInputs = new StringMap<Object>();
 	
@@ -55,6 +56,7 @@ public class ComputationalServlet extends WeaveServlet
 		
 		stataScriptsPath = AwsContextParams.getInstance(config.getServletContext()).getStataScriptsPath();
 		rScriptsPath = AwsContextParams.getInstance(config.getServletContext()).getRScriptsPath();
+		built_inScriptsPath = rScriptsPath + "/built/";
 	}
 
 	private static final long serialVersionUID = 1L;
@@ -153,7 +155,7 @@ public class ComputationalServlet extends WeaveServlet
 		
 		try{
 			rService = new AwsRService();
-			result = rService.runScript(FilenameUtils.concat(rScriptsPath, scriptName), inputs);
+			result = rService.runScript(FilenameUtils.concat(built_inScriptsPath, scriptName), inputs);
 			
 		}
 		catch(Exception e){
