@@ -75,12 +75,13 @@
 	    }, function(n, o) {
 			if(qo_btnsCtrl.queryObjectUploaded.file.content)
 			{
-				qo_btnsCtrl.queryService.queryObject = angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content);
-				if(qo_btnsCtrl.WeaveService.weave)
-				{
-					qo_btnsCtrl.WeaveService.weave.path().state(qo_btnsCtrl.queryService.queryObject.sessionState);
-					delete qo_btnsCtrl.queryService.queryObject.sessionState;
-				}
+				qo_btncCtrl.queryService.populate_qo(angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content));
+				//qo_btnsCtrl.analysisService.active_qo = angular.fromJson(qo_btnsCtrl.queryObjectUploaded.file.content);
+//				if(qo_btnsCtrl.WeaveService.weave)
+//				{
+//					qo_btnsCtrl.WeaveService.weave.path().state(qo_btnsCtrl.queryService.queryObject.sessionState);
+//					delete qo_btnsCtrl.queryService.queryObject.sessionState;
+//				}
 			}
 	    }, true);
 	    

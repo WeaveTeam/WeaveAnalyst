@@ -3,6 +3,7 @@
  * this component represents one ui crumb in the hierarchy
  * TODO import this as bower module from GITHUB
  * */
+var shanti;
 (function (){
     angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
 
@@ -10,6 +11,9 @@
     function selectorPillComponent () {
         return {
             restrict: 'E',
+            scope:{
+            	column :'='
+            },
             templateUrl:"src/utils/crumbs/crumbPartial.html" ,
             controller: sPillController,
             controllerAs: 'p_Ctrl',
@@ -28,6 +32,8 @@
         p_Ctrl.display_Siblings = display_Siblings;
         p_Ctrl.add_init_Crumb = add_init_Crumb;
         p_Ctrl.manage_Crumbs = manage_Crumbs;
+        p_Ctrl.populate_Defaults = populate_Defaults;
+        p_Ctrl.get_trail_from_column = get_trail_from_column;
 
         p_Ctrl.showList = false;
 
@@ -37,6 +43,24 @@
         p_Ctrl.crumbTrail = [];
         p_Ctrl.crumbLog = [];
 
+        shanti = p_Ctrl;
+        scope.$watch('p_Ctrl.column', function(){
+        	if(p_Ctrl.column.defaults)
+        		p_Ctrl.populate_Defaults();
+        });
+        
+        function populate_Defaults (){
+        	//clear existing logs and trails
+        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
+        	//create the new trail starting from the column
+        };
+        
+        function get_trail_from_column (in_column){
+        	var trailObj = {trail : [], logs : []};
+        	
+        	
+        	return trailObj;
+        };
 
         function manage_Crumbs(i_node){
             /*1. check if it is the previously added node*/
@@ -124,7 +148,7 @@
 
         function display_Siblings(i_node){
             p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node)
+            p_Ctrl.WeaveService.display_Options(i_node);
         }
     }
 })();

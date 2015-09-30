@@ -19,6 +19,16 @@
 	{
 		
 		var that = this; // point to this for async responses
+		that.queryObjectCollection;
+		that.active_qo;
+		that.active_qoName;
+		
+		this.cache = {
+				columns : [],
+				dataTableList : [],
+				filterArray : [],
+				numericalColumns : []
+		};
 		
 		this.queryObject = {
 				title : "Beta Query Object",
@@ -93,12 +103,32 @@
 		};    		
 	    
 		
-		this.cache = {
-				columns : [],
-				dataTableList : [],
-				filterArray : [],
-				numericalColumns : []
+		
+		that.init_sessioned_qos = function(){
+			
+			/**************
+			******** QUERY OBJECT COLLECTION
+			**************/
+			that.queryObjectCollection = WeaveAPI.globalHashMap.requestObject("queryObjects",  weavecore.LinkableHashMap);
+			
+			//TODO call this line to the UI for creation of new QO and addition to collection
+			/**************
+			******** DEFAULT QUERY OBJECT
+			**************/
+			that.active_qo = that.queryObjectCollection.requestObject("",  wa.QueryObject);//dynamically create name every time
+			
+			that.active_qoName = WeaveAPI.globalHashMap.requestObject("active_qo", weavecore.LinkableString);//value is empty
+			that.active_qoName.value = that.queryObjectCollection.getName(that.active_qo);//setting the value here
 		};
+		
+		//INIT QUERY OBJECT COLLECTION
+		that.init_sessioned_qos();
+		
+		that.populate_qo = function(in_qo){
+			WeaveAPI.SessionManager.setSessionState(that.active_qo, in_qo);
+		};
+		
+		
 		/**
 	     * This function wraps the async aws runScript function into an angular defer/promise
 	     * So that the UI asynchronously wait for the data to be available...

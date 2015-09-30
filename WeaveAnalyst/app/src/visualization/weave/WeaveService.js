@@ -105,6 +105,7 @@
             {
                 if(!that.weave_Tree){
                     that.weave_Tree = new that.weave.WeaveTreeNode();
+                    console.log("creating new Weave Tree");
                     return that.weave_Tree;
                 }
                 else

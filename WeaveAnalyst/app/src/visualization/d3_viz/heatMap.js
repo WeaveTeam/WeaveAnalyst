@@ -44,7 +44,7 @@ if(!this.wa.d3_viz){
 	//initializes the heat map 
 	p.initialize_heatMap = function(config){
 		
-		this._margin =  {top: 50, right: 200, bottom: 50, left: 50};
+		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
 		this._container = config.container;
 		
 		this._width = this._container.offsetWidth - this._margin.left;
@@ -110,6 +110,7 @@ if(!this.wa.d3_viz){
 	      .attr("fill", 'darkOrange')
 	      .attr("text-anchor", "end")
 	      .text(function(d, i) { return hmObj._labels[i]; });
+	    
 
 	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
 		    			.data(function (d,i)
@@ -118,7 +119,7 @@ if(!this.wa.d3_viz){
 				    				{ 
 				    					return {value: a, row: i};} ) ;
 							})//returning a key function
-			           .enter().append("svg:rect")
+			            .enter().append("svg:rect")
 			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
 			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
 			             .attr("width", hmObj._rowScale(1))
@@ -132,6 +133,30 @@ if(!this.wa.d3_viz){
 			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
 			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
 			             							 d3.select(this).style('stroke-opacity', 0);});
+	    
+	    //TEMPORARY SOLUTION for getting column names
+	    var btm_Label_g = hmObj._rowObjects[0][3];
+	    
+	   console.log("entire g element", btm_Label_g);
+	   console.log("the object", d3.select(btm_Label_g));
+	    
+	   var x = d3.select(btm_Label_g)
+	    .data(hmObj._labels)
+	    .enter()
+	    .append('g');
+	   
+	   
+	   console.log("four gs", x);
+	    
+	    
+//	    .append("text")
+//	    .attr("x", -1)
+//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
+//	    .attr("dy", "0.25")
+//	    .attr("fill", 'darkOrange')
+//	    .text(function(d, i) {
+//	    	console.log(d);
+//	    	return hmObj._labels[i]; });
 	};
 	
 	//sets the color of the heat map

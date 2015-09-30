@@ -5,6 +5,34 @@
 if(!this.wa)
 	this.wa = {};
 
+
+(function(){
+	
+	Object.defineProperty(ScriptInputs, 'NS', {
+        value: 'wa'
+    });
+
+	Object.defineProperty(ScriptInputs, 'CLASS_NAME', {
+        value: 'ScriptInputs'
+	});
+	
+	function ScriptInputs (){
+		
+		 Object.defineProperty(this, 'sessionable', {
+	           value: true
+	       });
+		 
+		 Object.defineProperty(this, 'columns', {
+			 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableVariable([]))
+		 });
+		 
+	}
+	
+	window.wa.ScriptInputs = ScriptInputs;
+})();
+
+
+
 (function(){
 	
 	 Object.defineProperty(QueryObject, 'NS', {
@@ -30,22 +58,26 @@ if(!this.wa)
 		 value : new Date()
 	 });
 	 
-	 Object.defineProperty(this, 'Computation_Engine', {
+	 Object.defineProperty(this, 'ComputationEngine', {
            value: WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
        });
 	 
-	 Object.defineProperty(this, 'script_Selected', {
+	 Object.defineProperty(this, 'scriptSelected', {
 		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
 	 });
 		
 	 Object.defineProperty(this, 'title', {
 		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
 	 });
+	 
+	 Object.defineProperty(this, 'scriptOptions', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new wa.ScriptInputs())
+	 });
+	 
 		
 	}
 	
 	window.wa.QueryObject = QueryObject;
 	
 })();
-
 

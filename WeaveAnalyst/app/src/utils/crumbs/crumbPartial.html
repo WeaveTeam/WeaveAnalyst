@@ -1,4 +1,5 @@
 <div id="crumbsContainer" ng-init = "p_Ctrl.add_init_Crumb()">
+<h8 ng-if = "p_Ctrl.crumbTrail.length == 0">Click Here</h8>
     <div ng-repeat = 'a in p_Ctrl.crumbTrail'>
         <div class = "crumbs" ng-class="{onHover: hover}" ng-mouseenter="hover = true" ng-mouseleave="hover = false"  ng-click="p_Ctrl.display_Siblings(a)">{{a.label}}</div>
         <div class = "arrow" ng-class="{onArrow: ahover}" ng-mouseenter="ahover = true" ng-mouseleave="ahover = false"  ng-click="p_Ctrl.display_Children(a)"
