@@ -8,7 +8,7 @@
  * @author spurushe
  * @author fkamayou
  */
-
+var qo;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('scriptControls', scriptControls);
@@ -36,6 +36,7 @@
 		
 		scriptCtrl.getScriptMetadata = getScriptMetadata;
 		scriptCtrl.active_qo = $scope.anaCtrl.active_qo;
+		qo = scriptCtrl.active_qo;
 		
 		scriptCtrl.values = [];
 		scriptCtrl.openAdvRModal = openAdvRModal;

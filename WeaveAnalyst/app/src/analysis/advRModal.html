@@ -10,34 +10,66 @@
 			<tr>
 				<td>Specify the path to your installed R libraries</td>
 				<td><input class= "form-control" type= "text" placeholder="for e.g C:\\Program Files\\R\\R-3.1.2\\library"/></td>
-				<td><button class ="btn btn-info" ng-click = "adCtrl.getInstalled_R_Packages()">Go</button></td>
+				<td><button class ="btn btn-info btn-sm" ng-click = "adCtrl.getInstalled_R_Packages()">Go</button></td>
 			</tr>
 		</table>
 		
+		<!-- List of installed packages -->
 		<p>List of installed R packages </p>
 		<div ui-grid = "adCtrl.gridOptions" class = "pkg_grid"></div>
 		<br/><br/>
 		
+		<!-- Installing a new Package from a CRAN Mirror -->
 		<table style = "width:100%">
 			<tr>
 				<td>Install a new R package</td>
 				<td ><ui-select ng-model="adCtrl.rMirror"  theme="select2" style = "width:100%; min-width:200px">
-					    		<ui-select-match allow-clear="true" placeholder="Select CRAN Mirror">{{$select.selected}}</ui-select-match>
+					    		<ui-select-match allow-clear="true" placeholder="Select CRAN Mirror">{{$select.selected.name}}</ui-select-match>
 								<ui-select-choices repeat="mirror in adCtrl.rUtils.cran_mirrors | filter : $select.search">
-					       			 {{mirror}}
+					       			 {{mirror.name}}
 					        	</ui-select-choices>
 					</ui-select>
 				</td>
-				<td><ui-select ng-model="adCtrl.rMirrior"  theme="select2" style = "width:100%; min-width:200px">
+				<td><ui-select ng-model="adCtrl.pkgs_to_install"  theme="select2" style = "width:100%; min-width:200px">
 					    		<ui-select-match allow-clear="true" placeholder="Select R Package">{{$select.selected}}</ui-select-match>
-								<ui-select-choices repeat="mirror in adCtrl.mirrors | filter : $select.search">
-					       			 {{mirror}}
+								<ui-select-choices repeat="pkg in adCtrl.rUtils.repo_pkgs | filter : $select.search">
+					       			 {{pkg}}
 					        	</ui-select-choices>
 					</ui-select></td>
-				<td><button class= "btn btn-info btn-sm">Install</button></td>
+				<td><button class= "btn btn-info">Install</button></td>
 				</tr>
 		</table>
-		 
+		
+		<!-- List of functions in an R package -->
+		
+		<table style = "width:100%">
+			<tr>
+				<td>List of functions in a package</td>
+				<td><ui-select ng-model="adCtrl.pkg"  theme="select2" style = "width:100%; min-width:200px">
+					    		<ui-select-match allow-clear="true" placeholder="Select Installed Package">{{$select.selected.Package}}</ui-select-match>
+								<ui-select-choices repeat="pk in adCtrl.rUtils.rInstalled_pkgs | filter : $select.search">
+					       			 {{pk.Package}}
+					        	</ui-select-choices>
+					</ui-select></td>
+				<td>
+					<ui-select ng-model="adCtrl.func"  theme="select2" style = "width:100%; min-width:200px">
+						    		<ui-select-match allow-clear="true" placeholder="Select function">{{$select.selected}}</ui-select-match>
+									<ui-select-choices repeat="func in adCtrl.rUtils.pkg_objects.funcs | filter : $select.search">
+						       			 {{func}}
+						        	</ui-select-choices>
+					</ui-select>
+				</td>
+				<td>
+					<ui-select ng-model="adCtrl.const"  theme="select2" style = "width:100%; min-width:200px">
+						    		<ui-select-match allow-clear="true" placeholder="Select constants">{{$select.selected}}</ui-select-match>
+									<ui-select-choices repeat="cons in adCtrl.rUtils.pkg_objects.constants | filter : $select.search">
+						       			 {{cons}}
+						        	</ui-select-choices>
+					</ui-select>
+				</td>
+					
+			</tr>		
+		</table>
 
 </div>
 

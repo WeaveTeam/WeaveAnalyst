@@ -233,8 +233,11 @@ if(!this.wa)
 		var adCtrl = this;
 		adCtrl.rUtils = rUtils;
 		adCtrl.getInstalled_R_Packages = getInstalled_R_Packages;
+		adCtrl.get_packages = get_packages;
+		adCtrl.get_Pkg_Objects = get_Pkg_Objects;
 		
 		adCtrl.rUtils.getRMirrors();//getting list of CRAN mirrors
+		adCtrl.getInstalled_R_Packages();
 		
 		adCtrl.gridOptions = {
 			columnDefs : [
@@ -249,6 +252,24 @@ if(!this.wa)
 				adCtrl.gridOptions.data = result;
 			});
 		}
+		
+		function get_packages (){
+			adCtrl.rUtils.get_packages_at_repo(adCtrl.rMirror.url);
+		}
+		
+		function get_Pkg_Objects (){
+			adCtrl.rUtils.get_Pkg_Objects(adCtrl.pkg.Package);
+		}
+		
+		$scope.$watch('adCtrl.rMirror', function(){
+			if(adCtrl.rMirror)
+				adCtrl.get_packages();
+		});
+		
+		$scope.$watch('adCtrl.pkg', function(){
+			if(adCtrl.pkg)
+				adCtrl.get_Pkg_Objects();
+		});
 	};
 })();
 
@@ -478,7 +499,7 @@ if(!this.wa)
  * @author spurushe
  * @author fkamayou
  */
-
+var qo;
 (function(){
 	
 	angular.module('weaveAnalyst.AnalysisModule').directive('scriptControls', scriptControls);
@@ -506,6 +527,7 @@ if(!this.wa)
 		
 		scriptCtrl.getScriptMetadata = getScriptMetadata;
 		scriptCtrl.active_qo = $scope.anaCtrl.active_qo;
+		qo = scriptCtrl.active_qo;
 		
 		scriptCtrl.values = [];
 		scriptCtrl.openAdvRModal = openAdvRModal;
@@ -1074,49 +1096,49 @@ if(!this.wa)
 		      };
 		 $scope.data = [{
 		        'id': 1,
-		        'title': 'node1',
+		        'title': 'Query_Object1',
 		        'nodes': [
 		          {
 		            'id': 11,
-		            'title': 'node1.1',
+		            'title': 'Query_Object1.1',
 		            'nodes': [
 		              {
 		                'id': 111,
-		                'title': 'node1.1.1',
+		                'title': 'Query_Object1.1.1',
 		                'nodes': []
 		              }
 		            ]
 		          },
 		          {
 		            'id': 12,
-		            'title': 'node1.2',
+		            'title': 'Query_Object1.2',
 		            'nodes': []
 		          }
 		        ]
 		      }, {
 		        'id': 2,
-		        'title': 'node2',
+		        'title': 'Query_Object2',
 		        'nodrop': true, // An arbitrary property to check in custom template for nodrop-enabled
 		        'nodes': [
 		          {
 		            'id': 21,
-		            'title': 'node2.1',
+		            'title': 'Query_Object2.1',
 		            'nodes': []
 		          },
 		          {
 		            'id': 22,
-		            'title': 'node2.2',
+		            'title': 'Query_Object2.2',
 		            'nodes': []
 		          }
 		        ]
 		      }, 
 		      {
 		        'id': 3,
-		        'title': 'node3',
+		        'title': 'Query_Object3',
 		        'nodes': [
 		          {
 		            'id': 31,
-		            'title': 'node3.1',
+		            'title': 'Query_Object3.1',
 		            'nodes': []
 		          }
 		        ]
@@ -1870,6 +1892,908 @@ if(!this.wa)
 		
 	}
 })();
+var aws = {};
+
+/**
+ * This function is a wrapper for making a request to a JSON RPC servlet
+ * 
+ * @param {string} url
+ * @param {string} method The method name to be passed to the servlet
+ * @param {?Array|Object} params An array of object to be passed as parameters to the method 
+ * @param {Function} resultHandler A callback function that handles the servlet result
+ * @param {string|number=}queryId
+ * @see aws.addBusyListener
+ */
+aws.queryService = function(url, method, params, resultHandler, queryId)
+{
+    var request = {
+        jsonrpc: "2.0",
+        id: queryId || "no_id",
+        method: method,
+        params: params
+    };
+    
+    $.post(url, JSON.stringify(request), handleResponse, "text");
+
+    function handleResponse(response)
+    {
+    	// parse result for target window to use correct Array implementation
+    	response = targetWindow.JSON.parse(response);
+    	
+        if (response.error)
+        {
+        	console.log(JSON.stringify(response, null, 3));
+        }
+        else if (resultHandler){
+            return resultHandler(response.result, queryId);
+        }
+    }
+};
+
+/**
+ * Makes a batch request to a JSON RPC 2.0 service. This function requires jQuery for the $.post() functionality.
+ * @param {string} url The URL of the service.
+ * @param {string} method Name of the method to call on the server for each entry in the queryIdToParams mapping.
+ * @param {Array|Object} queryIdToParams A mapping from queryId to RPC parameters.
+ * @param {function(Array|Object)} resultsHandler Receives a mapping from queryId to RPC result.
+ */
+aws.bulkQueryService = function(url, method, queryIdToParams, resultsHandler)
+{
+	var batch = [];
+	for (var queryId in queryIdToParams)
+		batch.push({jsonrpc: "2.0", id: queryId, method: method, params: queryIdToParams[queryId]});
+	$.post(url, JSON.stringify(batch), handleBatch, "json");
+	function handleBatch(batchResponse)
+	{
+		var results = Array.isArray(queryIdToParams) ? [] : {};
+		for (var i in batchResponse)
+		{
+			var response = batchResponse[i];
+			if (response.error)
+				console.log(JSON.stringify(response, null, 3));
+			else
+				results[response.id] = response.result;
+		}
+		if (resultsHandler)
+			resultsHandler(results);
+	}
+};
+
+var tryParseJSON = function(jsonString){
+    try {
+        var o = JSON.parse(jsonString);
+
+        // Handle non-exception-throwing cases:
+        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
+        // so we must check for that, too.
+        if (o && typeof o === "object" && o !== null) {
+            return o;
+        }
+    }
+    catch (e) { }
+
+    return false;
+};
+
+var CSVToArray = function(strData, strDelimiter) {
+    // Check to see if the delimiter is defined. If not,
+    // then default to comma.
+    strDelimiter = (strDelimiter || ",");
+    // Create a regular expression to parse the CSV values.
+    var objPattern = new RegExp((
+    // Delimiters.
+    "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+    // Quoted fields.
+    "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+    // Standard fields.
+    "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+    // Create an array to hold our data. Give the array
+    // a default empty first row.
+    var arrData = [[]];
+    // Create an array to hold our individual pattern
+    // matching groups.
+    var arrMatches = null;
+    // Keep looping over the regular expression matches
+    // until we can no longer find a match.
+    while (arrMatches = objPattern.exec(strData)) {
+        // Get the delimiter that was found.
+        var strMatchedDelimiter = arrMatches[1];
+        // Check to see if the given delimiter has a length
+        // (is not the start of string) and if it matches
+        // field delimiter. If id does not, then we know
+        // that this delimiter is a row delimiter.
+        if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
+            // Since we have reached a new row of data,
+            // add an empty row to our data array.
+            arrData.push([]);
+        }
+        // Now that we have our delimiter out of the way,
+        // let's check to see which kind of value we
+        // captured (quoted or unquoted).
+        if (arrMatches[2]) {
+            // We found a quoted value. When we capture
+            // this value, unescape any double quotes.
+            var strMatchedValue = arrMatches[2].replace(
+            new RegExp("\"\"", "g"), "\"");
+        } else {
+            // We found a non-quoted value.
+            var strMatchedValue = arrMatches[3];
+        }
+        // Now that we have our value string, let's add
+        // it to the data array.
+        arrData[arrData.length - 1].push(strMatchedValue);
+    }
+    // Return the parsed data.
+    return (arrData);
+};
+angular.module('weaveAnalyst.utils', []);
+angular.module('weaveAnalyst.utils').
+  directive('myDraggable', function($document) {
+    return {
+        
+    };
+  });
+angular.module('weaveAnalyst.utils')
+.directive(
+        'dualListBox',
+        function($compile, $timeout) {
+            return {
+                restrict: "A",
+                //templateURL: "tpls/dualList.tpls.html",
+                //scope: {options: "="},
+                compile: function(telem, attrs) {
+                    // telem is the template elememt? if no template then no tElem?
+                    // same as "container" below.... 
+                    //var container = $compile(telem);
+                    return function(scope, elem, attr) {
+                        scope.$watch(function() {
+                            return scope.options;
+                        }, function(newval, oldval) {
+                            $timeout(function() {
+                                elem.trigger('bootstrapduallistbox.refresh');
+                            });
+                        });
+
+                        var settings = {
+                            bootstrap2compatible: false,
+                            preserveselectiononmove: false, // 'all' / 'moved' / false
+                            moveonselect: true, // true/false (forced true on androids, see the comment later)
+                            initialfilterfrom: '', // string, filter selectables list on init
+                            initialfilterto: '', // string, filter selected list on init
+                            helperselectnamepostfix: '_helper', // 'string_of_postfix' / false
+                            infotext: 'Showing all {0}', // text when all options are visible / false for no info text
+                            infotextfiltered: '<span class="label label-warning">Filtered</span> {0} from {1}', // when not all of the options are visible due to the filter
+                            infotextempty: 'Empty list', // when there are no options present in the list
+                            selectorminimalheight: 100,
+                            showfilterinputs: true,
+                            filterplaceholder: 'Filter',
+                            filtertextclear: 'show all',
+                            nonselectedlistlabel: false, // 'string', false
+                            selectedlistlabel: false // 'string', false
+                        };
+                        var container = $('<div class="row bootstrap-duallistbox-container"><div class="col-md-6 box1"><span class="info-container"><span class="info"></span><button type="button" class="btn btn-default btn-xs clear1 pull-right">' + settings.filtertextclear + '</button></span><input placeholder="' + settings.filterplaceholder + '" class="filter" type="text"><div class="btn-group buttons"><button type="button" class="btn btn-default moveall" title="Move all"><i class="glyphicon glyphicon-arrow-right"></i><i class="glyphicon glyphicon-arrow-right"></i></button><button type="button" class="btn btn-default move" title="Move selected"><i class="glyphicon glyphicon-arrow-right"></i></button></div><select multiple="multiple" data-duallistbox_generated="true"></select></div><div class="col-md-6 box2"><span class="info-container"><span class="info"></span><button type="button" class="btn btn-default btn-xs clear2 pull-right">' + settings.filtertextclear + '</button></span><input placeholder="' + settings.filterplaceholder + '" class="filter" type="text"><div class="btn-group buttons"><button type="button" class="btn btn-default remove" title="Remove selected"><i class="glyphicon glyphicon-arrow-left"></i></button><button type="button" class="btn btn-default removeall" title="Remove all"><i class="glyphicon glyphicon-arrow-left"></i><i class="glyphicon glyphicon-arrow-left"></i></button></div><select multiple="multiple" data-duallistbox_generated="true"></select></div></div>');
+                        var elements = {
+                            originalselect: elem, //$this,
+                            box1: $('.box1', container),
+                            box2: $('.box2', container),
+                            //filterinput1: $('.box1 .filter', container),
+                            //filterinput2: $('.box2 .filter', container),
+                            //filter1clear: $('.box1 .clear1', container),
+                            //filter2clear: $('.box2 .clear2', container),
+                            info1: $('.box1 .info', container),
+                            info2: $('.box2 .info', container),
+                            select1: $('.box1 select', container),
+                            select2: $('.box2 select', container),
+                            movebutton: $('.box1 .move', container),
+                            removebutton: $('.box2 .remove', container),
+                            moveallbutton: $('.box1 .moveall', container),
+                            removeallbutton: $('.box2 .removeall', container),
+                            form: $($('.box1 .filter', container)[0].form)
+                        };
+                        var i = 0;
+                        var selectedelements = 0;
+                        var originalselectname = attr.name || "";
+                        var c = attr.class;
+                        var height;
+
+                        function init() {
+                            container.addClass('moveonselect');
+                            if (typeof c !== 'undefined' && c) {
+                                c = c.match(/\bspan[1-9][0-2]?/);
+                                if (!c) {
+                                    c = attr.class;
+                                    c = c.match(/\bcol-md-[1-9][0-2]?/);
+                                }
+                            }
+                            if ( !! c) {
+                                container.addClass(c.toString());
+                            }
+                            if (elements.originalselect.height() < settings.selectorminimalheight) {
+                                height = settings.selectorminimalheight
+                            } else {
+                                height = elements.originalselect.height();
+                            }
+                            elements.select1.height(height);
+                            elements.select2.height(height);
+                            elem.addClass('hide');
+                            //update selection states();
+                            //elements.filterinput1.hide();
+                            //elements.filterinput2.hide();
+                            var box = $(container.insertBefore(elem));
+                            bindevents();
+                            refreshselects();
+                            updatesselectionstates();
+                            //elem.html(box);
+                            $compile(box)(scope);
+                            //$compile(elem.contents())(scope);
+                            //console.log(elem);
+
+                        }
+                        init();
+
+                        function updatesselectionstates() {
+                            $(elem).find('option').each(function(index, item) {
+                                var $item = $(item);
+                                if (typeof($item.data('original-index')) === 'undefined') {
+                                    $item.data('original-index', i++);
+                                }
+                                if (typeof($item.data('_selected')) === 'undefined') {
+                                    $item.data('_selected', false);
+                                }
+                            });
+                        }
+                        scope.updateselections = refreshselects;
+
+                        function refreshselects() {
+                            selectedelements = 0;
+                            elements.select2.empty();
+                            elements.select1.empty();
+                            $(elem).find('option').each(function(index, item) {
+                                var $item = $(item);
+                                if ($item.prop('selected')) {
+                                    selectedelements++;
+                                    elements.select2.append($item.clone(true).prop('selected',
+                                        $item.data('_selected')));
+                                } else {
+                                    elements.select1.append($item.clone(true).prop('selected',
+                                        $item.data('_selected')));
+                                }
+                            });
+                            // ommited filters here
+                        }
+                        // functions formatstring(s, args) and refreshinfo()... don't need?'
+
+                        function bindevents() {
+                            elements.form.submit(function(e) {
+                                if (elements.filterinput1.is(":focus")) {
+                                    e.preventDefault();
+                                    elements.filterinput1.focusout();
+                                } else if (elements.filterinput2.is(":focus")) {
+                                    e.preventDefault();
+                                    elements.filterinput2.focusout();
+                                }
+                            }); // probably  not needed
+
+                            elements.originalselect.on('bootstrapduallistbox.refresh', function(e, clearselections) {
+                                updatesselectionstates();
+
+                                if (!clearselections) {
+                                    saveselections1();
+                                    saveselections2();
+                                } else {
+                                    clearselections12();
+                                }
+
+                                refreshselects();
+                            });
+
+                            //                        elements.filter1clear.on('click', function() {
+                            //                            elements.filterinput1.val('');
+                            //                            refreshselects();
+                            //                        });
+                            //
+                            //                        elements.filter2clear.on('click', function() {
+                            //                            elements.filterinput2.val('');
+                            //                            refreshselects();
+                            //                        });
+
+                            elements.movebutton.on('click', function() {
+                                move();
+                            });
+
+                            elements.moveallbutton.on('click', function() {
+                                moveall();
+                            });
+
+                            elements.removebutton.on('click', function() {
+                                remove();
+                            });
+
+                            elements.removeallbutton.on('click', function() {
+                                removeall();
+                            });
+
+                            //                        elements.filterinput1.on('change keyup', function() {
+                            //                            filter1();
+                            //                        });
+                            //
+                            //                        elements.filterinput2.on('change keyup', function() {
+                            //                            filter2();
+                            //                        });
+
+                            settings.preserveselectiononmove = false;
+
+                            elements.select1.on('change', function() {
+                                move();
+                            });
+                            elements.select2.on('change', function() {
+                                remove();
+                            });
+
+                        }
+
+                        function saveselections1() {
+                            elements.select1.find('option').each(function(index, item) {
+                                var $item = $(item);
+
+                                elements.originalselect.find('option').eq($item.data('original-index'))
+                                    .data('_selected', $item.prop('selected'));
+                            });
+                        }
+
+                        function saveselections2() {
+                            elements.select2.find('option').each(function(index, item) {
+                                var $item = $(item);
+
+                                elements.originalselect.find('option').eq($item.data('original-index'))
+                                    .data('_selected', $item.prop('selected'));
+                            });
+                        }
+
+                        function clearselections12() {
+                            elements.select1.find('option').each(function() {
+                                elements.originalselect.find('option').data('_selected', false);
+                            });
+                        }
+
+                        function sortoptions(select) {
+                            select.find('option').sort(function(a, b) {
+                                return ($(a).data('original-index') > $(b).data('original-index')) ? 1 : -1;
+                            }).appendTo(select);
+                        }
+
+                        function changeselectionstate(original_index, selected) {
+                            elements.originalselect.find('option').each(function(index, item) {
+                                var $item = $(item);
+
+                                if ($item.data('original-index') === original_index) {
+                                    $item.prop('selected', selected);
+                                }
+                            });
+                        }
+
+                        function move() {
+                            if (settings.preserveselectiononmove === 'all') {
+                                saveselections1();
+                                saveselections2();
+                            } else if (settings.preserveselectiononmove === 'moved') {
+                                saveselections1();
+                            }
+
+
+                            elements.select1.find('option:selected').each(function(index, item) {
+                                var $item = $(item);
+
+                                if (!$item.data('filtered1')) {
+                                    changeselectionstate($item.data('original-index'), true);
+                                }
+                            });
+
+                            refreshselects();
+                            triggerchangeevent();
+
+                            sortoptions(elements.select2);
+                        }
+
+                        function remove() {
+                            if (settings.preserveselectiononmove === 'all') {
+                                saveselections1();
+                                saveselections2();
+                            } else if (settings.preserveselectiononmove === 'moved') {
+                                saveselections2();
+                            }
+
+                            elements.select2.find('option:selected').each(function(index, item) {
+                                var $item = $(item);
+
+                                if (!$item.data('filtered2')) {
+                                    changeselectionstate($item.data('original-index'), false);
+                                }
+                            });
+
+                            refreshselects();
+                            triggerchangeevent();
+
+                            sortoptions(elements.select1);
+                        }
+
+                        function moveall() {
+                            if (settings.preserveselectiononmove === 'all') {
+                                saveselections1();
+                                saveselections2();
+                            } else if (settings.preserveselectiononmove === 'moved') {
+                                saveselections1();
+                            }
+
+                            elements.originalselect.find('option').each(function(index, item) {
+                                var $item = $(item);
+
+                                if (!$item.data('filtered1')) {
+                                    $item.prop('selected', true);
+                                }
+                            });
+
+                            refreshselects();
+                            triggerchangeevent();
+                        }
+
+                        function removeall() {
+                            if (settings.preserveselectiononmove === 'all') {
+                                saveselections1();
+                                saveselections2();
+                            } else if (settings.preserveselectiononmove === 'moved') {
+                                saveselections2();
+                            }
+
+                            elements.originalselect.find('option').each(function(index, item) {
+                                var $item = $(item);
+
+                                if (!$item.data('filtered2')) {
+                                    $item.prop('selected', false);
+                                }
+                            });
+
+                            refreshselects();
+                            triggerchangeevent();
+                        }
+
+                        function triggerchangeevent() {
+                            elements.originalselect.trigger('change');
+                        }
+                    }
+                }
+
+            }
+        });
+angular.module('weaveAnalyst.utils')
+        .directive('fileUpload', function($q) {
+          return {
+            restrict: 'E',
+            template: "<label class='file-nput-btn'>{{label}}<input class='file-upload' type='file'/></label>",
+            replace: true,
+            link: function($scope, elem, attrs) {
+              var deferred;
+              $scope.label = attrs.label;
+              $(elem).fileReader({
+                "debugMode": true,
+                "filereader": "lib/file-reader/filereader.swf"
+              });
+              $(elem).on('click', function(args) {
+                deferred = $q.defer();
+                $scope.fileUpload = deferred.promise;
+              });
+              $(elem).find('input').on("change", function(evt) {
+                var file = evt.target.files[0];
+                if (file.name == undefined || file.name == "") {
+                  return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                  var contents = {filename: file.name,
+                    content: e.target.result};
+                  scriptUploaded = contents;
+                  $scope.$safeApply(function() { deferred.resolve(contents); });
+                };
+                reader.readAsText(file);
+              });
+            }
+          };
+        })
+        .directive("fileread", [function () {
+    return {
+        scope: {
+            fileread: "="
+        },
+        link: function (scope, element, attributes) {
+            element.bind("change", function (changeEvent) {
+                var reader = new FileReader();
+                reader.onload = function (loadEvent) {
+                    scope.$apply(function () {
+                        scope.fileread = {
+                        		content : loadEvent.target.result,
+                        		filename : changeEvent.target.files[0].name
+                        };
+                    });
+                };
+                reader.readAsText(changeEvent.target.files[0]);
+            });
+        }
+    };
+}]).directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if(event.which === 13) {
+                scope.$apply(function (){
+                    scope.$eval(attrs.ngEnter);
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});;;
+        
+
+/**
+ * this card appears on the index page and gives an idea of functionality of the tabs. 
+ * @shwetapurushe
+ */
+
+(function(){
+	angular.module('weaveAnalyst.utils').directive('introCard', introCardComponent);
+	
+	function introCardComponent(){
+		return {
+			restrict: 'E', 
+			template:'<div class = "intro_card"><div class="header panel-heading"><h2>{{ic_Ctrl.title}}</h2></div>' +
+				'<div><div>{{ic_Ctrl.description}}</div><div></div>',
+			scope:{
+				title : '@',
+				description : '@',
+				tab: '@'
+				
+			},
+			controller : introCardController,
+			controllerAs : 'ic_Ctrl',
+			bindToController : true,
+			link : function(){
+				
+			}
+		};//end of directive def
+	};
+	
+	function introCardController (){
+		var ic_Ctrl = this;
+	};
+})();
+angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compile, $templateCache, $q, $http) {
+
+  var getTemplate = function(templateUrl) {
+    var def = $q.defer();
+
+    var template = '';
+    
+    template = $templateCache.get(templateUrl);
+    console.log(template);
+    if (typeof template === "undefined") {
+      $http.get(templateUrl)
+        .success(function(data) {
+          $templateCache.put(templateUrl, data);
+          def.resolve(data);
+        });
+    }else {
+    	 def.resolve(template);
+    }
+
+    return def.promise;
+  };
+  
+  return {
+    restrict: "A",
+    link: function(scope, element, attrs) {
+    	console.log(attrs.templateUrl);
+      getTemplate(attrs.templateUrl).then(function(popOverContent) {
+        var options = {
+          content: popOverContent,
+          placement: attrs.popoverPlacement,
+          html: true,
+          date: scope.date
+        };
+        $(element).popover(options);
+      });
+    }
+  };
+});
+/**
+ *this file contains utlity functions for making the weave analyst support features present in the R GUI
+ * @shweta purushe 
+ */
+
+(function(){
+	angular.module('weaveAnalyst.utils').service('rUtils', rUtils);
+	
+	rUtils.$inject = ['$q', 'runQueryService', 'computationServiceURL'];
+	function rUtils($q, runQueryService, computationServiceURL){
+		var that = this; 
+		that.rPath; //stores the path of the user's R installation 
+		that.rInstalled_pkgs = [];
+		that.repo_pkgs = [];//list of packages present at a particular repo
+		that.cran_mirrors = [];
+		that.pkg_objects = {funcs : [], constants : []};//list of functions in a given package
+		
+		//gets the list of CRAN mirrors
+		that.getRMirrors = function(){
+			if(that.cran_mirrors.length > 1)
+				return that.cran_mirrors;
+			else{
+				console.log("retrieving CRAN mirrors");
+				var deferred = $q.defer();
+				
+				runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts',["getMirrors.R", null], function(result){
+					var mirror_names = result.resultData[0];
+					var mirror_urls = result.resultData[3];
+					for(var i =0; i< mirror_names.length; i++){
+						var mObj = {};
+						mObj.name = mirror_names[i];
+						mObj.url = mirror_urls[i];
+						
+						that.cran_mirrors.push(mObj);
+					}
+					console.log("result", that.cran_mirrors);
+					deferred.resolve(that.cran_mirrors);
+				},
+				function(error){
+					deferred.reject(error);
+				});
+				
+				return deferred.promise;
+			}
+		};
+		
+		//gets a list from the library folder of the installed R version
+		that.getInstalled_R_Packages = function(){
+			console.log("retreiving installed R packages");
+			that.rInstalled_pkgs = [];
+			
+			var deferred = $q.defer();
+			var rpath = "C:\\Program Files\\R\\R-3.1.2\\library";//hard coded for now
+
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackages.R", {path: rpath}],function (result){ 
+				var data = result.resultData;
+				for(var i = 0; i < data[0].length; i++){//figure way around hard coding
+					var obj = {};
+					obj.Package = data[0][i];
+					obj.Version = data[1][i];
+					that.rInstalled_pkgs.push(obj);
+				}
+				
+				deferred.resolve(that.rInstalled_pkgs);
+			}, 
+			function (error){ deferred.reject(error);}
+			);
+			
+			return deferred.promise;
+		};
+		
+		that.get_packages_at_repo = function(repository){
+			
+			var deferred = $q.defer();
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getRepoPackages.R", {repo : repository}], function(result){
+				that.repo_pkgs = result;
+				console.log("repo_pkgs", result);
+				deferred.resolve(that.repo_pkgs);
+			}, function(error){
+				deferred.reject(error);
+			});
+			
+			return deferred.promise;
+		};
+		
+		//gets the objects in a particular package
+		that.get_Pkg_Objects = function(package_name){
+			if(!package_name)
+				return;
+			
+			var deferred = $q.defer();
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackageObjects.R", {packageName : package_name}], function(result){
+				console.log("pkg_objects", result);
+				
+				that.pkg_objects.funcs = result.resultData[0];
+				that.pkg_objects.constants = result.resultData[1];
+				
+				deferred.resolve(that.pkg_objects);
+			}, function(error){
+				deferred.reject(error);
+			});
+			
+			return deferred.promise;
+		};
+		
+		//verifies the path entered by user or else uses default
+		that.verify_Path = function(){
+			
+		};
+	}
+})();
+/**
+ *this object represents the over arching global object for the Weave Analyst
+ *@author shweta purushe 
+ */
+if(!this.wa)
+	this.wa = {};
+
+
+(function(){
+	
+	Object.defineProperty(ScriptInputs, 'NS', {
+        value: 'wa'
+    });
+
+	Object.defineProperty(ScriptInputs, 'CLASS_NAME', {
+        value: 'ScriptInputs'
+	});
+	
+	function ScriptInputs (){
+		
+		 Object.defineProperty(this, 'sessionable', {
+	           value: true
+	       });
+		 
+		 Object.defineProperty(this, 'columns', {
+			 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableVariable([]))
+		 });
+		 
+	}
+	
+	window.wa.ScriptInputs = ScriptInputs;
+})();
+
+
+
+(function(){
+	
+	 Object.defineProperty(QueryObject, 'NS', {
+	        value: 'wa'
+	    });
+
+	 Object.defineProperty(QueryObject, 'CLASS_NAME', {
+	        value: 'QueryObject'
+   	});
+	    
+	    
+	function QueryObject (){
+		
+	 Object.defineProperty(this, 'sessionable', {
+           value: true
+       });
+		
+	 Object.defineProperty(this, 'author', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
+	 });
+	 
+	 Object.defineProperty(this, 'date', {
+		 value : new Date()
+	 });
+	 
+	 Object.defineProperty(this, 'ComputationEngine', {
+           value: WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
+       });
+	 
+	 Object.defineProperty(this, 'scriptSelected', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
+	 });
+		
+	 Object.defineProperty(this, 'title', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
+	 });
+	 
+	 Object.defineProperty(this, 'scriptOptions', {
+		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new wa.ScriptInputs())
+	 });
+	 
+		
+	}
+	
+	window.wa.QueryObject = QueryObject;
+	
+})();
+
+
+/**
+ * This Service is designed to receive a query object, pre-process an analysis query and processes its results.
+ * @author spurushe
+ * @author fkamayou
+ * 
+ **/
+(function(){
+	angular.module('weaveAnalyst.run', []);
+
+	angular.module('weaveAnalyst.run').service('QueryHandlerService', QueryHandlerService);
+	
+	function QueryHandlerService (){
+		var that = this;
+		var nestedFilterRequest = {and : []};
+		
+		//this function pre-processes filters applied on the input data before being sent to the server
+		that.handle_Filters = function(){
+			
+		};
+		
+		//this function pre-processes the inputs of a particular computation by wrapping it into a bean
+		that.handle_ScriptInput_Options = function(scriptOptions){
+
+	    	var typedInputObjects= [];
+	    
+	    	for(var key in scriptOptions) {
+				var input = scriptOptions[key];
+				
+				// handle multiColumns. Note that we do this first because type of arrayVariabel == 'object' returns true.
+				if(Array.isArray(input)) {
+					typedInputObjects.push({
+						name : key,
+						type : 'dataColumnMatrix',
+						value : {
+							
+							columnIds : $.map(input, function(column) {
+								return column.id;
+							}), 
+							filters : nestedFilterRequest.and.length ? nestedFilterRequest : null,
+							namesToAssign : $.map(input, function(column) {
+								return column.title;
+							})
+						}
+					});
+				} 
+				
+				// handle single column
+				else if((typeof input) == 'object') {
+		    		rowsObject.value.columnIds.push(input.id);
+	    			rowsObject.value.namesToAssign.push(key);
+		    		if($.inArray(rowsObject,typedInputObjects) == -1)//if not present in array before
+		    			typedInputObjects.push(rowsObject);
+		    	}
+
+				else if ((typeof input) == 'string'){
+					typedInputObjects.push({
+						name : key, 
+						type : 'string',
+						value : input
+					});
+		    	}
+		    	else if ((typeof input) == 'number'){// regular number
+		    		typedInputObjects.push({
+						name : key, 
+						type : 'number',
+						value : input
+					});
+		    	} 
+		    	else if ((typeof input) == 'boolean'){ // boolean 
+		    		typedInputObjects.push({
+						name : key, 
+						type : 'boolean',
+						value : input
+					});
+		    	}
+		    	else{
+					console.log("unknown script input type ", input);
+				}
+	    	}
+	    	
+	    	return typedInputObjects;
+		};
+		
+		//this function temporarily remaps original data values to new ones without altering the original data 
+		that.handle_ColumnRemapping = function(){
+			
+		};
+		
+		//runs a pre-processed query (analysis) on the server (in R/STATA etc)
+		that.run_query = function(){
+			
+		};
+	};
+})();
 /** this controller controls the project tab 
  * @author spurushe
  * 
@@ -2599,860 +3523,6 @@ if(!this.wa)
 		};
 	}
 })();
-/**
- * This Service is designed to receive a query object, pre-process an analysis query and processes its results.
- * @author spurushe
- * @author fkamayou
- * 
- **/
-(function(){
-	angular.module('weaveAnalyst.run', []);
-
-	angular.module('weaveAnalyst.run').service('QueryHandlerService', QueryHandlerService);
-	
-	function QueryHandlerService (){
-		var that = this;
-		var nestedFilterRequest = {and : []};
-		
-		//this function pre-processes filters applied on the input data before being sent to the server
-		that.handle_Filters = function(){
-			
-		};
-		
-		//this function pre-processes the inputs of a particular computation by wrapping it into a bean
-		that.handle_ScriptInput_Options = function(scriptOptions){
-
-	    	var typedInputObjects= [];
-	    
-	    	for(var key in scriptOptions) {
-				var input = scriptOptions[key];
-				
-				// handle multiColumns. Note that we do this first because type of arrayVariabel == 'object' returns true.
-				if(Array.isArray(input)) {
-					typedInputObjects.push({
-						name : key,
-						type : 'dataColumnMatrix',
-						value : {
-							
-							columnIds : $.map(input, function(column) {
-								return column.id;
-							}), 
-							filters : nestedFilterRequest.and.length ? nestedFilterRequest : null,
-							namesToAssign : $.map(input, function(column) {
-								return column.title;
-							})
-						}
-					});
-				} 
-				
-				// handle single column
-				else if((typeof input) == 'object') {
-		    		rowsObject.value.columnIds.push(input.id);
-	    			rowsObject.value.namesToAssign.push(key);
-		    		if($.inArray(rowsObject,typedInputObjects) == -1)//if not present in array before
-		    			typedInputObjects.push(rowsObject);
-		    	}
-
-				else if ((typeof input) == 'string'){
-					typedInputObjects.push({
-						name : key, 
-						type : 'string',
-						value : input
-					});
-		    	}
-		    	else if ((typeof input) == 'number'){// regular number
-		    		typedInputObjects.push({
-						name : key, 
-						type : 'number',
-						value : input
-					});
-		    	} 
-		    	else if ((typeof input) == 'boolean'){ // boolean 
-		    		typedInputObjects.push({
-						name : key, 
-						type : 'boolean',
-						value : input
-					});
-		    	}
-		    	else{
-					console.log("unknown script input type ", input);
-				}
-	    	}
-	    	
-	    	return typedInputObjects;
-		};
-		
-		//this function temporarily remaps original data values to new ones without altering the original data 
-		that.handle_ColumnRemapping = function(){
-			
-		};
-		
-		//runs a pre-processed query (analysis) on the server (in R/STATA etc)
-		that.run_query = function(){
-			
-		};
-	};
-})();
-var aws = {};
-
-/**
- * This function is a wrapper for making a request to a JSON RPC servlet
- * 
- * @param {string} url
- * @param {string} method The method name to be passed to the servlet
- * @param {?Array|Object} params An array of object to be passed as parameters to the method 
- * @param {Function} resultHandler A callback function that handles the servlet result
- * @param {string|number=}queryId
- * @see aws.addBusyListener
- */
-aws.queryService = function(url, method, params, resultHandler, queryId)
-{
-    var request = {
-        jsonrpc: "2.0",
-        id: queryId || "no_id",
-        method: method,
-        params: params
-    };
-    
-    $.post(url, JSON.stringify(request), handleResponse, "text");
-
-    function handleResponse(response)
-    {
-    	// parse result for target window to use correct Array implementation
-    	response = targetWindow.JSON.parse(response);
-    	
-        if (response.error)
-        {
-        	console.log(JSON.stringify(response, null, 3));
-        }
-        else if (resultHandler){
-            return resultHandler(response.result, queryId);
-        }
-    }
-};
-
-/**
- * Makes a batch request to a JSON RPC 2.0 service. This function requires jQuery for the $.post() functionality.
- * @param {string} url The URL of the service.
- * @param {string} method Name of the method to call on the server for each entry in the queryIdToParams mapping.
- * @param {Array|Object} queryIdToParams A mapping from queryId to RPC parameters.
- * @param {function(Array|Object)} resultsHandler Receives a mapping from queryId to RPC result.
- */
-aws.bulkQueryService = function(url, method, queryIdToParams, resultsHandler)
-{
-	var batch = [];
-	for (var queryId in queryIdToParams)
-		batch.push({jsonrpc: "2.0", id: queryId, method: method, params: queryIdToParams[queryId]});
-	$.post(url, JSON.stringify(batch), handleBatch, "json");
-	function handleBatch(batchResponse)
-	{
-		var results = Array.isArray(queryIdToParams) ? [] : {};
-		for (var i in batchResponse)
-		{
-			var response = batchResponse[i];
-			if (response.error)
-				console.log(JSON.stringify(response, null, 3));
-			else
-				results[response.id] = response.result;
-		}
-		if (resultsHandler)
-			resultsHandler(results);
-	}
-};
-
-var tryParseJSON = function(jsonString){
-    try {
-        var o = JSON.parse(jsonString);
-
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
-        // so we must check for that, too.
-        if (o && typeof o === "object" && o !== null) {
-            return o;
-        }
-    }
-    catch (e) { }
-
-    return false;
-};
-
-var CSVToArray = function(strData, strDelimiter) {
-    // Check to see if the delimiter is defined. If not,
-    // then default to comma.
-    strDelimiter = (strDelimiter || ",");
-    // Create a regular expression to parse the CSV values.
-    var objPattern = new RegExp((
-    // Delimiters.
-    "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-    // Quoted fields.
-    "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-    // Standard fields.
-    "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
-    // Create an array to hold our data. Give the array
-    // a default empty first row.
-    var arrData = [[]];
-    // Create an array to hold our individual pattern
-    // matching groups.
-    var arrMatches = null;
-    // Keep looping over the regular expression matches
-    // until we can no longer find a match.
-    while (arrMatches = objPattern.exec(strData)) {
-        // Get the delimiter that was found.
-        var strMatchedDelimiter = arrMatches[1];
-        // Check to see if the given delimiter has a length
-        // (is not the start of string) and if it matches
-        // field delimiter. If id does not, then we know
-        // that this delimiter is a row delimiter.
-        if (strMatchedDelimiter.length && (strMatchedDelimiter != strDelimiter)) {
-            // Since we have reached a new row of data,
-            // add an empty row to our data array.
-            arrData.push([]);
-        }
-        // Now that we have our delimiter out of the way,
-        // let's check to see which kind of value we
-        // captured (quoted or unquoted).
-        if (arrMatches[2]) {
-            // We found a quoted value. When we capture
-            // this value, unescape any double quotes.
-            var strMatchedValue = arrMatches[2].replace(
-            new RegExp("\"\"", "g"), "\"");
-        } else {
-            // We found a non-quoted value.
-            var strMatchedValue = arrMatches[3];
-        }
-        // Now that we have our value string, let's add
-        // it to the data array.
-        arrData[arrData.length - 1].push(strMatchedValue);
-    }
-    // Return the parsed data.
-    return (arrData);
-};
-angular.module('weaveAnalyst.utils', []);
-angular.module('weaveAnalyst.utils').
-  directive('myDraggable', function($document) {
-    return {
-        
-    };
-  });
-angular.module('weaveAnalyst.utils')
-.directive(
-        'dualListBox',
-        function($compile, $timeout) {
-            return {
-                restrict: "A",
-                //templateURL: "tpls/dualList.tpls.html",
-                //scope: {options: "="},
-                compile: function(telem, attrs) {
-                    // telem is the template elememt? if no template then no tElem?
-                    // same as "container" below.... 
-                    //var container = $compile(telem);
-                    return function(scope, elem, attr) {
-                        scope.$watch(function() {
-                            return scope.options;
-                        }, function(newval, oldval) {
-                            $timeout(function() {
-                                elem.trigger('bootstrapduallistbox.refresh');
-                            });
-                        });
-
-                        var settings = {
-                            bootstrap2compatible: false,
-                            preserveselectiononmove: false, // 'all' / 'moved' / false
-                            moveonselect: true, // true/false (forced true on androids, see the comment later)
-                            initialfilterfrom: '', // string, filter selectables list on init
-                            initialfilterto: '', // string, filter selected list on init
-                            helperselectnamepostfix: '_helper', // 'string_of_postfix' / false
-                            infotext: 'Showing all {0}', // text when all options are visible / false for no info text
-                            infotextfiltered: '<span class="label label-warning">Filtered</span> {0} from {1}', // when not all of the options are visible due to the filter
-                            infotextempty: 'Empty list', // when there are no options present in the list
-                            selectorminimalheight: 100,
-                            showfilterinputs: true,
-                            filterplaceholder: 'Filter',
-                            filtertextclear: 'show all',
-                            nonselectedlistlabel: false, // 'string', false
-                            selectedlistlabel: false // 'string', false
-                        };
-                        var container = $('<div class="row bootstrap-duallistbox-container"><div class="col-md-6 box1"><span class="info-container"><span class="info"></span><button type="button" class="btn btn-default btn-xs clear1 pull-right">' + settings.filtertextclear + '</button></span><input placeholder="' + settings.filterplaceholder + '" class="filter" type="text"><div class="btn-group buttons"><button type="button" class="btn btn-default moveall" title="Move all"><i class="glyphicon glyphicon-arrow-right"></i><i class="glyphicon glyphicon-arrow-right"></i></button><button type="button" class="btn btn-default move" title="Move selected"><i class="glyphicon glyphicon-arrow-right"></i></button></div><select multiple="multiple" data-duallistbox_generated="true"></select></div><div class="col-md-6 box2"><span class="info-container"><span class="info"></span><button type="button" class="btn btn-default btn-xs clear2 pull-right">' + settings.filtertextclear + '</button></span><input placeholder="' + settings.filterplaceholder + '" class="filter" type="text"><div class="btn-group buttons"><button type="button" class="btn btn-default remove" title="Remove selected"><i class="glyphicon glyphicon-arrow-left"></i></button><button type="button" class="btn btn-default removeall" title="Remove all"><i class="glyphicon glyphicon-arrow-left"></i><i class="glyphicon glyphicon-arrow-left"></i></button></div><select multiple="multiple" data-duallistbox_generated="true"></select></div></div>');
-                        var elements = {
-                            originalselect: elem, //$this,
-                            box1: $('.box1', container),
-                            box2: $('.box2', container),
-                            //filterinput1: $('.box1 .filter', container),
-                            //filterinput2: $('.box2 .filter', container),
-                            //filter1clear: $('.box1 .clear1', container),
-                            //filter2clear: $('.box2 .clear2', container),
-                            info1: $('.box1 .info', container),
-                            info2: $('.box2 .info', container),
-                            select1: $('.box1 select', container),
-                            select2: $('.box2 select', container),
-                            movebutton: $('.box1 .move', container),
-                            removebutton: $('.box2 .remove', container),
-                            moveallbutton: $('.box1 .moveall', container),
-                            removeallbutton: $('.box2 .removeall', container),
-                            form: $($('.box1 .filter', container)[0].form)
-                        };
-                        var i = 0;
-                        var selectedelements = 0;
-                        var originalselectname = attr.name || "";
-                        var c = attr.class;
-                        var height;
-
-                        function init() {
-                            container.addClass('moveonselect');
-                            if (typeof c !== 'undefined' && c) {
-                                c = c.match(/\bspan[1-9][0-2]?/);
-                                if (!c) {
-                                    c = attr.class;
-                                    c = c.match(/\bcol-md-[1-9][0-2]?/);
-                                }
-                            }
-                            if ( !! c) {
-                                container.addClass(c.toString());
-                            }
-                            if (elements.originalselect.height() < settings.selectorminimalheight) {
-                                height = settings.selectorminimalheight
-                            } else {
-                                height = elements.originalselect.height();
-                            }
-                            elements.select1.height(height);
-                            elements.select2.height(height);
-                            elem.addClass('hide');
-                            //update selection states();
-                            //elements.filterinput1.hide();
-                            //elements.filterinput2.hide();
-                            var box = $(container.insertBefore(elem));
-                            bindevents();
-                            refreshselects();
-                            updatesselectionstates();
-                            //elem.html(box);
-                            $compile(box)(scope);
-                            //$compile(elem.contents())(scope);
-                            //console.log(elem);
-
-                        }
-                        init();
-
-                        function updatesselectionstates() {
-                            $(elem).find('option').each(function(index, item) {
-                                var $item = $(item);
-                                if (typeof($item.data('original-index')) === 'undefined') {
-                                    $item.data('original-index', i++);
-                                }
-                                if (typeof($item.data('_selected')) === 'undefined') {
-                                    $item.data('_selected', false);
-                                }
-                            });
-                        }
-                        scope.updateselections = refreshselects;
-
-                        function refreshselects() {
-                            selectedelements = 0;
-                            elements.select2.empty();
-                            elements.select1.empty();
-                            $(elem).find('option').each(function(index, item) {
-                                var $item = $(item);
-                                if ($item.prop('selected')) {
-                                    selectedelements++;
-                                    elements.select2.append($item.clone(true).prop('selected',
-                                        $item.data('_selected')));
-                                } else {
-                                    elements.select1.append($item.clone(true).prop('selected',
-                                        $item.data('_selected')));
-                                }
-                            });
-                            // ommited filters here
-                        }
-                        // functions formatstring(s, args) and refreshinfo()... don't need?'
-
-                        function bindevents() {
-                            elements.form.submit(function(e) {
-                                if (elements.filterinput1.is(":focus")) {
-                                    e.preventDefault();
-                                    elements.filterinput1.focusout();
-                                } else if (elements.filterinput2.is(":focus")) {
-                                    e.preventDefault();
-                                    elements.filterinput2.focusout();
-                                }
-                            }); // probably  not needed
-
-                            elements.originalselect.on('bootstrapduallistbox.refresh', function(e, clearselections) {
-                                updatesselectionstates();
-
-                                if (!clearselections) {
-                                    saveselections1();
-                                    saveselections2();
-                                } else {
-                                    clearselections12();
-                                }
-
-                                refreshselects();
-                            });
-
-                            //                        elements.filter1clear.on('click', function() {
-                            //                            elements.filterinput1.val('');
-                            //                            refreshselects();
-                            //                        });
-                            //
-                            //                        elements.filter2clear.on('click', function() {
-                            //                            elements.filterinput2.val('');
-                            //                            refreshselects();
-                            //                        });
-
-                            elements.movebutton.on('click', function() {
-                                move();
-                            });
-
-                            elements.moveallbutton.on('click', function() {
-                                moveall();
-                            });
-
-                            elements.removebutton.on('click', function() {
-                                remove();
-                            });
-
-                            elements.removeallbutton.on('click', function() {
-                                removeall();
-                            });
-
-                            //                        elements.filterinput1.on('change keyup', function() {
-                            //                            filter1();
-                            //                        });
-                            //
-                            //                        elements.filterinput2.on('change keyup', function() {
-                            //                            filter2();
-                            //                        });
-
-                            settings.preserveselectiononmove = false;
-
-                            elements.select1.on('change', function() {
-                                move();
-                            });
-                            elements.select2.on('change', function() {
-                                remove();
-                            });
-
-                        }
-
-                        function saveselections1() {
-                            elements.select1.find('option').each(function(index, item) {
-                                var $item = $(item);
-
-                                elements.originalselect.find('option').eq($item.data('original-index'))
-                                    .data('_selected', $item.prop('selected'));
-                            });
-                        }
-
-                        function saveselections2() {
-                            elements.select2.find('option').each(function(index, item) {
-                                var $item = $(item);
-
-                                elements.originalselect.find('option').eq($item.data('original-index'))
-                                    .data('_selected', $item.prop('selected'));
-                            });
-                        }
-
-                        function clearselections12() {
-                            elements.select1.find('option').each(function() {
-                                elements.originalselect.find('option').data('_selected', false);
-                            });
-                        }
-
-                        function sortoptions(select) {
-                            select.find('option').sort(function(a, b) {
-                                return ($(a).data('original-index') > $(b).data('original-index')) ? 1 : -1;
-                            }).appendTo(select);
-                        }
-
-                        function changeselectionstate(original_index, selected) {
-                            elements.originalselect.find('option').each(function(index, item) {
-                                var $item = $(item);
-
-                                if ($item.data('original-index') === original_index) {
-                                    $item.prop('selected', selected);
-                                }
-                            });
-                        }
-
-                        function move() {
-                            if (settings.preserveselectiononmove === 'all') {
-                                saveselections1();
-                                saveselections2();
-                            } else if (settings.preserveselectiononmove === 'moved') {
-                                saveselections1();
-                            }
-
-
-                            elements.select1.find('option:selected').each(function(index, item) {
-                                var $item = $(item);
-
-                                if (!$item.data('filtered1')) {
-                                    changeselectionstate($item.data('original-index'), true);
-                                }
-                            });
-
-                            refreshselects();
-                            triggerchangeevent();
-
-                            sortoptions(elements.select2);
-                        }
-
-                        function remove() {
-                            if (settings.preserveselectiononmove === 'all') {
-                                saveselections1();
-                                saveselections2();
-                            } else if (settings.preserveselectiononmove === 'moved') {
-                                saveselections2();
-                            }
-
-                            elements.select2.find('option:selected').each(function(index, item) {
-                                var $item = $(item);
-
-                                if (!$item.data('filtered2')) {
-                                    changeselectionstate($item.data('original-index'), false);
-                                }
-                            });
-
-                            refreshselects();
-                            triggerchangeevent();
-
-                            sortoptions(elements.select1);
-                        }
-
-                        function moveall() {
-                            if (settings.preserveselectiononmove === 'all') {
-                                saveselections1();
-                                saveselections2();
-                            } else if (settings.preserveselectiononmove === 'moved') {
-                                saveselections1();
-                            }
-
-                            elements.originalselect.find('option').each(function(index, item) {
-                                var $item = $(item);
-
-                                if (!$item.data('filtered1')) {
-                                    $item.prop('selected', true);
-                                }
-                            });
-
-                            refreshselects();
-                            triggerchangeevent();
-                        }
-
-                        function removeall() {
-                            if (settings.preserveselectiononmove === 'all') {
-                                saveselections1();
-                                saveselections2();
-                            } else if (settings.preserveselectiononmove === 'moved') {
-                                saveselections2();
-                            }
-
-                            elements.originalselect.find('option').each(function(index, item) {
-                                var $item = $(item);
-
-                                if (!$item.data('filtered2')) {
-                                    $item.prop('selected', false);
-                                }
-                            });
-
-                            refreshselects();
-                            triggerchangeevent();
-                        }
-
-                        function triggerchangeevent() {
-                            elements.originalselect.trigger('change');
-                        }
-                    }
-                }
-
-            }
-        });
-angular.module('weaveAnalyst.utils')
-        .directive('fileUpload', function($q) {
-          return {
-            restrict: 'E',
-            template: "<label class='file-nput-btn'>{{label}}<input class='file-upload' type='file'/></label>",
-            replace: true,
-            link: function($scope, elem, attrs) {
-              var deferred;
-              $scope.label = attrs.label;
-              $(elem).fileReader({
-                "debugMode": true,
-                "filereader": "lib/file-reader/filereader.swf"
-              });
-              $(elem).on('click', function(args) {
-                deferred = $q.defer();
-                $scope.fileUpload = deferred.promise;
-              });
-              $(elem).find('input').on("change", function(evt) {
-                var file = evt.target.files[0];
-                if (file.name == undefined || file.name == "") {
-                  return;
-                }
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                  var contents = {filename: file.name,
-                    content: e.target.result};
-                  scriptUploaded = contents;
-                  $scope.$safeApply(function() { deferred.resolve(contents); });
-                };
-                reader.readAsText(file);
-              });
-            }
-          };
-        })
-        .directive("fileread", [function () {
-    return {
-        scope: {
-            fileread: "="
-        },
-        link: function (scope, element, attributes) {
-            element.bind("change", function (changeEvent) {
-                var reader = new FileReader();
-                reader.onload = function (loadEvent) {
-                    scope.$apply(function () {
-                        scope.fileread = {
-                        		content : loadEvent.target.result,
-                        		filename : changeEvent.target.files[0].name
-                        };
-                    });
-                };
-                reader.readAsText(changeEvent.target.files[0]);
-            });
-        }
-    };
-}]).directive('ngEnter', function () {
-    return function (scope, element, attrs) {
-        element.bind("keydown keypress", function (event) {
-            if(event.which === 13) {
-                scope.$apply(function (){
-                    scope.$eval(attrs.ngEnter);
-                });
-
-                event.preventDefault();
-            }
-        });
-    };
-});;;
-        
-
-/**
- * this card appears on the index page and gives an idea of functionality of the tabs. 
- * @shwetapurushe
- */
-
-(function(){
-	angular.module('weaveAnalyst.utils').directive('introCard', introCardComponent);
-	
-	function introCardComponent(){
-		return {
-			restrict: 'E', 
-			template:'<div class = "intro_card"><div class="header panel-heading"><h2>{{ic_Ctrl.title}}</h2></div>' +
-				'<div><div>{{ic_Ctrl.description}}</div><div></div>',
-			scope:{
-				title : '@',
-				description : '@',
-				tab: '@'
-				
-			},
-			controller : introCardController,
-			controllerAs : 'ic_Ctrl',
-			bindToController : true,
-			link : function(){
-				
-			}
-		};//end of directive def
-	};
-	
-	function introCardController (){
-		var ic_Ctrl = this;
-	};
-})();
-angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compile, $templateCache, $q, $http) {
-
-  var getTemplate = function(templateUrl) {
-    var def = $q.defer();
-
-    var template = '';
-    
-    template = $templateCache.get(templateUrl);
-    console.log(template);
-    if (typeof template === "undefined") {
-      $http.get(templateUrl)
-        .success(function(data) {
-          $templateCache.put(templateUrl, data);
-          def.resolve(data);
-        });
-    }else {
-    	 def.resolve(template);
-    }
-
-    return def.promise;
-  };
-  
-  return {
-    restrict: "A",
-    link: function(scope, element, attrs) {
-    	console.log(attrs.templateUrl);
-      getTemplate(attrs.templateUrl).then(function(popOverContent) {
-        var options = {
-          content: popOverContent,
-          placement: attrs.popoverPlacement,
-          html: true,
-          date: scope.date
-        };
-        $(element).popover(options);
-      });
-    }
-  };
-});
-/**
- *this file contains utlity functions for making the weave analyst support features present in the R GUI
- * @shweta purushe 
- */
-
-(function(){
-	angular.module('weaveAnalyst.utils').service('rUtils', rUtils);
-	
-	rUtils.$inject = ['$q', 'runQueryService', 'computationServiceURL'];
-	function rUtils($q, runQueryService, computationServiceURL){
-		var that = this; 
-		that.rPath; //stores the path of the user's R installation 
-		that.rInstalled_pkgs = [];
-		that.cran_mirrors = [];
-		
-		that.getRMirrors = function(){
-			if(that.cran_mirrors.length > 1)
-				return that.cran_mirrors;
-			else{
-				console.log("retrieving CRAN mirrors");
-				var deferred = $q.defer();
-				
-				runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts',["getMirrors.R", null], function(result){
-					that.cran_mirrors = result.resultData[0];
-					console.log("result", that.cran_mirrors);
-					deferred.resolve(that.cran_mirrors);
-				},
-				function(error){
-					deferred.reject(error);
-				});
-				
-				return deferred.promise;
-			}
-		};
-		
-		//gets a list from the library folder of the installed R version
-		that.getInstalled_R_Packages = function(){
-			console.log("retreiving installed R packages");
-			
-			var deferred = $q.defer();
-			var rpath = "C:\\Program Files\\R\\R-3.1.2\\library";//hard coded for now
-			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackages.R", {path: rpath}],function (result){ 
-				var data = result.resultData;
-				for(var i = 0; i < data[0].length; i++){//figure way around hard coding
-					var obj = {};
-					obj.Package = data[0][i];
-					obj.Version = data[1][i];
-					that.rInstalled_pkgs.push(obj);
-				}
-				
-				deferred.resolve(that.rInstalled_pkgs);
-			}, 
-			function (error){ deferred.reject(error);}
-			);
-			
-			return deferred.promise;
-		};
-		
-		that.get_package_funcs = function(package_name){
-			
-		};
-	}
-})();
-/**
- *this object represents the over arching global object for the Weave Analyst
- *@author shweta purushe 
- */
-if(!this.wa)
-	this.wa = {};
-
-
-(function(){
-	
-	Object.defineProperty(ScriptInputs, 'NS', {
-        value: 'wa'
-    });
-
-	Object.defineProperty(ScriptInputs, 'CLASS_NAME', {
-        value: 'ScriptInputs'
-	});
-	
-	function ScriptInputs (){
-		
-		 Object.defineProperty(this, 'sessionable', {
-	           value: true
-	       });
-		 
-		 Object.defineProperty(this, 'columns', {
-			 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableVariable([]))
-		 });
-		 
-	}
-	
-	window.wa.ScriptInputs = ScriptInputs;
-})();
-
-
-
-(function(){
-	
-	 Object.defineProperty(QueryObject, 'NS', {
-	        value: 'wa'
-	    });
-
-	 Object.defineProperty(QueryObject, 'CLASS_NAME', {
-	        value: 'QueryObject'
-   	});
-	    
-	    
-	function QueryObject (){
-		
-	 Object.defineProperty(this, 'sessionable', {
-           value: true
-       });
-		
-	 Object.defineProperty(this, 'author', {
-		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
-	 });
-	 
-	 Object.defineProperty(this, 'date', {
-		 value : new Date()
-	 });
-	 
-	 Object.defineProperty(this, 'ComputationEngine', {
-           value: WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
-       });
-	 
-	 Object.defineProperty(this, 'scriptSelected', {
-		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
-	 });
-		
-	 Object.defineProperty(this, 'title', {
-		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new weavecore.LinkableString(""))
-	 });
-	 
-	 Object.defineProperty(this, 'scriptOptions', {
-		 value : WeaveAPI.SessionManager.registerLinkableChild(this, new wa.ScriptInputs())
-	 });
-	 
-		
-	}
-	
-	window.wa.QueryObject = QueryObject;
-	
-})();
-
-
 angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
 
 });
@@ -4205,6 +4275,160 @@ angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInsta
 angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
 
 }]);
+/**
+ * Created by Shweta on 8/5/15.
+ * this component represents one ui crumb in the hierarchy
+ * TODO import this as bower module from GITHUB
+ * */
+var shanti;
+(function (){
+    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
+
+    selectorPillComponent.$inject= [];
+    function selectorPillComponent () {
+        return {
+            restrict: 'E',
+            scope:{
+            	column :'='
+            },
+            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
+            controller: sPillController,
+            controllerAs: 'p_Ctrl',
+            bindToController: true,
+            link: function (scope, elem, attrs) {
+
+            }
+        };//end of directive definition
+    }
+
+    sPillController.$inject = ['$scope', 'WeaveService'];
+    function sPillController (scope, WeaveService){
+       var p_Ctrl = this;
+        p_Ctrl.WeaveService = WeaveService;
+        p_Ctrl.display_Children = display_Children;
+        p_Ctrl.display_Siblings = display_Siblings;
+        p_Ctrl.add_init_Crumb = add_init_Crumb;
+        p_Ctrl.manage_Crumbs = manage_Crumbs;
+        p_Ctrl.populate_Defaults = populate_Defaults;
+        p_Ctrl.get_trail_from_column = get_trail_from_column;
+
+        p_Ctrl.showList = false;
+
+        //is the previously added node in the stack, needed for comparison
+        //structure of each node should be {w_node //actual node ; label: its label}
+        p_Ctrl.weave_node = {};
+        p_Ctrl.crumbTrail = [];
+        p_Ctrl.crumbLog = [];
+
+        shanti = p_Ctrl;
+        scope.$watch('p_Ctrl.column', function(){
+        	if(p_Ctrl.column.defaults)
+        		p_Ctrl.populate_Defaults();
+        });
+        
+        function populate_Defaults (){
+        	//clear existing logs and trails
+        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
+        	//create the new trail starting from the column
+        };
+        
+        function get_trail_from_column (in_column){
+        	var trailObj = {trail : [], logs : []};
+        	
+        	
+        	return trailObj;
+        };
+
+        function manage_Crumbs(i_node){
+            /*1. check if it is the previously added node*/
+            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
+                /*2. check if it in the trail already */
+                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
+                    /* for the very first crumb added; happens only once*/
+                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
+                       // console.log("first WeaveDataSource crumb added...");
+                        p_Ctrl.crumbTrail.push(i_node);
+                        p_Ctrl.crumbLog.push(i_node.label);
+                    }
+                    //remaining iterations
+                    else{
+                        /*3. check if previous crumb in trail is parent*/
+                        var p_name = i_node.w_node.parent.getLabel();
+                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
+                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
+
+                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
+                            /*4. check if a sibling is present after parent */
+                            if(p_Ctrl.crumbTrail[p_ind + 1]){
+                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
+                                var sib_parent_name = sib_node.w_node.parent.getLabel();
+                                if(p_name == sib_parent_name){
+                                    //if yes
+                                    //remove sibling and is trail
+                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
+                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
+                                    //add it
+                                    p_Ctrl.crumbTrail.push(i_node);
+                                    p_Ctrl.crumbLog.push(i_node.label);
+                                    //console.log("replacing sibling and updating ...");
+
+                                }
+                            }
+                            else{
+                                //if no then add
+                                //console.log("new child added after parent...");
+                                p_Ctrl.crumbTrail.push(i_node);
+                                p_Ctrl.crumbLog.push(i_node.label);
+                            }
+                        }
+                        else{}//don't add it anywhere in trail
+                    }
+                }
+                else{}//if it already exists in the trail
+            }
+            else{}// if it is old
+            p_Ctrl.weave_node = i_node;
+
+            //p_Ctrl.toggleList = false;
+            if(i_node.w_node.isBranch()){
+                if(i_node.label == 'WeaveDataSource')
+                    p_Ctrl.showList = false;
+                else{
+                    p_Ctrl.display_Children(i_node);
+                    p_Ctrl.showList = true;
+                }
+            }
+            else
+                p_Ctrl.showList = false;
+        }
+
+
+        //this function adds the data source initial pill, done only once as soon as weave loads
+        function add_init_Crumb (){
+            if(p_Ctrl.WeaveService.request_WeaveTree()){
+                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
+
+                var init_node = {};
+                init_node.label = ds[0].getLabel();
+                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
+                p_Ctrl.manage_Crumbs(init_node);
+                //scope.$apply();//because digest completes by the time the tree root is fetched
+            }
+            else
+                setTimeout(p_Ctrl.add_init_Crumb, 300);
+        }
+
+        function display_Children(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
+        }
+
+        function display_Siblings(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node);
+        }
+    }
+})();
 (function(){
 	angular.module('weaveAnalyst.WeaveModule', []);
 	angular.module('weaveAnalyst.WeaveModule').service("WeaveService", WeaveService);
@@ -6321,160 +6545,6 @@ if(!this.wa.d3_viz){
 })();
 
 /**
- * Created by Shweta on 8/5/15.
- * this component represents one ui crumb in the hierarchy
- * TODO import this as bower module from GITHUB
- * */
-var shanti;
-(function (){
-    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
-
-    selectorPillComponent.$inject= [];
-    function selectorPillComponent () {
-        return {
-            restrict: 'E',
-            scope:{
-            	column :'='
-            },
-            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
-            controller: sPillController,
-            controllerAs: 'p_Ctrl',
-            bindToController: true,
-            link: function (scope, elem, attrs) {
-
-            }
-        };//end of directive definition
-    }
-
-    sPillController.$inject = ['$scope', 'WeaveService'];
-    function sPillController (scope, WeaveService){
-       var p_Ctrl = this;
-        p_Ctrl.WeaveService = WeaveService;
-        p_Ctrl.display_Children = display_Children;
-        p_Ctrl.display_Siblings = display_Siblings;
-        p_Ctrl.add_init_Crumb = add_init_Crumb;
-        p_Ctrl.manage_Crumbs = manage_Crumbs;
-        p_Ctrl.populate_Defaults = populate_Defaults;
-        p_Ctrl.get_trail_from_column = get_trail_from_column;
-
-        p_Ctrl.showList = false;
-
-        //is the previously added node in the stack, needed for comparison
-        //structure of each node should be {w_node //actual node ; label: its label}
-        p_Ctrl.weave_node = {};
-        p_Ctrl.crumbTrail = [];
-        p_Ctrl.crumbLog = [];
-
-        shanti = p_Ctrl;
-        scope.$watch('p_Ctrl.column', function(){
-        	if(p_Ctrl.column.defaults)
-        		p_Ctrl.populate_Defaults();
-        });
-        
-        function populate_Defaults (){
-        	//clear existing logs and trails
-        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
-        	//create the new trail starting from the column
-        };
-        
-        function get_trail_from_column (in_column){
-        	var trailObj = {trail : [], logs : []};
-        	
-        	
-        	return trailObj;
-        };
-
-        function manage_Crumbs(i_node){
-            /*1. check if it is the previously added node*/
-            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
-                /*2. check if it in the trail already */
-                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
-                    /* for the very first crumb added; happens only once*/
-                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
-                       // console.log("first WeaveDataSource crumb added...");
-                        p_Ctrl.crumbTrail.push(i_node);
-                        p_Ctrl.crumbLog.push(i_node.label);
-                    }
-                    //remaining iterations
-                    else{
-                        /*3. check if previous crumb in trail is parent*/
-                        var p_name = i_node.w_node.parent.getLabel();
-                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
-                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
-
-                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
-                            /*4. check if a sibling is present after parent */
-                            if(p_Ctrl.crumbTrail[p_ind + 1]){
-                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
-                                var sib_parent_name = sib_node.w_node.parent.getLabel();
-                                if(p_name == sib_parent_name){
-                                    //if yes
-                                    //remove sibling and is trail
-                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
-                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
-                                    //add it
-                                    p_Ctrl.crumbTrail.push(i_node);
-                                    p_Ctrl.crumbLog.push(i_node.label);
-                                    //console.log("replacing sibling and updating ...");
-
-                                }
-                            }
-                            else{
-                                //if no then add
-                                //console.log("new child added after parent...");
-                                p_Ctrl.crumbTrail.push(i_node);
-                                p_Ctrl.crumbLog.push(i_node.label);
-                            }
-                        }
-                        else{}//don't add it anywhere in trail
-                    }
-                }
-                else{}//if it already exists in the trail
-            }
-            else{}// if it is old
-            p_Ctrl.weave_node = i_node;
-
-            //p_Ctrl.toggleList = false;
-            if(i_node.w_node.isBranch()){
-                if(i_node.label == 'WeaveDataSource')
-                    p_Ctrl.showList = false;
-                else{
-                    p_Ctrl.display_Children(i_node);
-                    p_Ctrl.showList = true;
-                }
-            }
-            else
-                p_Ctrl.showList = false;
-        }
-
-
-        //this function adds the data source initial pill, done only once as soon as weave loads
-        function add_init_Crumb (){
-            if(p_Ctrl.WeaveService.request_WeaveTree()){
-                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
-
-                var init_node = {};
-                init_node.label = ds[0].getLabel();
-                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
-                p_Ctrl.manage_Crumbs(init_node);
-                //scope.$apply();//because digest completes by the time the tree root is fetched
-            }
-            else
-                setTimeout(p_Ctrl.add_init_Crumb, 300);
-        }
-
-        function display_Children(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
-        }
-
-        function display_Siblings(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node);
-        }
-    }
-})();
-/**
  * controls the attribute menu visualization tool  widget
  */
 (function(){
@@ -6524,13 +6594,70 @@ var shanti;
 		};
 	}
 })();
-angular.module('weaveApp').controller("ColorCtrl", function(){
+/**
+ * directive that creates the AdvancedTable tool widget
+ * controls the Advanced Table in Weave
+ * @spurushe
+ */
 
-});
-angular.module('weaveApp').controller("keyColumnCtrl", function(){
+(function(){
+	angular.module('weaveApp').directive('dataTable', dataTable );
+	
+	function dataTable(){
+		return {
+			restrict : 'E',
+			templateUrl : 'tools/dataTable/data_table.tpl.html',
+			controller : dataTableController,
+			controllerAs : 'dtCtrl',
+			bindToController : true,
+			link : function(){
+				
+			}
+		};
+	}//end of directive definition
+	
+	function dataTableController (){
+		var dtCtrl = this;
+		var weave_wrapper;
+		
+		dtCtrl.request_dataTable = request_dataTable;
+		dtCtrl.initWeaveWrapper = initWeaveWerapper;
+		dtCtrl.items = ['a','d'];
+		
+		dtCtrl.config = {
+			checked: false,
+			toolName: null,
+			columns : null
+		};
+		
+		function initWeaveWrapper(){
+			//TODO put this retrieval in manager class later
+			if(!wa.wWrapper)
+				weave_wrapper = new wa.WeaveWrapper();
+			else
+				weave_wrapper = WeaveWrapper.instance;
+		};
+		
+		function request_dataTable (){
+			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
+				
+				dtCtrl.initWeaveWrapper();
+				
+				if(dtCtrl.config.checked)//if checked
+					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
+				else{//if unchecked
+					if(dtCtrl.config.toolName)//if the tool exists
+						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
+					else
+						return;
+				}
+			}
+			else
+				setTimeout(request_dataTable, 100);
+		};
+	};
+})();
 
-
-});
 /**
  * directive that creates the bar chart visualization tool widget
  * controls the bar chart in Weave
@@ -6599,77 +6726,6 @@ angular.module('weaveApp').controller("keyColumnCtrl", function(){
 	};
 })();
 /**
- * directive that creates the AdvancedTable tool widget
- * controls the Advanced Table in Weave
- * @spurushe
- */
-
-(function(){
-	angular.module('weaveApp').directive('dataTable', dataTable );
-	
-	function dataTable(){
-		return {
-			restrict : 'E',
-			templateUrl : 'tools/dataTable/data_table.tpl.html',
-			controller : dataTableController,
-			controllerAs : 'dtCtrl',
-			bindToController : true,
-			link : function(){
-				
-			}
-		};
-	}//end of directive definition
-	
-	function dataTableController (){
-		var dtCtrl = this;
-		var weave_wrapper;
-		
-		dtCtrl.request_dataTable = request_dataTable;
-		dtCtrl.initWeaveWrapper = initWeaveWerapper;
-		dtCtrl.items = ['a','d'];
-		
-		dtCtrl.config = {
-			checked: false,
-			toolName: null,
-			columns : null
-		};
-		
-		function initWeaveWrapper(){
-			//TODO put this retrieval in manager class later
-			if(!wa.wWrapper)
-				weave_wrapper = new wa.WeaveWrapper();
-			else
-				weave_wrapper = WeaveWrapper.instance;
-		};
-		
-		function request_dataTable (){
-			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
-				
-				dtCtrl.initWeaveWrapper();
-				
-				if(dtCtrl.config.checked)//if checked
-					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
-				else{//if unchecked
-					if(dtCtrl.config.toolName)//if the tool exists
-						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
-					else
-						return;
-				}
-			}
-			else
-				setTimeout(request_dataTable, 100);
-		};
-	};
-})();
-
-/**
- * controls the map visualization tool widget
- */
-
-angular.module('weaveApp').controller("MapCtrl", function(){
-
-});
-/**
  * directive that creates the scatter plot visualization tool widget
  * controls the scatter plot in Weave
  * @spurushe
@@ -6736,3 +6792,17 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 	};
 	
 })();
+/**
+ * controls the map visualization tool widget
+ */
+
+angular.module('weaveApp').controller("MapCtrl", function(){
+
+});
+angular.module('weaveApp').controller("ColorCtrl", function(){
+
+});
+angular.module('weaveApp').controller("keyColumnCtrl", function(){
+
+
+});

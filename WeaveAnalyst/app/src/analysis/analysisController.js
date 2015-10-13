@@ -60,8 +60,11 @@
 		var adCtrl = this;
 		adCtrl.rUtils = rUtils;
 		adCtrl.getInstalled_R_Packages = getInstalled_R_Packages;
+		adCtrl.get_packages = get_packages;
+		adCtrl.get_Pkg_Objects = get_Pkg_Objects;
 		
 		adCtrl.rUtils.getRMirrors();//getting list of CRAN mirrors
+		adCtrl.getInstalled_R_Packages();
 		
 		adCtrl.gridOptions = {
 			columnDefs : [
@@ -76,5 +79,23 @@
 				adCtrl.gridOptions.data = result;
 			});
 		}
+		
+		function get_packages (){
+			adCtrl.rUtils.get_packages_at_repo(adCtrl.rMirror.url);
+		}
+		
+		function get_Pkg_Objects (){
+			adCtrl.rUtils.get_Pkg_Objects(adCtrl.pkg.Package);
+		}
+		
+		$scope.$watch('adCtrl.rMirror', function(){
+			if(adCtrl.rMirror)
+				adCtrl.get_packages();
+		});
+		
+		$scope.$watch('adCtrl.pkg', function(){
+			if(adCtrl.pkg)
+				adCtrl.get_Pkg_Objects();
+		});
 	};
 })();
