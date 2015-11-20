@@ -517,9 +517,9 @@ var qo;
 		};//directive definition object
 	};
 
-	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService'];
+	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService', '$log'];
 	
-	function scriptController ($scope, queryService, $filter, analysisService){
+	function scriptController ($scope, queryService, $filter, analysisService, $log){
 		var scriptCtrl = this;
 		
 		scriptCtrl.queryService = queryService;
@@ -534,7 +534,49 @@ var qo;
 		scriptCtrl.columnToRemap = {
 				value : {}
 		};
-	
+		
+		/*******************************slider stuff**********************************************/
+		scriptCtrl.handleSliderValueChange = handleSliderValueChange;
+		scriptCtrl.updateSliderValues = updateSliderValues;
+		
+		//temp sol
+		WeaveAPI.log = scriptCtrl.log = new weavecore.SessionStateLog(WeaveAPI.globalHashMap);
+		var cc = WeaveAPI.SessionManager.getCallbackCollection(scriptCtrl.log);
+        cc.addGroupedCallback({}, scriptCtrl.updateSliderValues, true);
+		
+		
+		scriptCtrl.labeledslider = {
+		            'options': {
+		                start: function (event, ui) {
+		                    $log.info('Event: Slider start');
+		                },
+		                stop: function (event, ui) {
+		                    $log.info('Event: Slider stop');
+		                    scriptCtrl.handleSliderValueChange(ui);
+		                }
+		            }
+        };
+		
+		function handleSliderValueChange(ui) {
+            var delta = ui.value - scriptCtrl.log.undoHistory.length;
+            if (delta < 0)
+            	scriptCtrl.log.undo(-delta);
+            else
+            	scriptCtrl.log.redo(delta);
+
+            $scope.$apply();
+        }
+		
+		function updateSliderValues() {
+            scriptCtrl.sliderPosition = scriptCtrl.log._undoHistory.length;
+            // since this function is called programatically in next frame in next frame ,
+            // and not called by UI event , we need to manually trigger digest cycle.
+            console.log('UpdateSliderValues called');
+            $scope.$apply();
+        }
+		
+		scriptCtrl.log.clearHistory();
+		/*******************************slider stuff**********************************************/
 		//watches for change in computation engine
 //		$scope.$watch(function(){
 //			return scriptCtrl.active_qo.ComputationEngine.value;
@@ -1892,6 +1934,735 @@ if(!this.wa)
 		
 	}
 })();
+/** this controller controls the project tab 
+ * @author spurushe
+ * 
+ **/
+(function(){
+	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
+	
+	ProjectManagementController.$inject = ['$scope', '$modal', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
+	
+	function ProjectManagementController ($scope,$modal, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
+		var prjtCtrl = this;
+		
+		prjtCtrl.projectService = projectService;
+		prjtCtrl.WeaveService = WeaveService;
+		prjtCtrl.queryService = queryService;
+		
+		prjtCtrl.checkQOTableExits = checkQOTableExits;
+		prjtCtrl.construct_view = construct_view;
+		prjtCtrl.deleteProject = deleteProject;
+		prjtCtrl.openAdditionPanel = openAdditionPanel;
+		
+		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
+		prjtCtrl.nameOfQueryObjectToDelete = "";
+		prjtCtrl.view_modes = ['List', 'Compact', 'Detail'];
+		
+		//options needed for creating the modal instance window
+		 //communicating with the modal
+		prjtCtrl.pjtModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: false,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/project/projectAdditionModal.html',
+		         controller: 'pjtAddtionInstanceController',
+		         controllerAs : 'pam',
+		         resolve :{
+		        	 projectNameEntered : function(){
+		        		 return $scope.projectNameEntered;
+		        		 },
+		        	 userNameEntered : function(){
+		        		 return $scope.userNameEntered;
+		        		 },
+		        	 projectDescriptionEntered : function(){
+		        		 return $scope.projectDescriptionEntered;
+		        		 }
+		        	 
+		         }
+			};
+		
+		//check for table 
+		prjtCtrl.checkQOTableExits();
+		//create table with dummy project and queries
+		
+		
+		//when a project is selected or changed
+		$scope.$watch(function(){
+			return prjtCtrl.projectService.cache.project.selected;
+		},function(){
+			if(prjtCtrl.projectService.cache.project.selected){
+				console.log("project Selected", prjtCtrl.projectService.cache.project.selected.Name);
+				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected.Name);
+			}
+		});
+		
+		//Watch for when record is inserted in db
+	     $scope.$watch(function(){
+	     	return prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
+	      }, function(){ 
+	    	  prjtCtrl.insertQueryObjectStatus = prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
+	     	if(!(angular.isUndefined(prjtCtrl.insertQueryObjectStatus)))
+			 {
+			 	if(prjtCtrl.insertQueryObjectStatus != 0)
+			 		{
+	    		 		alert("Query Object has been added");
+	    		 		prjtCtrl.queryService.cache.listofQueryObjectsInProject = [];
+	    		 		prjtCtrl.queryService.getListOfQueryObjectsInProject(prjtCtrl.projectService.cache.project.selected);//makes a new call
+			 		}
+			 }
+		 
+	     	prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus = 0;//reset
+	      });
+	     
+	     //this function alters the three kinds of views for viewing projects and query objects
+	     function construct_view (){
+	    	 var mode = prjtCtrl.projectService.viewMode;
+	    	 
+	    	 if(mode == 'List')
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the projects and its query obejcts as a list. Select Compact to view a project in detail. Select Detail to view a project's query objects in detail.";
+	    	 else if(mode == 'Compact')
+	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
+	    	 else 
+	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail.";
+	    		 
+	     };
+		
+	     //checks if a table is created for storing query objects
+	     function checkQOTableExits (){
+	    	var	pS = prjtCtrl.projectService;
+	    	
+	    	pS.checkQOTableExits().then(function(projExists){
+		    	 console.log("stored_query_objects table exists",projExists );
+		    	 if(projExists){
+		    		 pS.getListOfProjects().then(function(projectList){
+		    			 if(projectList.length == 0)
+		    				 alert("There are no stored query objects");
+		    		 });//retrives project list
+		    	 }
+		    	 else{
+			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
+			    		 		+ "Create a table to store query objects?");
+			    		 if(conf == true){
+			    			 pS.createQOTable().then(function(status){
+			    				 if(status){
+			    					 console.log("status", status);
+			    				 }
+			    					 alert("Table \"stored_query_objects\" has been successfully created");
+			    			 });
+			    		 }
+			    		 else
+			    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
+		    	 }
+	    	});
+	     };
+	     
+		//deletes an entire Project along with all queryObjects within
+		function deleteProject (){
+			prjtCtrl.deleteProjectConfirmation(prjtCtrl.projectService.cache.project.selected);
+		};
+		
+		//additional checks for confirming deletion
+		function deleteProjectConfirmation (projectSelected){
+			var deletePopup = confirm("Are you sure you want to delete project " + projectSelected + "?");
+			if(deletePopup == true){
+				prjtCtrl.projectService.deleteProject(projectSelected);
+			}
+		};
+		
+		
+		//button click event that creates the modal
+		function openAdditionPanel(){
+			var saveNewProject = $modal.open(prjtCtrl.pjtModalOptions);
+			
+			//called when modal is being closed
+			saveNewProject.result.then(function(additionParams){//then function takes a single object
+				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
+				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
+				 console.log("userName", additionParams.userNameEntered);
+			});
+		};
+		
+	};
+	
+	
+	//Modal instance controller
+	angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceController', additionController);
+	additionController.$inject= ['$scope', '$modalInstance','projectService', 'projectNameEntered','projectDescriptionEntered', 'userNameEntered'];
+	
+	function additionController ($scope, $modalInstance,projectService, projectNameEntered,projectDescriptionEntered, userNameEntered){
+		var pam = this;
+		
+		pam.projectService = projectService;
+		pam.uploadStatus = "";
+		pam.queryObjectJsons = [];
+		pam.queryObjectTitles = [];
+		pam.saveQueryObjects = saveQueryObjects;
+		pam.remove = remove;
+		
+		//object representation of a SINGLE file uploaded, changed everytime a file is uploaded
+		pam.uploaded = {
+				QueryObject : {
+					filename : "",
+					content : ""			
+				}
+		};
+		
+		pam.uploadedObjects = {
+				
+			queryObjectJsons : [],//contains the content of all query objects uploaded (json strings)
+			queryObjectTitles : []//contains the titles of all query Objects uploaded
+		};
+		
+		
+		//whenever a file is uploaded
+		$scope.$watch(function(){
+			return pam.uploaded.QueryObject.filename;
+		}, function(){
+			
+			if(pam.uploaded.QueryObject.filename)
+				{
+					//check if the file had been uploaded before
+					if($.inArray(pam.uploaded.QueryObject.filename, pam.uploadedObjects.queryObjectTitles) == -1)
+						{
+							//managing the title of queryObject (json )uploaded
+							var title = pam.uploaded.QueryObject.filename;
+							pam.uploadedObjects.queryObjectTitles.push(title);
+							
+							//managing the content of queryObject (json )uploaded
+							var content = pam.uploaded.QueryObject.content;
+							pam.uploadedObjects.queryObjectJsons.push(content);
+							
+							
+							var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+							pam.uploadStatus = countUploaded + " file(s) uploaded";
+						}
+				}
+			
+		});
+		
+		//called when save button is hit.;
+		function saveQueryObjects (projectNameEntered,projectDescriptionEntered, userNameEntered) {
+			if(!projectNameEntered)
+				projectNameEntered = "Example Project";
+			if(!projectDescriptionEntered)
+				projectDescriptionEntered = "These query object(s) belong to " + projectNameEntered;
+			if(!userNameEntered)
+				userNameEntered = "Awesome User";
+			
+			var additionParams = {
+					projectNameEntered : projectNameEntered,
+					userNameEntered :userNameEntered,
+					projectDescriptionEntered : projectDescriptionEntered,
+					uploadedObjects : $scope.uploadedObjects
+			};
+			
+			if(additionParams.uploadedObjects.queryObjectJsons.length > 0){//only if something is uploaded, save it
+				
+				pam.projectService.createNewProject(additionParams.userNameEntered,
+						additionParams.projectNameEntered,
+						additionParams.projectDescriptionEntered,
+						additionParams.uploadedObjects.queryObjectTitles,
+						additionParams.uploadedObjects.queryObjectJsons,
+						null);
+				
+				$modalInstance.close(additionParams);
+			}
+			else{
+				alert("Please upload a query object to create a project");
+			}
+			
+		 };
+		 
+	 	function remove (file){
+		 //removes the file from the uploaded collection
+		 var index = $.inArray(file, pam.uploadedObjects.queryObjectTitles);
+		 console.log("index", index);
+		 pam.uploadedObjects.queryObjectTitles.splice(index, 1);
+		 pam.uploadedObjects.queryObjectJsons.splice(index, 1);
+		 
+		 var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
+		 pam.uploadStatus = countUploaded + " file(s) uploaded";
+		 if(countUploaded == 0){
+			 pam.uploadStatus = "";
+			 pam.uploaded.QueryObject.filename = null;
+			 pam.uploaded.QueryObject.content = null;
+			 
+		 }
+	 };
+	};
+})();//end of IIFE
+
+
+
+
+
+/**
+ * contains all the functions required for project management 
+ * @author spurushe
+ */
+(function(){
+	
+	angular.module('weaveAnalyst.project').service('projectService', projectService);
+	projectService.$inject = ['$q', '$rootScope', 'WeaveService', 'runQueryService','queryService', 'projectManagementURL'];
+	
+	function projectService ($q, rootScope, WeaveService, runQueryService,queryService, projectManagementURL){
+		var that = this;
+		
+		that.cache= {
+				project: {selected : null},
+				listOfProjectsFromDatabase : [],
+				returnedQueryObjects : [],
+				columnstring : null, 
+				projectDescription : null, 
+				userName : null, 
+				weaveSessionState : null,
+				deleteProjectStatus : null, 
+				deleteQueryObjectStatus : null, 
+				insertQueryObjectStatus : null,
+				no_of_projects : 0
+		};
+
+		/**
+		 *this function checks if the table 'stored_query_objects' has already been created
+		 */
+		that.checkQOTableExits = function(){
+			var deferred = $q.defer();
+			
+			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
+				deferred.resolve(result);
+			});
+			return deferred.promise;
+		};
+		
+		/**
+		 *this function creates the table 'stored_query_objects' if it has not been created before
+		 */
+		that.createQOTable = function(){
+			var deferred = $q.defer();
+				
+			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
+				deferred.resolve(result);
+			});
+			return deferred.promise;
+		};
+		
+		
+		/**
+	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
+	     * So that the UI asynchronously wait for the data to be available...
+	     */
+	   
+	    that.getListOfProjects = function() {
+	    	var deferred = $q.defer();
+	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
+				that.cache.listOfProjectsFromDatabase = result;
+				that.cache.no_of_projects = result.length;
+				deferred.resolve(result);
+			});
+	    	
+	    	return deferred.promise;
+	    };
+	    
+	    /**
+	     * This function wraps the async aws getQueryObjectsInProject function into an angular defer/promise
+	     * So that the UI asynchronously wait for the data to be available...
+	     */
+	    that.getListOfQueryObjects = function(projectName) {
+	    	var deferred = $q.defer();
+	    	runQueryService.queryRequest(projectManagementURL, 'getListOfQueryObjects', [projectName], function(AWSQueryObjectCollection){
+	    		that.cache.returnedQueryObjects = [];
+	    		if(!(angular.isUndefined(AWSQueryObjectCollection)))
+	    			{    			
+	        			var countOfJsons = AWSQueryObjectCollection.length;
+	        			for(var i = 0; i < countOfJsons; i++)
+	        			{
+	        				var singleObject= {};
+	        				singleObject.queryObject = JSON.parse(AWSQueryObjectCollection[i].finalQueryObject);//json content of the query object
+	        				singleObject.queryObjectName = AWSQueryObjectCollection[i].queryObjectName;//title of the query object
+	        				singleObject.projectDescription = AWSQueryObjectCollection[i].projectDescription;
+	        				singleObject.author = AWSQueryObjectCollection[i].author;
+	        				
+	        				that.cache.projectDescription = AWSQueryObjectCollection[i].projectDescription;//handling description
+	        				
+	        				if(angular.isUndefined(AWSQueryObjectCollection[i].thumbnail)){//handling visualization generated by a query object
+	        					singleObject.thumbnail = undefined;
+	        					console.log("This queryObject does not contain any stored visualizations");
+	        				}
+	        				else{
+	        					
+	        					singleObject.thumbnail = "data:image/png;base64," + AWSQueryObjectCollection[i].thumbnail;
+	        				}
+	        				
+	        				
+	        				that.cache.columnstring = "";
+	        				var columns = singleObject.queryObject.scriptOptions;
+	        				for(var j in columns){
+	        					var title = columns[j].metadata.title;
+	        					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
+	        				}
+	        				singleObject.columns = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
+	        				that.cache.returnedQueryObjects[i] = singleObject;
+	        			}
+	        			
+	    			}else{
+	    				that.cache.project.selected = "";
+	    				that.cache.projectDescription = "";
+	    				that.cache.userName = "";
+	    			}
+	    		
+	                deferred.resolve(that.cache.returnedQueryObjects);
+	                rootScope.$apply();
+	        	
+	        });
+	    	
+	    	return deferred.promise;
+	    };
+	    
+	    /**
+	     * returns the base64 encoded session state of the visualizations generated by a query object
+	     */
+	    that.getBase64SessionState = function(params){
+	    	if(!(WeaveService.weaveWindow.closed)){
+	    		var base64SessionState = WeaveService.getBase64SessionState();
+	    		queryService.queryObject.weaveSessionState = WeaveService.getSessionStateObjects();//TODO fix this adding properties dynamically not GOOD
+	    		that.writeSessionState(base64SessionState, params);
+	    	}
+	    };
+	   
+	    that.writeSessionState = function(base64String, params){
+	    	var projectName;
+	    	var userName;
+	    	var queryObjectTitles;
+	    	var projectDescription;
+	    	
+	    	if(angular.isDefined(params.projectEntered))
+	    		{
+		    		projectName = params.projectEntered;
+		    		projectDescription = "This project belongs to " + projectName;
+	    		}
+	    	else
+	    		{
+		    		projectName = "Other";
+		    		projectDescription = "These query objects do not belong to any project"; 
+	    		}
+	    	if(angular.isDefined(params.queryTitleEntered)){
+	    		queryObjectTitles = params.queryTitleEntered;
+	    		queryService.queryObject.title = queryObjectTitles;
+	    	}
+	    	else
+	    		 queryObjectTitles = queryService.queryObject.title;
+	    	if(angular.isDefined(params.userName)){
+	    		userName = params.userName;
+	    		queryService.queryObject.author = userName;
+	    	}
+	    	else
+	    		userName = "Awesome User";
+	    	
+
+	    	var queryObjectJsons = angular.toJson(queryService.queryObject);
+	    	var resultVisualizations = base64String;
+	    	
+	    	
+	    	runQueryService.queryRequest(projectManagementURL, 'writeSessionState', [userName, projectDescription, queryObjectTitles, queryObjectJsons, resultVisualizations, projectName], function(result){
+	    		console.log("adding status", result);
+	    		alert(queryObjectTitles + " has been added");
+	    	});
+	    };
+	    
+	    
+	    /**
+	     * this function returns the session state corresponding to the thumbnail of a query object that was clicked
+	     */
+	    that.returnSessionState = function(queryObject){
+	   	 var deferred = $q.defer();
+	   	 queryObject = angular.toJson(queryObject);
+	   	 //console.log("stringified queryObject", queryObject);
+	   	 
+	   	 runQueryService.queryRequest(projectManagementURL, 'getSessionState', [queryObject], function(result){
+	   		 that.cache.weaveSessionState = result;
+	   		 deferred.resolve(result);
+	        	
+	   	 });
+	    		
+			return deferred.promise;
+	   };
+	   
+	   	//as soon as service returns deleteStatus
+		//1. report status
+		//2. reset required variables
+		//3. updates required lists
+	   /**
+	    * This function wraps the async aws deleteproject function into an angular defer/promise
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.deleteProject = function(projectName) {
+	   	var deferred = $q.defer();
+	   	runQueryService.queryRequest(projectManagementURL, 'deleteProjectFromDatabase', [projectName], function(result){
+	           
+	       	that.cache.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
+	       	
+	      	 if(! (that.cache.deleteProjectStatus == 0 )){
+	      		 
+	      		that.cache.returnedQueryObjects = [];//reset
+	      		that.cache.projectDescription = "";
+	      		 alert("The Project " + projectName + " has been deleted");
+	      		 that.getListOfProjects();//call the updated projects list
+	      	 }
+	      	 
+	      	 that.cache.deleteProjectStatus = 0;//reset 
+	      	 deferred.resolve(result);
+	       	
+	       });
+	       return deferred.promise;
+	   };
+	   
+	   /**
+	    * This function wraps the async aws deleteQueryObject function into an angular defer/promise
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.deleteQueryObject = function(projectName, queryObjectTitle){
+		   var deferred = $q.defer();
+		   runQueryService.queryRequest(projectManagementURL, 'deleteQueryObjectFromProject', [projectName, queryObjectTitle], function(result){
+		       	that.cache.deleteQueryObjectStatus = result;
+		       	console.log("in the service",that.cache.deleteQueryObjectStatus );
+		       	
+		       	alert("Query Object " + queryObjectTitle + " has been deleted");
+		       	
+		       	that.cache.returnedQueryObjects = [];//clears list
+		       	
+		       	that.getListOfQueryObjects(projectName);//fetches new list
+		       	
+		       	//if the project contained only one QO which was deleted , retrive the new updated lists of projects
+		       	if(that.cache.returnedQueryObjects.length == 0){
+		       		that.getListOfProjects();
+		       		that.cache.project.selected = "";
+		       	}
+		       	deferred.resolve(result);
+		       	
+		       });
+		       
+		       return deferred.promise;
+	   };
+	   
+	   /**
+	    * This function wraps the async aws insertQueryObjectToProject function into an angular defer/promise
+	    * adds a query object (row) to the specified project in the database
+	    * So that the UI asynchronously wait for the data to be available...
+	    */
+	   that.insertQueryObjectToProject = function(userName, projectName, projectDescription,queryObjectTitles,queryObjectJsons, resultVisualizations){
+	 
+	   	var deferred = $q.defer();
+
+	   	runQueryService.queryRequest(projectManagementURL, 'insertMultipleQueryObjectInProjectFromDatabase', [userName,
+	   	                                                                                          projectName,
+	   	                                                                                          projectDescription,
+	   	                                                                                          queryObjectTitles,
+	   	                                                                                          queryObjectJsons,
+	   	                                                                                          resultVisualizations], function(result){
+	   		that.cache.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
+	       	console.log("insertQueryObjectStatus", that.cache.insertQueryObjectStatus);
+	       	if(that.cache.insertQueryObjectStatus != 0){
+	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
+	       	}
+	       	
+	       	deferred.resolve(result);
+	       	
+	       });
+	       return deferred.promise;
+	       
+	   };
+	   
+	   that.createNewProject = function(userNameEntered, projectNameEntered,projectDescriptionEntered, queryObjectTitles, queryObjectJsons){
+		   that.insertQueryObjectToProject(userNameEntered,
+				   						   projectNameEntered,
+				   						   projectDescriptionEntered,
+				   						   queryObjectTitles,
+				   						   queryObjectJsons,
+				   						   null)
+		   .then(function(){
+			   that.cache.listOfProjectsFromDatabase = [];//clear
+			   that.getListOfProjects();//fetch new list
+		   });
+
+	   };
+
+	};
+})();
+
+
+/**
+ *this directive contains the logic for managing the list view of projects and its query objects
+ *@author spurushe 
+ */
+
+(function(){
+	angular.module('weaveAnalyst.project').directive('projectGrid', projectGrid);
+	
+	function projectGrid (){
+		return{
+			restrict : 'E',
+			controller : projectGridController,
+			scope:{
+				data : '='
+			},
+			template : '<div ui-grid = "pGrid_Ctrl.gridOptions" ui-grid-pinning ui-grid-expandable></div>',
+			controllerAs : 'pGrid_Ctrl',
+			bindToController : true,
+			link : function(){
+
+			}
+		};
+	};//end of directive defintion
+	
+	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants', '$scope'];
+	function projectGridController (projectService, uiGridTreeViewConstants, $scope){
+		var pGrid_Ctrl = this;
+		
+		
+		pGrid_Ctrl.projectService = projectService;
+
+		pGrid_Ctrl.gridOptions = {
+		          expandableRowTemplate : 'src/project/subGrid.html',  //This is the template that will be used to render subgrid.
+		          expandableRowHeight : 150, //This will be the height of the subgrid
+		          expandableRowScope : {
+		              subGridVariable : 'subGridScopeVariable'  //Variables of object expandableScope will be available in the scope of the expanded subgrid
+		          },
+		          onRegisterApi: function (gridApi) {
+		              gridApi.expandable.on.rowExpandedStateChanged($scope, function (row) {
+		                  if (row.isExpanded) {
+		                    row.entity.subGridOptions = {
+		                      columnDefs: [
+		                      { name: 'author'},
+		                      { name: 'queryObjectName'},
+		                      { name: 'columns'}
+		                    ]};
+		                    
+		                    pGrid_Ctrl.projectService.getListOfQueryObjects(row.entity.Name).then(function(childQos){
+		                    	
+		                    	row.entity.subGridOptions.data = childQos;
+		                    });
+		                    
+		                  }
+		              });
+		          },
+				  data : pGrid_Ctrl.data//sets the data of the parent grid
+        };
+		
+		//defining the columns of the parent grid
+		pGrid_Ctrl.gridOptions.columnDefs = [
+		                                { name: 'Name', width: '35%'  },
+		                                { name: 'Description', width: '60%' }
+		                            ];
+		
+			
+	};//end of grid controller
+		
+})();
+/**
+ * this directive represents a single query object and its respective controls.
+ * @spurushe
+ */
+
+(function(){
+	angular.module('weaveAnalyst.project').directive('queryCard', queryCard);
+	function queryCard(){
+		return {
+			restrict : 'E',
+			scope :{
+				item : '='
+			},
+			templateUrl : 'src/project/query_card.tpl.html',
+			controller : queryCardController,
+			controllerAs : 'q_cardCtrl',
+			bindToControler : true,
+			link : function(){
+				
+			}
+		};
+	}//end of directive definition
+	
+	queryCardController.$inject = ['$scope', 'projectService'];
+	function queryCardController(scope, projectService){
+		var q_cardCtrl = this;
+		q_cardCtrl.projectService = projectService;
+		q_cardCtrl.item = scope.item;
+		q_cardCtrl.editMode = false;
+		
+		
+		q_cardCtrl.returnSessionState = returnSessionState;
+		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
+		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
+		q_cardCtrl.openInAnalysis = openInAnalysis;
+		q_cardCtrl.edit = edit;
+		q_cardCtrl.save = save;
+
+		//toggles the edit mode for editing a query card
+		function edit (){
+			q_cardCtrl.editMode = true;
+		};
+		
+		//saves a modified query card to the server
+		function save (item){
+			//save the edited state
+			//if saved make the edit mode false
+			alert(item.queryObject.title + " has been saved");
+			q_cardCtrl.editMode = false;
+		};
+		
+		
+		//deletes a single queryObject within the currently selected Project
+		function deleteSpecificQueryObject(item){
+			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
+			q_cardCtrl.deleteQueryConfirmation(q_cardCtrl.projectService.cache.project.selected, q_cardCtrl.nameOfQueryObjectToDelete);
+		};
+		
+		function deleteQueryConfirmation (currentProject, currentQueryFileName){
+			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
+			if(deletePopup == true){
+				q_cardCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
+			}
+		};
+		
+		function openInAnalysis (incoming_queryObject) {
+			$scope.$emit("queryObjectloaded", incoming_queryObject);
+			$location.path('/analysis'); 
+		};
+
+		//called when the thumb-nail is clicked
+		/**
+		 *@param given a query object
+		 *@returns it returns the weave visualizations for it.
+		 */
+		function returnSessionState (queryObject){
+//			q_cardCtrl.projectService.returnSessionState(queryObject).then(function(weaveSessionState){
+//				var newWeave;
+//				if(!(angular.isUndefined(weaveSessionState))){
+//					
+//			   		 if (!newWeave || newWeave.closed) {
+//							newWeave = window
+//									.open("/weave.html?",
+//											"abc",
+//											"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
+//						}
+//			   		 
+//			   		q_cardCtrl.WeaveService.setWeaveWindow(newWeave);
+//				   		
+//				   		$scope.$watch(function(){
+//				   			return q_cardCtrl.WeaveService.weave;
+//				   		},function(){
+//				   			if(q_cardCtrl.WeaveService.checkWeaveReady()) 
+//				   				q_cardCtrl.WeaveService.setBase64SessionState(weaveSessionState);
+//				   		});
+//			   		}
+//				else{
+//					console.log("Session state was not returned");
+//				}
+//			});
+		};
+	}
+})();
 var aws = {};
 
 /**
@@ -2793,735 +3564,6 @@ if(!this.wa)
 			
 		};
 	};
-})();
-/** this controller controls the project tab 
- * @author spurushe
- * 
- **/
-(function(){
-	angular.module('weaveAnalyst.project', []).controller("ProjectManagementController", ProjectManagementController);
-	
-	ProjectManagementController.$inject = ['$scope', '$modal', '$filter','$location','queryService', 'projectService', 'WeaveService', 'usSpinnerService'];
-	
-	function ProjectManagementController ($scope,$modal, $filter,$location,queryService, projectService, WeaveService, usSpinnerService){
-		var prjtCtrl = this;
-		
-		prjtCtrl.projectService = projectService;
-		prjtCtrl.WeaveService = WeaveService;
-		prjtCtrl.queryService = queryService;
-		
-		prjtCtrl.checkQOTableExits = checkQOTableExits;
-		prjtCtrl.construct_view = construct_view;
-		prjtCtrl.deleteProject = deleteProject;
-		prjtCtrl.openAdditionPanel = openAdditionPanel;
-		
-		prjtCtrl.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
-		prjtCtrl.nameOfQueryObjectToDelete = "";
-		prjtCtrl.view_modes = ['List', 'Compact', 'Detail'];
-		
-		//options needed for creating the modal instance window
-		 //communicating with the modal
-		prjtCtrl.pjtModalOptions = {//TODO find out how to push error log to bottom of page
-				 backdrop: true,
-		         backdropClick: false,
-		         dialogFade: true,
-		         keyboard: true,
-		         templateUrl: 'src/project/projectAdditionModal.html',
-		         controller: 'pjtAddtionInstanceController',
-		         controllerAs : 'pam',
-		         resolve :{
-		        	 projectNameEntered : function(){
-		        		 return $scope.projectNameEntered;
-		        		 },
-		        	 userNameEntered : function(){
-		        		 return $scope.userNameEntered;
-		        		 },
-		        	 projectDescriptionEntered : function(){
-		        		 return $scope.projectDescriptionEntered;
-		        		 }
-		        	 
-		         }
-			};
-		
-		//check for table 
-		prjtCtrl.checkQOTableExits();
-		//create table with dummy project and queries
-		
-		
-		//when a project is selected or changed
-		$scope.$watch(function(){
-			return prjtCtrl.projectService.cache.project.selected;
-		},function(){
-			if(prjtCtrl.projectService.cache.project.selected){
-				console.log("project Selected", prjtCtrl.projectService.cache.project.selected.Name);
-				prjtCtrl.projectService.getListOfQueryObjects(prjtCtrl.projectService.cache.project.selected.Name);
-			}
-		});
-		
-		//Watch for when record is inserted in db
-	     $scope.$watch(function(){
-	     	return prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
-	      }, function(){ 
-	    	  prjtCtrl.insertQueryObjectStatus = prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus;
-	     	if(!(angular.isUndefined(prjtCtrl.insertQueryObjectStatus)))
-			 {
-			 	if(prjtCtrl.insertQueryObjectStatus != 0)
-			 		{
-	    		 		alert("Query Object has been added");
-	    		 		prjtCtrl.queryService.cache.listofQueryObjectsInProject = [];
-	    		 		prjtCtrl.queryService.getListOfQueryObjectsInProject(prjtCtrl.projectService.cache.project.selected);//makes a new call
-			 		}
-			 }
-		 
-	     	prjtCtrl.queryService.queryObject.properties.insertQueryObjectStatus = 0;//reset
-	      });
-	     
-	     //this function alters the three kinds of views for viewing projects and query objects
-	     function construct_view (){
-	    	 var mode = prjtCtrl.projectService.viewMode;
-	    	 
-	    	 if(mode == 'List')
-	    		 prjtCtrl.projectService.view_Desc = "This mode displays the projects and its query obejcts as a list. Select Compact to view a project in detail. Select Detail to view a project's query objects in detail.";
-	    	 else if(mode == 'Compact')
-	    		 prjtCtrl.projectService.view_Desc ="This mode displays a single project in detail. Select List to view a list of projects. Select Detail to view a project's query objects in detail.";
-	    	 else 
-	    		 prjtCtrl.projectService.view_Desc = "This mode displays the query objects of a project in detail. Select List to view a list of projects. Select Compact to view a project in detail.";
-	    		 
-	     };
-		
-	     //checks if a table is created for storing query objects
-	     function checkQOTableExits (){
-	    	var	pS = prjtCtrl.projectService;
-	    	
-	    	pS.checkQOTableExits().then(function(projExists){
-		    	 console.log("stored_query_objects table exists",projExists );
-		    	 if(projExists){
-		    		 pS.getListOfProjects().then(function(projectList){
-		    			 if(projectList.length == 0)
-		    				 alert("There are no stored query objects");
-		    		 });//retrives project list
-		    	 }
-		    	 else{
-			    		var conf = confirm("There is no dedicated datatable to store query objects" +"\n"
-			    		 		+ "Create a table to store query objects?");
-			    		 if(conf == true){
-			    			 pS.createQOTable().then(function(status){
-			    				 if(status){
-			    					 console.log("status", status);
-			    				 }
-			    					 alert("Table \"stored_query_objects\" has been successfully created");
-			    			 });
-			    		 }
-			    		 else
-			    			 alert("You will not be able to store query objects. Refresh the page if you change your mind");
-		    	 }
-	    	});
-	     };
-	     
-		//deletes an entire Project along with all queryObjects within
-		function deleteProject (){
-			prjtCtrl.deleteProjectConfirmation(prjtCtrl.projectService.cache.project.selected);
-		};
-		
-		//additional checks for confirming deletion
-		function deleteProjectConfirmation (projectSelected){
-			var deletePopup = confirm("Are you sure you want to delete project " + projectSelected + "?");
-			if(deletePopup == true){
-				prjtCtrl.projectService.deleteProject(projectSelected);
-			}
-		};
-		
-		
-		//button click event that creates the modal
-		function openAdditionPanel(){
-			var saveNewProject = $modal.open(prjtCtrl.pjtModalOptions);
-			
-			//called when modal is being closed
-			saveNewProject.result.then(function(additionParams){//then function takes a single object
-				 console.log("jsons", additionParams.uploadedObjects.queryObjectJsons);
-				 console.log("titles", additionParams.uploadedObjects.queryObjectTitles);
-				 console.log("userName", additionParams.userNameEntered);
-			});
-		};
-		
-	};
-	
-	
-	//Modal instance controller
-	angular.module('weaveAnalyst.project').controller('pjtAddtionInstanceController', additionController);
-	additionController.$inject= ['$scope', '$modalInstance','projectService', 'projectNameEntered','projectDescriptionEntered', 'userNameEntered'];
-	
-	function additionController ($scope, $modalInstance,projectService, projectNameEntered,projectDescriptionEntered, userNameEntered){
-		var pam = this;
-		
-		pam.projectService = projectService;
-		pam.uploadStatus = "";
-		pam.queryObjectJsons = [];
-		pam.queryObjectTitles = [];
-		pam.saveQueryObjects = saveQueryObjects;
-		pam.remove = remove;
-		
-		//object representation of a SINGLE file uploaded, changed everytime a file is uploaded
-		pam.uploaded = {
-				QueryObject : {
-					filename : "",
-					content : ""			
-				}
-		};
-		
-		pam.uploadedObjects = {
-				
-			queryObjectJsons : [],//contains the content of all query objects uploaded (json strings)
-			queryObjectTitles : []//contains the titles of all query Objects uploaded
-		};
-		
-		
-		//whenever a file is uploaded
-		$scope.$watch(function(){
-			return pam.uploaded.QueryObject.filename;
-		}, function(){
-			
-			if(pam.uploaded.QueryObject.filename)
-				{
-					//check if the file had been uploaded before
-					if($.inArray(pam.uploaded.QueryObject.filename, pam.uploadedObjects.queryObjectTitles) == -1)
-						{
-							//managing the title of queryObject (json )uploaded
-							var title = pam.uploaded.QueryObject.filename;
-							pam.uploadedObjects.queryObjectTitles.push(title);
-							
-							//managing the content of queryObject (json )uploaded
-							var content = pam.uploaded.QueryObject.content;
-							pam.uploadedObjects.queryObjectJsons.push(content);
-							
-							
-							var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
-							pam.uploadStatus = countUploaded + " file(s) uploaded";
-						}
-				}
-			
-		});
-		
-		//called when save button is hit.;
-		function saveQueryObjects (projectNameEntered,projectDescriptionEntered, userNameEntered) {
-			if(!projectNameEntered)
-				projectNameEntered = "Example Project";
-			if(!projectDescriptionEntered)
-				projectDescriptionEntered = "These query object(s) belong to " + projectNameEntered;
-			if(!userNameEntered)
-				userNameEntered = "Awesome User";
-			
-			var additionParams = {
-					projectNameEntered : projectNameEntered,
-					userNameEntered :userNameEntered,
-					projectDescriptionEntered : projectDescriptionEntered,
-					uploadedObjects : $scope.uploadedObjects
-			};
-			
-			if(additionParams.uploadedObjects.queryObjectJsons.length > 0){//only if something is uploaded, save it
-				
-				pam.projectService.createNewProject(additionParams.userNameEntered,
-						additionParams.projectNameEntered,
-						additionParams.projectDescriptionEntered,
-						additionParams.uploadedObjects.queryObjectTitles,
-						additionParams.uploadedObjects.queryObjectJsons,
-						null);
-				
-				$modalInstance.close(additionParams);
-			}
-			else{
-				alert("Please upload a query object to create a project");
-			}
-			
-		 };
-		 
-	 	function remove (file){
-		 //removes the file from the uploaded collection
-		 var index = $.inArray(file, pam.uploadedObjects.queryObjectTitles);
-		 console.log("index", index);
-		 pam.uploadedObjects.queryObjectTitles.splice(index, 1);
-		 pam.uploadedObjects.queryObjectJsons.splice(index, 1);
-		 
-		 var countUploaded = pam.uploadedObjects.queryObjectTitles.length;
-		 pam.uploadStatus = countUploaded + " file(s) uploaded";
-		 if(countUploaded == 0){
-			 pam.uploadStatus = "";
-			 pam.uploaded.QueryObject.filename = null;
-			 pam.uploaded.QueryObject.content = null;
-			 
-		 }
-	 };
-	};
-})();//end of IIFE
-
-
-
-
-
-/**
- * contains all the functions required for project management 
- * @author spurushe
- */
-(function(){
-	
-	angular.module('weaveAnalyst.project').service('projectService', projectService);
-	projectService.$inject = ['$q', '$rootScope', 'WeaveService', 'runQueryService','queryService', 'projectManagementURL'];
-	
-	function projectService ($q, rootScope, WeaveService, runQueryService,queryService, projectManagementURL){
-		var that = this;
-		
-		that.cache= {
-				project: {selected : null},
-				listOfProjectsFromDatabase : [],
-				returnedQueryObjects : [],
-				columnstring : null, 
-				projectDescription : null, 
-				userName : null, 
-				weaveSessionState : null,
-				deleteProjectStatus : null, 
-				deleteQueryObjectStatus : null, 
-				insertQueryObjectStatus : null,
-				no_of_projects : 0
-		};
-
-		/**
-		 *this function checks if the table 'stored_query_objects' has already been created
-		 */
-		that.checkQOTableExits = function(){
-			var deferred = $q.defer();
-			
-			runQueryService.queryRequest(projectManagementURL, 'checkQOTableExits', null, function(result){
-				deferred.resolve(result);
-			});
-			return deferred.promise;
-		};
-		
-		/**
-		 *this function creates the table 'stored_query_objects' if it has not been created before
-		 */
-		that.createQOTable = function(){
-			var deferred = $q.defer();
-				
-			runQueryService.queryRequest(projectManagementURL, 'createQOTable', null, function(result){
-				deferred.resolve(result);
-			});
-			return deferred.promise;
-		};
-		
-		
-		/**
-	     * This function wraps the async aws getListOfProjects function into an angular defer/promise
-	     * So that the UI asynchronously wait for the data to be available...
-	     */
-	   
-	    that.getListOfProjects = function() {
-	    	var deferred = $q.defer();
-	    	runQueryService.queryRequest(projectManagementURL, 'getProjectListFromDatabase', null, function(result){
-				that.cache.listOfProjectsFromDatabase = result;
-				that.cache.no_of_projects = result.length;
-				deferred.resolve(result);
-			});
-	    	
-	    	return deferred.promise;
-	    };
-	    
-	    /**
-	     * This function wraps the async aws getQueryObjectsInProject function into an angular defer/promise
-	     * So that the UI asynchronously wait for the data to be available...
-	     */
-	    that.getListOfQueryObjects = function(projectName) {
-	    	var deferred = $q.defer();
-	    	runQueryService.queryRequest(projectManagementURL, 'getListOfQueryObjects', [projectName], function(AWSQueryObjectCollection){
-	    		that.cache.returnedQueryObjects = [];
-	    		if(!(angular.isUndefined(AWSQueryObjectCollection)))
-	    			{    			
-	        			var countOfJsons = AWSQueryObjectCollection.length;
-	        			for(var i = 0; i < countOfJsons; i++)
-	        			{
-	        				var singleObject= {};
-	        				singleObject.queryObject = JSON.parse(AWSQueryObjectCollection[i].finalQueryObject);//json content of the query object
-	        				singleObject.queryObjectName = AWSQueryObjectCollection[i].queryObjectName;//title of the query object
-	        				singleObject.projectDescription = AWSQueryObjectCollection[i].projectDescription;
-	        				singleObject.author = AWSQueryObjectCollection[i].author;
-	        				
-	        				that.cache.projectDescription = AWSQueryObjectCollection[i].projectDescription;//handling description
-	        				
-	        				if(angular.isUndefined(AWSQueryObjectCollection[i].thumbnail)){//handling visualization generated by a query object
-	        					singleObject.thumbnail = undefined;
-	        					console.log("This queryObject does not contain any stored visualizations");
-	        				}
-	        				else{
-	        					
-	        					singleObject.thumbnail = "data:image/png;base64," + AWSQueryObjectCollection[i].thumbnail;
-	        				}
-	        				
-	        				
-	        				that.cache.columnstring = "";
-	        				var columns = singleObject.queryObject.scriptOptions;
-	        				for(var j in columns){
-	        					var title = columns[j].metadata.title;
-	        					that.cache.columnstring= that.cache.columnstring.concat(title) + " , ";
-	        				}
-	        				singleObject.columns = that.cache.columnstring.slice(0,-2);//getting rid of the last comma
-	        				that.cache.returnedQueryObjects[i] = singleObject;
-	        			}
-	        			
-	    			}else{
-	    				that.cache.project.selected = "";
-	    				that.cache.projectDescription = "";
-	    				that.cache.userName = "";
-	    			}
-	    		
-	                deferred.resolve(that.cache.returnedQueryObjects);
-	                rootScope.$apply();
-	        	
-	        });
-	    	
-	    	return deferred.promise;
-	    };
-	    
-	    /**
-	     * returns the base64 encoded session state of the visualizations generated by a query object
-	     */
-	    that.getBase64SessionState = function(params){
-	    	if(!(WeaveService.weaveWindow.closed)){
-	    		var base64SessionState = WeaveService.getBase64SessionState();
-	    		queryService.queryObject.weaveSessionState = WeaveService.getSessionStateObjects();//TODO fix this adding properties dynamically not GOOD
-	    		that.writeSessionState(base64SessionState, params);
-	    	}
-	    };
-	   
-	    that.writeSessionState = function(base64String, params){
-	    	var projectName;
-	    	var userName;
-	    	var queryObjectTitles;
-	    	var projectDescription;
-	    	
-	    	if(angular.isDefined(params.projectEntered))
-	    		{
-		    		projectName = params.projectEntered;
-		    		projectDescription = "This project belongs to " + projectName;
-	    		}
-	    	else
-	    		{
-		    		projectName = "Other";
-		    		projectDescription = "These query objects do not belong to any project"; 
-	    		}
-	    	if(angular.isDefined(params.queryTitleEntered)){
-	    		queryObjectTitles = params.queryTitleEntered;
-	    		queryService.queryObject.title = queryObjectTitles;
-	    	}
-	    	else
-	    		 queryObjectTitles = queryService.queryObject.title;
-	    	if(angular.isDefined(params.userName)){
-	    		userName = params.userName;
-	    		queryService.queryObject.author = userName;
-	    	}
-	    	else
-	    		userName = "Awesome User";
-	    	
-
-	    	var queryObjectJsons = angular.toJson(queryService.queryObject);
-	    	var resultVisualizations = base64String;
-	    	
-	    	
-	    	runQueryService.queryRequest(projectManagementURL, 'writeSessionState', [userName, projectDescription, queryObjectTitles, queryObjectJsons, resultVisualizations, projectName], function(result){
-	    		console.log("adding status", result);
-	    		alert(queryObjectTitles + " has been added");
-	    	});
-	    };
-	    
-	    
-	    /**
-	     * this function returns the session state corresponding to the thumbnail of a query object that was clicked
-	     */
-	    that.returnSessionState = function(queryObject){
-	   	 var deferred = $q.defer();
-	   	 queryObject = angular.toJson(queryObject);
-	   	 //console.log("stringified queryObject", queryObject);
-	   	 
-	   	 runQueryService.queryRequest(projectManagementURL, 'getSessionState', [queryObject], function(result){
-	   		 that.cache.weaveSessionState = result;
-	   		 deferred.resolve(result);
-	        	
-	   	 });
-	    		
-			return deferred.promise;
-	   };
-	   
-	   	//as soon as service returns deleteStatus
-		//1. report status
-		//2. reset required variables
-		//3. updates required lists
-	   /**
-	    * This function wraps the async aws deleteproject function into an angular defer/promise
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.deleteProject = function(projectName) {
-	   	var deferred = $q.defer();
-	   	runQueryService.queryRequest(projectManagementURL, 'deleteProjectFromDatabase', [projectName], function(result){
-	           
-	       	that.cache.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
-	       	
-	      	 if(! (that.cache.deleteProjectStatus == 0 )){
-	      		 
-	      		that.cache.returnedQueryObjects = [];//reset
-	      		that.cache.projectDescription = "";
-	      		 alert("The Project " + projectName + " has been deleted");
-	      		 that.getListOfProjects();//call the updated projects list
-	      	 }
-	      	 
-	      	 that.cache.deleteProjectStatus = 0;//reset 
-	      	 deferred.resolve(result);
-	       	
-	       });
-	       return deferred.promise;
-	   };
-	   
-	   /**
-	    * This function wraps the async aws deleteQueryObject function into an angular defer/promise
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.deleteQueryObject = function(projectName, queryObjectTitle){
-		   var deferred = $q.defer();
-		   runQueryService.queryRequest(projectManagementURL, 'deleteQueryObjectFromProject', [projectName, queryObjectTitle], function(result){
-		       	that.cache.deleteQueryObjectStatus = result;
-		       	console.log("in the service",that.cache.deleteQueryObjectStatus );
-		       	
-		       	alert("Query Object " + queryObjectTitle + " has been deleted");
-		       	
-		       	that.cache.returnedQueryObjects = [];//clears list
-		       	
-		       	that.getListOfQueryObjects(projectName);//fetches new list
-		       	
-		       	//if the project contained only one QO which was deleted , retrive the new updated lists of projects
-		       	if(that.cache.returnedQueryObjects.length == 0){
-		       		that.getListOfProjects();
-		       		that.cache.project.selected = "";
-		       	}
-		       	deferred.resolve(result);
-		       	
-		       });
-		       
-		       return deferred.promise;
-	   };
-	   
-	   /**
-	    * This function wraps the async aws insertQueryObjectToProject function into an angular defer/promise
-	    * adds a query object (row) to the specified project in the database
-	    * So that the UI asynchronously wait for the data to be available...
-	    */
-	   that.insertQueryObjectToProject = function(userName, projectName, projectDescription,queryObjectTitles,queryObjectJsons, resultVisualizations){
-	 
-	   	var deferred = $q.defer();
-
-	   	runQueryService.queryRequest(projectManagementURL, 'insertMultipleQueryObjectInProjectFromDatabase', [userName,
-	   	                                                                                          projectName,
-	   	                                                                                          projectDescription,
-	   	                                                                                          queryObjectTitles,
-	   	                                                                                          queryObjectJsons,
-	   	                                                                                          resultVisualizations], function(result){
-	   		that.cache.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
-	       	console.log("insertQueryObjectStatus", that.cache.insertQueryObjectStatus);
-	       	if(that.cache.insertQueryObjectStatus != 0){
-	       		alert(that.cache.insertQueryObjectStatus + " Query Object(s)" +  " have been added to project:" + projectName);
-	       	}
-	       	
-	       	deferred.resolve(result);
-	       	
-	       });
-	       return deferred.promise;
-	       
-	   };
-	   
-	   that.createNewProject = function(userNameEntered, projectNameEntered,projectDescriptionEntered, queryObjectTitles, queryObjectJsons){
-		   that.insertQueryObjectToProject(userNameEntered,
-				   						   projectNameEntered,
-				   						   projectDescriptionEntered,
-				   						   queryObjectTitles,
-				   						   queryObjectJsons,
-				   						   null)
-		   .then(function(){
-			   that.cache.listOfProjectsFromDatabase = [];//clear
-			   that.getListOfProjects();//fetch new list
-		   });
-
-	   };
-
-	};
-})();
-
-
-/**
- *this directive contains the logic for managing the list view of projects and its query objects
- *@author spurushe 
- */
-
-(function(){
-	angular.module('weaveAnalyst.project').directive('projectGrid', projectGrid);
-	
-	function projectGrid (){
-		return{
-			restrict : 'E',
-			controller : projectGridController,
-			scope:{
-				data : '='
-			},
-			template : '<div ui-grid = "pGrid_Ctrl.gridOptions" ui-grid-pinning ui-grid-expandable></div>',
-			controllerAs : 'pGrid_Ctrl',
-			bindToController : true,
-			link : function(){
-
-			}
-		};
-	};//end of directive defintion
-	
-	projectGridController.$inject = ['projectService', 'uiGridTreeViewConstants', '$scope'];
-	function projectGridController (projectService, uiGridTreeViewConstants, $scope){
-		var pGrid_Ctrl = this;
-		
-		
-		pGrid_Ctrl.projectService = projectService;
-
-		pGrid_Ctrl.gridOptions = {
-		          expandableRowTemplate : 'src/project/subGrid.html',  //This is the template that will be used to render subgrid.
-		          expandableRowHeight : 150, //This will be the height of the subgrid
-		          expandableRowScope : {
-		              subGridVariable : 'subGridScopeVariable'  //Variables of object expandableScope will be available in the scope of the expanded subgrid
-		          },
-		          onRegisterApi: function (gridApi) {
-		              gridApi.expandable.on.rowExpandedStateChanged($scope, function (row) {
-		                  if (row.isExpanded) {
-		                    row.entity.subGridOptions = {
-		                      columnDefs: [
-		                      { name: 'author'},
-		                      { name: 'queryObjectName'},
-		                      { name: 'columns'}
-		                    ]};
-		                    
-		                    pGrid_Ctrl.projectService.getListOfQueryObjects(row.entity.Name).then(function(childQos){
-		                    	
-		                    	row.entity.subGridOptions.data = childQos;
-		                    });
-		                    
-		                  }
-		              });
-		          },
-				  data : pGrid_Ctrl.data//sets the data of the parent grid
-        };
-		
-		//defining the columns of the parent grid
-		pGrid_Ctrl.gridOptions.columnDefs = [
-		                                { name: 'Name', width: '35%'  },
-		                                { name: 'Description', width: '60%' }
-		                            ];
-		
-			
-	};//end of grid controller
-		
-})();
-/**
- * this directive represents a single query object and its respective controls.
- * @spurushe
- */
-
-(function(){
-	angular.module('weaveAnalyst.project').directive('queryCard', queryCard);
-	function queryCard(){
-		return {
-			restrict : 'E',
-			scope :{
-				item : '='
-			},
-			templateUrl : 'src/project/query_card.tpl.html',
-			controller : queryCardController,
-			controllerAs : 'q_cardCtrl',
-			bindToControler : true,
-			link : function(){
-				
-			}
-		};
-	}//end of directive definition
-	
-	queryCardController.$inject = ['$scope', 'projectService'];
-	function queryCardController(scope, projectService){
-		var q_cardCtrl = this;
-		q_cardCtrl.projectService = projectService;
-		q_cardCtrl.item = scope.item;
-		q_cardCtrl.editMode = false;
-		
-		
-		q_cardCtrl.returnSessionState = returnSessionState;
-		q_cardCtrl.deleteSpecificQueryObject = deleteSpecificQueryObject;
-		q_cardCtrl.deleteQueryConfirmation = deleteQueryConfirmation;
-		q_cardCtrl.openInAnalysis = openInAnalysis;
-		q_cardCtrl.edit = edit;
-		q_cardCtrl.save = save;
-
-		//toggles the edit mode for editing a query card
-		function edit (){
-			q_cardCtrl.editMode = true;
-		};
-		
-		//saves a modified query card to the server
-		function save (item){
-			//save the edited state
-			//if saved make the edit mode false
-			alert(item.queryObject.title + " has been saved");
-			q_cardCtrl.editMode = false;
-		};
-		
-		
-		//deletes a single queryObject within the currently selected Project
-		function deleteSpecificQueryObject(item){
-			q_cardCtrl.nameOfQueryObjectToDelete = item.queryObjectName; 
-			q_cardCtrl.deleteQueryConfirmation(q_cardCtrl.projectService.cache.project.selected, q_cardCtrl.nameOfQueryObjectToDelete);
-		};
-		
-		function deleteQueryConfirmation (currentProject, currentQueryFileName){
-			var deletePopup = confirm("Are you sure you want to delete " + currentQueryFileName + " from " + currentProject + "?");
-			if(deletePopup == true){
-				q_cardCtrl.projectService.deleteQueryObject(currentProject, currentQueryFileName);
-			}
-		};
-		
-		function openInAnalysis (incoming_queryObject) {
-			$scope.$emit("queryObjectloaded", incoming_queryObject);
-			$location.path('/analysis'); 
-		};
-
-		//called when the thumb-nail is clicked
-		/**
-		 *@param given a query object
-		 *@returns it returns the weave visualizations for it.
-		 */
-		function returnSessionState (queryObject){
-//			q_cardCtrl.projectService.returnSessionState(queryObject).then(function(weaveSessionState){
-//				var newWeave;
-//				if(!(angular.isUndefined(weaveSessionState))){
-//					
-//			   		 if (!newWeave || newWeave.closed) {
-//							newWeave = window
-//									.open("/weave.html?",
-//											"abc",
-//											"toolbar=no, fullscreen = no, scrollbars=yes, addressbar=no, resizable=yes");
-//						}
-//			   		 
-//			   		q_cardCtrl.WeaveService.setWeaveWindow(newWeave);
-//				   		
-//				   		$scope.$watch(function(){
-//				   			return q_cardCtrl.WeaveService.weave;
-//				   		},function(){
-//				   			if(q_cardCtrl.WeaveService.checkWeaveReady()) 
-//				   				q_cardCtrl.WeaveService.setBase64SessionState(weaveSessionState);
-//				   		});
-//			   		}
-//				else{
-//					console.log("Session state was not returned");
-//				}
-//			});
-		};
-	}
 })();
 angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
 
@@ -4429,6 +4471,924 @@ var shanti;
         }
     }
 })();
+/**
+ * this is a modified collapsible tree written in d3
+ * reference : http://bl.ocks.org/mbostock/4339083
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	//constructor
+	function collapsibleTree (){
+		this._container;
+		this._margin;
+		this._height;
+		this._width;
+		
+		this._root;
+		this._diagnol;
+		this._duration;
+		
+		this._treeSvg;
+		this._tree;
+		this._nodes;
+		this._links;
+		this._i;
+	};
+	
+	var p = collapsibleTree.prototype;
+	window.wa.d3_viz.collapsibleTree = collapsibleTree;
+	
+	//inits the tree initial parameters
+	p.intialize_tree = function(config){
+		
+		this._container = config.container;
+		
+		console.log(config.container.offsetHeight);
+		
+		this._margin = {top: 20, right: 20, bottom: 20, left: 20};
+	    //this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
+	    //this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		
+		this._width= 500 - this._margin.right - this._margin.left,
+		this._height = 500 - this._margin.top - this._margin.bottom;
+
+		this._i = 0;
+		this._duration = 750;
+
+		this._tree = d3.layout.tree()
+	    	.size([this._height, this._width]);
+
+		this._diagonal = d3.svg.diagonal()
+	    .projection(function(d) { return [d.x, d.y]; });
+		
+		this._treeSvg = d3.select(this._container).append("svg")
+	    .attr("width", this._width + this._margin.right + this._margin.left)
+	    .attr("height", 1000)
+	    .append("g")
+	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+		
+		this.create_Root_Node();
+		
+	};
+	
+	//creates the first root node
+	p.create_Root_Node = function(){
+
+		d3.json("src/visualization/d3_viz/flare.json", function(error, flare) {
+		  if (error) throw error;
+
+		  this._root = flare;
+		  this._root.x0 =  this._height / 2;
+		  this._root.y0 = 0;
+
+		  function collapse(d) {
+			    if (d.children) {
+			      d._children = d.children;
+			      d._children.forEach(collapse);
+			      d.children = null;
+			    }
+			  }
+		  
+		  this._root.children.forEach(collapse);
+		  this.update(this._root);
+		}.bind(this));
+
+		d3.select(self.frameElement).style("height", "800px");
+	};
+	
+
+	// Toggle children on click.
+	p.click = function (d){
+	  if (d.children) {
+	    d._children = d.children;
+	    d.children = null;
+	  } else {
+	    d.children = d._children;
+	    d._children = null;
+	  }
+	  this.update(d);
+	};
+	
+	p.update = function(source){
+		
+		var t = this;
+
+		//console.log("this", this);
+		  // Compute the new tree layout.
+		t._nodes = t._tree.nodes(t._root).reverse(),
+		t._links = t._tree.links(t._nodes);
+
+		  // Normalize for fixed-depth.
+		 t._nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+		  // Update the nodes…
+		  var node = t._treeSvg.selectAll("g.node")
+		      .data( t._nodes, function(d) { return d.id || (d.id = ++t._i); });
+
+		  // Enter any new nodes at the parent's previous position.
+		  var nodeEnter = node.enter().append("g")
+		      .attr("class", "node")
+		      .attr("transform", function(d) { return "translate(" + source.x0 + "," + source.y0 + ")"; })
+		      .on("click",function(d){ t.click (d)});
+
+		  nodeEnter.append("circle")
+		      .attr("r", 1e-6)
+		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+		  nodeEnter.append("text")
+		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+		      .attr("dy", ".35em")
+		      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+		      .text(function(d) { return d.name; })
+		      .style("fill-opacity", 1e-6);
+
+		// Transition nodes to their new position.
+		  var nodeUpdate = node.transition()
+		      .duration(t._duration)
+		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+
+		  nodeUpdate.select("circle")
+		      .attr("r", 4.5)
+		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+		  nodeUpdate.select("text")
+		      .style("fill-opacity", 1);
+
+		// Transition exiting nodes to the parent's new position.
+		  var nodeExit = node.exit().transition()
+		      .duration( t._duration)
+		      .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
+		      .remove();
+
+		  nodeExit.select("circle")
+		      .attr("r", 1e-6);
+
+		  nodeExit.select("text")
+		      .style("fill-opacity", 1e-6);
+
+		  // Update the links…
+		  var link =  t._treeSvg.selectAll("path.link")
+		      .data( t._links, function(d) { return d.target.id; });
+
+		  // Enter any new links at the parent's previous position.
+		  link.enter().insert("path", "g")
+		      .attr("class", "link")
+		      .attr("d", function(d) {
+		        var o = {x: source.x0, y: source.y0};
+		        return  t._diagonal({source: o, target: o});
+		      }.bind(this));
+
+		  // Transition links to their new position.
+		  link.transition()
+		      .duration( t._duration)
+		      .attr("d",  t._diagonal);
+
+		  // Transition exiting nodes to the parent's new position.
+		  link.exit().transition()
+		      .duration( t._duration)
+		      .attr("d", function(d) {
+		        var o = {x: source.x, y: source.y};
+		        return  t._diagonal({source: o, target: o});
+		      })
+		      .remove();
+
+		  // Stash the old positions for transition.
+		  this._nodes.forEach(function(d) {
+		    d.x0 = d.x;
+		    d.y0 = d.y;
+		  });
+	};
+})();
+/**
+ * this d3 file renders a d3 heat map using different metrics
+ * for example correlation matrix etc
+ * 
+ * @ author spurushe
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function heatMap (){
+		this._container;
+		this._margin;
+		this._width;
+		this._height;
+		this._heatMapSvg;
+		
+		this._colScale;
+		this._rowScale;
+		this._rowObjects;
+		this._rowCells;
+		
+		
+		this._colorRamp;
+		this._colorScale;
+		this._toolTip;
+		
+		this._data;
+		this._labels;
+	};
+	
+	var p = heatMap.prototype;
+	
+	window.wa.d3_viz.heatMap = heatMap;
+	
+	
+	//initializes the heat map 
+	p.initialize_heatMap = function(config){
+		
+		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
+		this._container = config.container;
+		
+		this._width = this._container.offsetWidth - this._margin.left;
+		this._height = this._container.offsetHeight - this._margin.top;
+
+		//original SVG
+		this._heatMapSvg = d3.select(this._container).append("svg")
+			.attr("width", this._width )
+			.attr("height",this._height );
+		
+		this._data = config.data;
+		this._labels = config.labels;
+		
+		  // Scaling Functions
+		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
+
+		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
+
+		//toolTip
+		this._toolTip = d3.select(this._container)
+		.append("div")
+		.style("visibility", "hidden")
+		.attr("class", "toolTip")
+		.text("");
+	};
+	
+	/**
+	 * function to draw a heatmap using a matrix computed in R/STATA
+	 *  dom_element_to_append_to: the HTML element to which the heatmap D3 viz is appended
+	 *  data: the computed matrix   
+	 *  columnTitles required for labeling the matrix
+	 */
+	p.render_heatMap = function(){
+		
+		var hmObj = this;
+		
+		if(!hmObj._heatMapSvg){
+			console.log("Heat Map still initializing");
+			setTimeout(p.render_heatMap, 100);
+		}
+		
+		this.setColor();
+
+		// remove all previous items before render
+	    if(hmObj._heatMapSvg)
+	    	hmObj._heatMapSvg.selectAll('*').remove();
+	    else
+	    	return;
+		
+		
+		//row creation
+	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
+						.data(hmObj._data)
+						.enter().append("svg:g")
+						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
+						.attr("class", "row");
+		
+		//appending text for row
+	    hmObj._rowObjects.append("text")
+	      .attr("x", -1)
+	      .attr("y", function(d, i) { return hmObj._colScale(i); })
+	      .attr("dy", "0.25")
+	      .attr("fill", 'darkOrange')
+	      .attr("text-anchor", "end")
+	      .text(function(d, i) { return hmObj._labels[i]; });
+	    
+
+	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
+		    			.data(function (d,i)
+				    		{ 
+				    			return d.map(function(a) 
+				    				{ 
+				    					return {value: a, row: i};} ) ;
+							})//returning a key function
+			            .enter().append("svg:rect")
+			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
+			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
+			             .attr("width", hmObj._rowScale(1))
+			             .attr("height", hmObj._colScale(1))
+			             .style("fill", function(d) { return hmObj._colorScale(d.value);})
+			             .style('stroke', "black")
+			             .style('stroke-width', 1)
+			             .style('stroke-opacity', 0)
+			             .on('mouseover', function(d){ hmObj._toolTip.style('visibility', 'visible' ).text(d.value); 
+			             							   d3.select(this).style('stroke-opacity', 1);})
+			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
+			             							 d3.select(this).style('stroke-opacity', 0);});
+	    
+	    //TEMPORARY SOLUTION for getting column names
+	    var btm_Label_g = hmObj._rowObjects[0][3];
+	    
+	   console.log("entire g element", btm_Label_g);
+	   console.log("the object", d3.select(btm_Label_g));
+	    
+	   var x = d3.select(btm_Label_g)
+	    .data(hmObj._labels)
+	    .enter()
+	    .append('g');
+	   
+	   
+	   console.log("four gs", x);
+	    
+	    
+//	    .append("text")
+//	    .attr("x", -1)
+//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
+//	    .attr("dy", "0.25")
+//	    .attr("fill", 'darkOrange')
+//	    .text(function(d, i) {
+//	    	console.log(d);
+//	    	return hmObj._labels[i]; });
+	};
+	
+	//sets the color of the heat map
+	p.setColor = function(){//to parameterize color scales
+		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
+
+		this._colorScale = d3.scale.linear()
+		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
+		     .range([colorLow, colorMed, colorHigh]);
+	};
+})();
+
+
+/**
+ * code for rendering the d3 map filter tool used in the Weave Analyst
+ * @ author spurushe
+ * @ author sanjay1909
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function mapTool(){
+		
+		this._zoom;
+		this._centered;
+		this._width;
+		this._height;
+		this._projection;
+		this._path;
+		this._toolTip;
+		
+		
+		this._stateGrp;
+		this._countyGrp;
+		this._counties = {};
+		this._statePaths;
+		this._countyPaths;
+		this._heirarchy;
+		this._stateIdLookup = {};
+		
+		//is a pointer to the geometries after GEO-Jsons are loaded the first time
+		this.cache = {
+				stateTopoGeometries : [],
+				countyTopoGeometries : [],
+				selectedStates : {},
+				selectedCounties : {},
+				US: []
+		};
+		
+		
+		
+	}
+	
+	var p = mapTool.prototype;
+	
+	p.intializeChart = function(config){
+		
+		this._container = config.container;
+		this._margin = config.margin;
+		
+		this._fileName = config.fileName;
+		this._stateFile = config.stateFile;
+		this._countyFile = config.countyFile;
+		
+		this._width = (this._container.offsetWidth) - this._margin.left - this._margin.right;
+		this._height = (this._container.offsetHeight) - this._margin.top - this._margin.bottom;
+	    
+		
+		//original SVG
+		this._mapSvg = d3.select(this._container).append("svg")
+			.attr("width", this._width )
+			.attr("height",this._height );
+		
+		//projection
+		this._projection = d3.geo.albersUsa()
+							 .translate([this._width/2, this._height/2])
+							 .scale([550]);
+		//path generator
+		this._path = d3.geo.path()
+					   .projection(this._projection);
+		
+		this._zoom = d3.behavior.zoom()
+	    .translate(this._projection.translate())
+	    .scale(this._projection.scale())
+	    .scaleExtent([this._height, 8 * this._height])
+	    .on("zoom", this.zoomMap.bind(this));
+		
+		this._toolTip = d3.select(this._container)
+		.append("div")
+		.style("position", "absolute")
+		.style("z-index", "10")
+		.style("visibility", "hidden")
+		.text("")
+		.style("color", "red")
+		.style("font-weight", 'bold');
+		
+		// these updates the map
+		
+	};
+	
+
+	p.zoomMap = function() {
+		  this._projection.translate(d3.event.translate).scale(d3.event.scale);
+		  this._stateGrp.selectAll("path").attr("d", this._path);
+	};
+	
+	/**
+	 * @param heirarchy the hierarchy you want to render at eg State vs country vs county
+	 * @param selectedStates states selected in a previous run
+	 * @param selectedCounties counties selected in a previous run
+	 */
+	p.renderLayer = function(heirarchy, selectedStates, selectedCounties){
+		if(!this._mapSvg){
+			console.log("Chart not initialized yet");
+			return;
+		}
+		
+		
+		this._heirarchy = heirarchy;
+		if(selectedStates)
+			this.cache.selectedStates = selectedStates;
+		if(selectedCounties){
+			this.cache.selectedCounties = selectedCounties;
+		}
+			
+		
+		if(this.cache.US.length == 0)
+		{//first time call
+			this.loadGeoJson(this._fileName,this._heirarchy);
+		}
+		else{
+			if(this._heirarchy == 'State'){//handling state level geometries
+				addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
+				
+			}
+			else if(this._heirarchy == 'County'){ //handling county level
+				if('name' in this.cache.countyTopoGeometries.features[0].properties)//if this property has been assigned add it
+					addCountyLayer.call(this,this.cache.countyTopoGeometries.features);
+				else
+					this.loadCountyLayer(this._countyFile);
+				
+			}
+			
+		}
+	};
+	
+	p.loadGeoJson = function(filename,heirarchy) {		
+		d3.json(filename, function(error, USGeometries){
+			
+			this.cache.US = USGeometries;
+			
+			var states = topojson.feature(USGeometries, USGeometries.objects.states);
+			this.cache.stateTopoGeometries = states;
+			
+			var counties = topojson.feature(USGeometries, USGeometries.objects.counties);
+			this.cache.countyTopoGeometries = counties;
+			
+			if(heirarchy== 'State'){//handling state level geometries
+				this.loadStateLayer(this._stateFile);
+				
+			}
+			else if(heirarchy== 'County'){ //handling county level
+				this.loadCountyLayer(this._countyFile);
+			}
+		}.bind(this));		
+	};
+	
+
+	p.loadStateLayer = function(fileName){
+		d3.csv(fileName, function(state_fips){
+			for(i in state_fips){
+				var fips = parseFloat(state_fips[i].US_STATE_FIPS_CODE);
+				for(j in this.cache.stateTopoGeometries.features){
+					var id = this.cache.stateTopoGeometries.features[j].id;
+					if(fips == id){
+						this.cache.stateTopoGeometries.features[j].properties.name = state_fips[i].NAME10;
+						break;
+					}
+				}//j loop
+			}//i loop
+			addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
+			
+		}.bind(this));//end of csv load
+	};
+	
+	var addStatelayer = function(geometries){
+		//adding map layer
+		
+		this._mapSvg.selectAll("*").remove();
+		
+		this._stateGrp = this._mapSvg.append("g")
+	    .call(this._zoom);
+		
+		this._statePaths = this._stateGrp.selectAll(".path")
+		.data(geometries)
+		.enter()
+		.append("path")
+		.attr("d", this._path)
+		.attr("class", "geometryFill");
+		
+		
+		//handling selections							
+		this._statePaths							
+		.on('click', function(d){
+			console.log("d", d);
+			//if it is selected for the first time
+			if(!(d.id in this.cache.selectedStates)){
+				this.cache.selectedStates[d.id] = { title: d.properties.name };
+			}
+			//if already selected; remove it
+			else{
+				delete this.cache.selectedStates[d.id];
+			}
+			this.selectTheStates(this.cache.selectedStates);
+			
+		}.bind(this))
+		.on('mouseover', function(d){
+				this._toolTip.style('visibility', 'visible' ).text(d.properties.name); 
+			}.bind(this))
+	    .on("mousemove", function(){
+	    	return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+	    	}.bind(this))
+	    .on('mouseout', function(){ 
+	    	this._toolTip.style('visibility', 'hidden');
+	    	}.bind(this));
+		
+		//this runs if the selected states have already been cached
+		if(Object.keys(this.cache.selectedStates).length != 0)
+		{
+			this.selectTheStates(this.cache.selectedStates);
+		}
+	};
+	
+	p.selectTheStates = function(selectedStates){
+			//TODO it needs improvement
+			//apply the selected class for the selected state
+		
+			this._statePaths.classed('selected', function(d){	
+				if(d.id in selectedStates)
+					d.selected = true;
+				else
+					d.selected = false;
+				return d.selected;
+			});
+			
+		
+	};
+	
+	p.selectTheCounties = function(selectedCounties){
+		this._countyPaths.classed('selected', function(d){
+			if(d.id in selectedCounties)
+				d.selected = true;
+			else
+				d.selected = false;
+			return d.selected;
+		});
+	};
+	
+	
+	p.loadCountyLayer = function(fileNmae){
+		//adding county name property from csv to topojson
+		d3.csv(fileNmae, function(county_fips){
+			
+			for(i in county_fips){
+				var county_fips_code = parseFloat(county_fips[i].FIPS);
+				for(j in this.cache.countyTopoGeometries.features){
+					var id = this.cache.countyTopoGeometries.features[j].id;
+					if(county_fips_code == id){
+						this.cache.countyTopoGeometries.features[j].properties.name = county_fips[i].County_Name;
+						this.cache.countyTopoGeometries.features[j].properties.state = county_fips[i].State_Name;
+						this.cache.countyTopoGeometries.features[j].properties.stateAbbr = county_fips[i].State_Abbr;
+						this.cache.countyTopoGeometries.features[j].properties.stateId = parseFloat(county_fips[i].STFIPS);
+						break;
+					}
+				}//j loop
+			}//i loop
+			
+			addCountyLayer.call(this);
+			
+		}.bind(this));//end of csv load
+	};
+	
+	
+	p.addCountyLayerForState = function(d){
+		if(d)
+			var gElement = this._stateIdLookup[d.id];
+		if( this._stateGrp.clickedState != gElement){
+			var chart = this;
+			var x, y, k;
+			
+			if (d  && this._centered !== d) {
+			    var centroid = this._path.centroid(d);
+			    x = centroid[0];
+			    y = centroid[1];
+			    k = 2;
+			    this._centered = d;
+			    
+			   
+			    //drawing counties in d
+			    var gAr = d3.select(gElement);
+			    this._countyPaths= gAr.selectAll("path")
+			     .data(this.cache.countyTopoGeometries.features)
+			     .enter().append("g")
+			     .filter(function(cd,i){
+			    	 return d.id == cd.properties.stateId;
+			    	
+			     })
+			     .attr("class", "geometryFill");
+			    
+			    
+			    this._countyPaths
+			     .on('click', function(d){
+						var countyObj;
+						// first check county object there for stateID , then check countyID there for that state
+						if(!this.cache.selectedCounties[d.properties.stateId] || !(d.id in this.cache.selectedCounties[d.properties.stateId].counties)){
+							countyObj = this.cache.selectedCounties[d.properties.stateId];
+							if(!countyObj) 
+								countyObj = {title: d.properties.state, state: d.properties.stateId ,counties:{} };
+							countyObj.counties[d.id] = { title: d.properties.name };
+							
+							this.cache.selectedCounties[d.properties.stateId] = countyObj;
+							this._counties[d.id] = d.properties.name;
+						}
+						//if already selected; remove it
+						else{
+							countyObj = this.cache.selectedCounties[d.properties.stateId];
+							if(countyObj){
+								delete this.cache.selectedCounties[d.properties.stateId].counties[d.id];
+								delete chart._counties[d.id];
+							}
+						}
+						if(this.cache.selectedCounties[d.properties.stateId])
+							this.selectTheCounties(this.cache.selectedCounties[d.properties.stateId].counties);
+						
+						
+						
+			     }.bind(this))
+			     .on('mouseover', function(d){
+					 this._toolTip.style('visibility', 'visible' ).text(d.properties.name + " (" + d.properties.stateAbbr + ")"); 
+			     	}.bind(this))
+				 .on("mousemove", function(){
+					 return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+				 	}.bind(this))
+				 .on('mouseout', function(){
+					 this._toolTip.style('visibility', 'hidden');
+					 }.bind(this))
+			     .append("path")
+			     .attr("d", this._path)
+			     .attr("class", "countyBorders");
+			} 
+			  
+			else { 
+				x = this._width / 2;
+				y = this._height / 2;
+				k = 1;
+				this._centered = null;
+		  
+			}
+
+//			  f.selectAll("path")
+//			      .classed("active", centered && function(d) { return d === centered; });
+
+			this._stateGrp.transition()
+			      .duration(750)
+			      .attr("transform", "translate(" + this._width / 2 + "," + this._height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+			      .style("stroke-width", 1.5 / k + "px");
+			
+			if(d)
+				{
+					if(this.cache.selectedCounties[d.id])
+						this.selectTheCounties(this.cache.selectedCounties[d.id].counties);
+				}
+		}
+		this._stateGrp.clickedState = gElement;
+	};
+	
+	
+	var addCountyLayer = function(geometries){
+		if(this.cache.selectedCounties){
+			for(stateID in this.cache.selectedCounties)
+				for(countyID in this.cache.selectedCounties[stateID].counties)
+					this._counties[countyID] = this.cache.selectedCounties[stateID].counties[countyID];
+		}
+		else
+			this._counties = {};
+		var chart = this;
+		
+		this._mapSvg.selectAll("*").remove();
+		
+		this._mapSvg.append("rect")
+		 .attr("class", "background")
+		 .attr("width", this._width)
+		 .attr("height", this._height)
+		 .on("click", this.addCountyLayerForState.bind(this));
+		
+		this._stateGrp = this._mapSvg.append('g');
+		
+		
+		this._statePaths = this._stateGrp
+		 .append("g")
+		 .attr("id", "states")
+		 .selectAll("g")
+		 .data(this.cache.stateTopoGeometries.features)
+		 .enter();
+		
+		this._statePaths.append("g")
+		.each(function(d){ 
+			chart._stateIdLookup[d.id] = this;
+		})
+		.on('click', this.addCountyLayerForState.bind(this))
+		 .append("path")
+		 .attr("d", this._path); 
+		
+		this._stateGrp.append("path")//just for the borders
+	      .datum(topojson.mesh(this.cache.US, this.cache.US.objects.states, function(a, b) { return a !== b; }))
+	      .attr("id", "state-borders")
+	      .attr("d", this._path);
+		
+		
+		//this runs if the selected states have already been cached
+		if(Object.keys(this.cache.selectedCounties).length != 0)
+		{
+			for(state in this.cache.selectedCounties){
+				for(var i = 0; i < this.cache.stateTopoGeometries.features.length; i++)
+					{
+						if(state == this.cache.stateTopoGeometries.features[i].id)
+							{
+								this.addCountyLayerForState(this.cache.stateTopoGeometries.features[i]);
+								break;
+							}
+					}
+				
+			}
+			
+		}
+	};
+	
+	
+	window.wa.d3_viz.mapTool = mapTool;
+}());
+
+
+/**
+ * this renders column distributions of numerical columns using the d3 library
+ * @author spurushe 
+ */
+
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function sparkLine (){
+		this._container;
+		this._svg;
+		
+		this._breaks;
+		this._counts;
+		
+		this._heightScale;
+		this._widthScale;
+		this._width;
+		this._height;
+		this._barWidth;
+		
+		this.toolTip;
+		this._bar;
+	};
+	
+	var p = sparkLine.prototype;
+	window.wa.d3_viz.sparkLine = sparkLine;
+	
+	
+	
+	p.initialze_sparkLine = function(config){
+		
+		this._container = config.container;
+
+		//data
+		this._breaks = config.breaks;
+		this._counts = config.counts;
+		
+		this._margin = {top: 5, right: 5, bottom: 5, left: 5};
+		this._width = config.width; this._height= config.height;
+
+		//scales
+		this._heightScale = d3.scale.linear()
+				  .domain([0, d3.max(this._counts)])
+				  .range([this._height, 0]);//output should be between height and 0
+		
+		this._widthScale = d3.scale.linear()
+						   .domain([0, d3.max(this._breaks)])
+						   .range([0, this._width]);
+		
+		//tooltip
+		this._tooltip = d3.select(this._container)
+		.append("div")
+		.style("position", "absolute")
+		.style("z-index", "10")
+		.style("visibility", "hidden")
+		.text("")
+		.style("color", "red")
+		.style("font-weight", 'bold');
+		
+		this._barWidth = (this._width - this._margin.left - this._margin.right)/this._counts.length;
+		
+		//creating the svgS
+		this._svg = d3.select(this._container).append('svg')
+					  .attr('fill', 'black')
+					  .attr('width', this._width)//svg viewport dynamically generated
+					  .attr('height', this._height )
+					  .append('g')
+					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+		
+	};
+	
+	
+
+	/**
+	 * this function draws the sparklines computed in R/STATA (one per column)
+	 * @param dom_element_to_append_to :the HTML element to which the sparkline D3 viz is appended
+	 * @param sparklineData : the distribution data calculated in R/STATA
+	 */
+	p.render_sparkLine = function(){
+		var slObj = this;
+		
+		if(!slObj._svg){
+			console.log("Still initializing chart");
+			setTimeout(p.render_sparkLine, 100);
+		}
+	
+		//making one g element per bar 
+		slObj._bar = slObj._svg.selectAll("g")
+	      			   .data(slObj._counts)
+	      			   .enter().append("svg:g")
+	      			   .attr("transform", function(d, i) {  return "translate(" + (i * slObj._barWidth ) + ",0)"; });
+
+		slObj._bar.append("rect")	
+	      .attr("y", function(d) { return slObj._heightScale(d); })
+	      .attr("height", function(d) { return slObj._height - slObj._heightScale(d); })
+	      .attr("width", slObj._barWidth)
+	      .on('mouseover', function(d){ slObj._tooltip.style('visibility', 'visible' ).text(d);   d3.select(this).style('stroke-opacity', 1);})
+          .on("mousemove", function(){return slObj._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+          .on('mouseout', function(){ slObj._tooltip.style('visibility', 'hidden'); 
+			             							 d3.select(this).style('stroke-opacity', 0);});
+	};
+})();
+
 (function(){
 	angular.module('weaveAnalyst.WeaveModule', []);
 	angular.module('weaveAnalyst.WeaveModule').service("WeaveService", WeaveService);
@@ -5627,1038 +6587,6 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 
 })();
 /**
- * this is a modified collapsible tree written in d3
- * reference : http://bl.ocks.org/mbostock/4339083
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	//constructor
-	function collapsibleTree (){
-		this._container;
-		this._margin;
-		this._height;
-		this._width;
-		
-		this._root;
-		this._diagnol;
-		this._duration;
-		
-		this._treeSvg;
-		this._tree;
-		this._nodes;
-		this._links;
-		this._i;
-	};
-	
-	var p = collapsibleTree.prototype;
-	window.wa.d3_viz.collapsibleTree = collapsibleTree;
-	
-	//inits the tree initial parameters
-	p.intialize_tree = function(config){
-		
-		this._container = config.container;
-		
-		console.log(config.container.offsetHeight);
-		
-		this._margin = {top: 20, right: 20, bottom: 20, left: 20};
-	    //this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
-	    //this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
-		
-		this._width= 500 - this._margin.right - this._margin.left,
-		this._height = 500 - this._margin.top - this._margin.bottom;
-
-		this._i = 0;
-		this._duration = 750;
-
-		this._tree = d3.layout.tree()
-	    	.size([this._height, this._width]);
-
-		this._diagonal = d3.svg.diagonal()
-	    .projection(function(d) { return [d.x, d.y]; });
-		
-		this._treeSvg = d3.select(this._container).append("svg")
-	    .attr("width", this._width + this._margin.right + this._margin.left)
-	    .attr("height", 1000)
-	    .append("g")
-	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
-		
-		this.create_Root_Node();
-		
-	};
-	
-	//creates the first root node
-	p.create_Root_Node = function(){
-
-		d3.json("src/visualization/d3_viz/flare.json", function(error, flare) {
-		  if (error) throw error;
-
-		  this._root = flare;
-		  this._root.x0 =  this._height / 2;
-		  this._root.y0 = 0;
-
-		  function collapse(d) {
-			    if (d.children) {
-			      d._children = d.children;
-			      d._children.forEach(collapse);
-			      d.children = null;
-			    }
-			  }
-		  
-		  this._root.children.forEach(collapse);
-		  this.update(this._root);
-		}.bind(this));
-
-		d3.select(self.frameElement).style("height", "800px");
-	};
-	
-
-	// Toggle children on click.
-	p.click = function (d){
-	  if (d.children) {
-	    d._children = d.children;
-	    d.children = null;
-	  } else {
-	    d.children = d._children;
-	    d._children = null;
-	  }
-	  this.update(d);
-	};
-	
-	p.update = function(source){
-		
-		var t = this;
-
-		//console.log("this", this);
-		  // Compute the new tree layout.
-		t._nodes = t._tree.nodes(t._root).reverse(),
-		t._links = t._tree.links(t._nodes);
-
-		  // Normalize for fixed-depth.
-		 t._nodes.forEach(function(d) { d.y = d.depth * 180; });
-
-		  // Update the nodes…
-		  var node = t._treeSvg.selectAll("g.node")
-		      .data( t._nodes, function(d) { return d.id || (d.id = ++t._i); });
-
-		  // Enter any new nodes at the parent's previous position.
-		  var nodeEnter = node.enter().append("g")
-		      .attr("class", "node")
-		      .attr("transform", function(d) { return "translate(" + source.x0 + "," + source.y0 + ")"; })
-		      .on("click",function(d){ t.click (d)});
-
-		  nodeEnter.append("circle")
-		      .attr("r", 1e-6)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		  nodeEnter.append("text")
-		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-		      .attr("dy", ".35em")
-		      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-		      .text(function(d) { return d.name; })
-		      .style("fill-opacity", 1e-6);
-
-		// Transition nodes to their new position.
-		  var nodeUpdate = node.transition()
-		      .duration(t._duration)
-		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-
-
-		  nodeUpdate.select("circle")
-		      .attr("r", 4.5)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		  nodeUpdate.select("text")
-		      .style("fill-opacity", 1);
-
-		// Transition exiting nodes to the parent's new position.
-		  var nodeExit = node.exit().transition()
-		      .duration( t._duration)
-		      .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
-		      .remove();
-
-		  nodeExit.select("circle")
-		      .attr("r", 1e-6);
-
-		  nodeExit.select("text")
-		      .style("fill-opacity", 1e-6);
-
-		  // Update the links…
-		  var link =  t._treeSvg.selectAll("path.link")
-		      .data( t._links, function(d) { return d.target.id; });
-
-		  // Enter any new links at the parent's previous position.
-		  link.enter().insert("path", "g")
-		      .attr("class", "link")
-		      .attr("d", function(d) {
-		        var o = {x: source.x0, y: source.y0};
-		        return  t._diagonal({source: o, target: o});
-		      }.bind(this));
-
-		  // Transition links to their new position.
-		  link.transition()
-		      .duration( t._duration)
-		      .attr("d",  t._diagonal);
-
-		  // Transition exiting nodes to the parent's new position.
-		  link.exit().transition()
-		      .duration( t._duration)
-		      .attr("d", function(d) {
-		        var o = {x: source.x, y: source.y};
-		        return  t._diagonal({source: o, target: o});
-		      })
-		      .remove();
-
-		  // Stash the old positions for transition.
-		  this._nodes.forEach(function(d) {
-		    d.x0 = d.x;
-		    d.y0 = d.y;
-		  });
-	};
-})();
-/**
- * this d3 file renders a d3 heat map using different metrics
- * for example correlation matrix etc
- * 
- * @ author spurushe
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function heatMap (){
-		this._container;
-		this._margin;
-		this._width;
-		this._height;
-		this._heatMapSvg;
-		
-		this._colScale;
-		this._rowScale;
-		this._rowObjects;
-		this._rowCells;
-		
-		
-		this._colorRamp;
-		this._colorScale;
-		this._toolTip;
-		
-		this._data;
-		this._labels;
-	};
-	
-	var p = heatMap.prototype;
-	
-	window.wa.d3_viz.heatMap = heatMap;
-	
-	
-	//initializes the heat map 
-	p.initialize_heatMap = function(config){
-		
-		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
-		this._container = config.container;
-		
-		this._width = this._container.offsetWidth - this._margin.left;
-		this._height = this._container.offsetHeight - this._margin.top;
-
-		//original SVG
-		this._heatMapSvg = d3.select(this._container).append("svg")
-			.attr("width", this._width )
-			.attr("height",this._height );
-		
-		this._data = config.data;
-		this._labels = config.labels;
-		
-		  // Scaling Functions
-		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
-
-		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
-
-		//toolTip
-		this._toolTip = d3.select(this._container)
-		.append("div")
-		.style("visibility", "hidden")
-		.attr("class", "toolTip")
-		.text("");
-	};
-	
-	/**
-	 * function to draw a heatmap using a matrix computed in R/STATA
-	 *  dom_element_to_append_to: the HTML element to which the heatmap D3 viz is appended
-	 *  data: the computed matrix   
-	 *  columnTitles required for labeling the matrix
-	 */
-	p.render_heatMap = function(){
-		
-		var hmObj = this;
-		
-		if(!hmObj._heatMapSvg){
-			console.log("Heat Map still initializing");
-			setTimeout(p.render_heatMap, 100);
-		}
-		
-		this.setColor();
-
-		// remove all previous items before render
-	    if(hmObj._heatMapSvg)
-	    	hmObj._heatMapSvg.selectAll('*').remove();
-	    else
-	    	return;
-		
-		
-		//row creation
-	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
-						.data(hmObj._data)
-						.enter().append("svg:g")
-						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
-						.attr("class", "row");
-		
-		//appending text for row
-	    hmObj._rowObjects.append("text")
-	      .attr("x", -1)
-	      .attr("y", function(d, i) { return hmObj._colScale(i); })
-	      .attr("dy", "0.25")
-	      .attr("fill", 'darkOrange')
-	      .attr("text-anchor", "end")
-	      .text(function(d, i) { return hmObj._labels[i]; });
-	    
-
-	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
-		    			.data(function (d,i)
-				    		{ 
-				    			return d.map(function(a) 
-				    				{ 
-				    					return {value: a, row: i};} ) ;
-							})//returning a key function
-			            .enter().append("svg:rect")
-			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
-			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
-			             .attr("width", hmObj._rowScale(1))
-			             .attr("height", hmObj._colScale(1))
-			             .style("fill", function(d) { return hmObj._colorScale(d.value);})
-			             .style('stroke', "black")
-			             .style('stroke-width', 1)
-			             .style('stroke-opacity', 0)
-			             .on('mouseover', function(d){ hmObj._toolTip.style('visibility', 'visible' ).text(d.value); 
-			             							   d3.select(this).style('stroke-opacity', 1);})
-			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
-			             							 d3.select(this).style('stroke-opacity', 0);});
-	    
-	    //TEMPORARY SOLUTION for getting column names
-	    var btm_Label_g = hmObj._rowObjects[0][3];
-	    
-	   console.log("entire g element", btm_Label_g);
-	   console.log("the object", d3.select(btm_Label_g));
-	    
-	   var x = d3.select(btm_Label_g)
-	    .data(hmObj._labels)
-	    .enter()
-	    .append('g');
-	   
-	   
-	   console.log("four gs", x);
-	    
-	    
-//	    .append("text")
-//	    .attr("x", -1)
-//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
-//	    .attr("dy", "0.25")
-//	    .attr("fill", 'darkOrange')
-//	    .text(function(d, i) {
-//	    	console.log(d);
-//	    	return hmObj._labels[i]; });
-	};
-	
-	//sets the color of the heat map
-	p.setColor = function(){//to parameterize color scales
-		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
-
-		this._colorScale = d3.scale.linear()
-		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
-		     .range([colorLow, colorMed, colorHigh]);
-	};
-})();
-
-
-/**
- * code for rendering the d3 map filter tool used in the Weave Analyst
- * @ author spurushe
- * @ author sanjay1909
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function mapTool(){
-		
-		this._zoom;
-		this._centered;
-		this._width;
-		this._height;
-		this._projection;
-		this._path;
-		this._toolTip;
-		
-		
-		this._stateGrp;
-		this._countyGrp;
-		this._counties = {};
-		this._statePaths;
-		this._countyPaths;
-		this._heirarchy;
-		this._stateIdLookup = {};
-		
-		//is a pointer to the geometries after GEO-Jsons are loaded the first time
-		this.cache = {
-				stateTopoGeometries : [],
-				countyTopoGeometries : [],
-				selectedStates : {},
-				selectedCounties : {},
-				US: []
-		};
-		
-		
-		
-	}
-	
-	var p = mapTool.prototype;
-	
-	p.intializeChart = function(config){
-		
-		this._container = config.container;
-		this._margin = config.margin;
-		
-		this._fileName = config.fileName;
-		this._stateFile = config.stateFile;
-		this._countyFile = config.countyFile;
-		
-		this._width = (this._container.offsetWidth) - this._margin.left - this._margin.right;
-		this._height = (this._container.offsetHeight) - this._margin.top - this._margin.bottom;
-	    
-		
-		//original SVG
-		this._mapSvg = d3.select(this._container).append("svg")
-			.attr("width", this._width )
-			.attr("height",this._height );
-		
-		//projection
-		this._projection = d3.geo.albersUsa()
-							 .translate([this._width/2, this._height/2])
-							 .scale([550]);
-		//path generator
-		this._path = d3.geo.path()
-					   .projection(this._projection);
-		
-		this._zoom = d3.behavior.zoom()
-	    .translate(this._projection.translate())
-	    .scale(this._projection.scale())
-	    .scaleExtent([this._height, 8 * this._height])
-	    .on("zoom", this.zoomMap.bind(this));
-		
-		this._toolTip = d3.select(this._container)
-		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
-		.style("visibility", "hidden")
-		.text("")
-		.style("color", "red")
-		.style("font-weight", 'bold');
-		
-		// these updates the map
-		
-	};
-	
-
-	p.zoomMap = function() {
-		  this._projection.translate(d3.event.translate).scale(d3.event.scale);
-		  this._stateGrp.selectAll("path").attr("d", this._path);
-	};
-	
-	/**
-	 * @param heirarchy the hierarchy you want to render at eg State vs country vs county
-	 * @param selectedStates states selected in a previous run
-	 * @param selectedCounties counties selected in a previous run
-	 */
-	p.renderLayer = function(heirarchy, selectedStates, selectedCounties){
-		if(!this._mapSvg){
-			console.log("Chart not initialized yet");
-			return;
-		}
-		
-		
-		this._heirarchy = heirarchy;
-		if(selectedStates)
-			this.cache.selectedStates = selectedStates;
-		if(selectedCounties){
-			this.cache.selectedCounties = selectedCounties;
-		}
-			
-		
-		if(this.cache.US.length == 0)
-		{//first time call
-			this.loadGeoJson(this._fileName,this._heirarchy);
-		}
-		else{
-			if(this._heirarchy == 'State'){//handling state level geometries
-				addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
-				
-			}
-			else if(this._heirarchy == 'County'){ //handling county level
-				if('name' in this.cache.countyTopoGeometries.features[0].properties)//if this property has been assigned add it
-					addCountyLayer.call(this,this.cache.countyTopoGeometries.features);
-				else
-					this.loadCountyLayer(this._countyFile);
-				
-			}
-			
-		}
-	};
-	
-	p.loadGeoJson = function(filename,heirarchy) {		
-		d3.json(filename, function(error, USGeometries){
-			
-			this.cache.US = USGeometries;
-			
-			var states = topojson.feature(USGeometries, USGeometries.objects.states);
-			this.cache.stateTopoGeometries = states;
-			
-			var counties = topojson.feature(USGeometries, USGeometries.objects.counties);
-			this.cache.countyTopoGeometries = counties;
-			
-			if(heirarchy== 'State'){//handling state level geometries
-				this.loadStateLayer(this._stateFile);
-				
-			}
-			else if(heirarchy== 'County'){ //handling county level
-				this.loadCountyLayer(this._countyFile);
-			}
-		}.bind(this));		
-	};
-	
-
-	p.loadStateLayer = function(fileName){
-		d3.csv(fileName, function(state_fips){
-			for(i in state_fips){
-				var fips = parseFloat(state_fips[i].US_STATE_FIPS_CODE);
-				for(j in this.cache.stateTopoGeometries.features){
-					var id = this.cache.stateTopoGeometries.features[j].id;
-					if(fips == id){
-						this.cache.stateTopoGeometries.features[j].properties.name = state_fips[i].NAME10;
-						break;
-					}
-				}//j loop
-			}//i loop
-			addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
-			
-		}.bind(this));//end of csv load
-	};
-	
-	var addStatelayer = function(geometries){
-		//adding map layer
-		
-		this._mapSvg.selectAll("*").remove();
-		
-		this._stateGrp = this._mapSvg.append("g")
-	    .call(this._zoom);
-		
-		this._statePaths = this._stateGrp.selectAll(".path")
-		.data(geometries)
-		.enter()
-		.append("path")
-		.attr("d", this._path)
-		.attr("class", "geometryFill");
-		
-		
-		//handling selections							
-		this._statePaths							
-		.on('click', function(d){
-			console.log("d", d);
-			//if it is selected for the first time
-			if(!(d.id in this.cache.selectedStates)){
-				this.cache.selectedStates[d.id] = { title: d.properties.name };
-			}
-			//if already selected; remove it
-			else{
-				delete this.cache.selectedStates[d.id];
-			}
-			this.selectTheStates(this.cache.selectedStates);
-			
-		}.bind(this))
-		.on('mouseover', function(d){
-				this._toolTip.style('visibility', 'visible' ).text(d.properties.name); 
-			}.bind(this))
-	    .on("mousemove", function(){
-	    	return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
-	    	}.bind(this))
-	    .on('mouseout', function(){ 
-	    	this._toolTip.style('visibility', 'hidden');
-	    	}.bind(this));
-		
-		//this runs if the selected states have already been cached
-		if(Object.keys(this.cache.selectedStates).length != 0)
-		{
-			this.selectTheStates(this.cache.selectedStates);
-		}
-	};
-	
-	p.selectTheStates = function(selectedStates){
-			//TODO it needs improvement
-			//apply the selected class for the selected state
-		
-			this._statePaths.classed('selected', function(d){	
-				if(d.id in selectedStates)
-					d.selected = true;
-				else
-					d.selected = false;
-				return d.selected;
-			});
-			
-		
-	};
-	
-	p.selectTheCounties = function(selectedCounties){
-		this._countyPaths.classed('selected', function(d){
-			if(d.id in selectedCounties)
-				d.selected = true;
-			else
-				d.selected = false;
-			return d.selected;
-		});
-	};
-	
-	
-	p.loadCountyLayer = function(fileNmae){
-		//adding county name property from csv to topojson
-		d3.csv(fileNmae, function(county_fips){
-			
-			for(i in county_fips){
-				var county_fips_code = parseFloat(county_fips[i].FIPS);
-				for(j in this.cache.countyTopoGeometries.features){
-					var id = this.cache.countyTopoGeometries.features[j].id;
-					if(county_fips_code == id){
-						this.cache.countyTopoGeometries.features[j].properties.name = county_fips[i].County_Name;
-						this.cache.countyTopoGeometries.features[j].properties.state = county_fips[i].State_Name;
-						this.cache.countyTopoGeometries.features[j].properties.stateAbbr = county_fips[i].State_Abbr;
-						this.cache.countyTopoGeometries.features[j].properties.stateId = parseFloat(county_fips[i].STFIPS);
-						break;
-					}
-				}//j loop
-			}//i loop
-			
-			addCountyLayer.call(this);
-			
-		}.bind(this));//end of csv load
-	};
-	
-	
-	p.addCountyLayerForState = function(d){
-		if(d)
-			var gElement = this._stateIdLookup[d.id];
-		if( this._stateGrp.clickedState != gElement){
-			var chart = this;
-			var x, y, k;
-			
-			if (d  && this._centered !== d) {
-			    var centroid = this._path.centroid(d);
-			    x = centroid[0];
-			    y = centroid[1];
-			    k = 2;
-			    this._centered = d;
-			    
-			   
-			    //drawing counties in d
-			    var gAr = d3.select(gElement);
-			    this._countyPaths= gAr.selectAll("path")
-			     .data(this.cache.countyTopoGeometries.features)
-			     .enter().append("g")
-			     .filter(function(cd,i){
-			    	 return d.id == cd.properties.stateId;
-			    	
-			     })
-			     .attr("class", "geometryFill");
-			    
-			    
-			    this._countyPaths
-			     .on('click', function(d){
-						var countyObj;
-						// first check county object there for stateID , then check countyID there for that state
-						if(!this.cache.selectedCounties[d.properties.stateId] || !(d.id in this.cache.selectedCounties[d.properties.stateId].counties)){
-							countyObj = this.cache.selectedCounties[d.properties.stateId];
-							if(!countyObj) 
-								countyObj = {title: d.properties.state, state: d.properties.stateId ,counties:{} };
-							countyObj.counties[d.id] = { title: d.properties.name };
-							
-							this.cache.selectedCounties[d.properties.stateId] = countyObj;
-							this._counties[d.id] = d.properties.name;
-						}
-						//if already selected; remove it
-						else{
-							countyObj = this.cache.selectedCounties[d.properties.stateId];
-							if(countyObj){
-								delete this.cache.selectedCounties[d.properties.stateId].counties[d.id];
-								delete chart._counties[d.id];
-							}
-						}
-						if(this.cache.selectedCounties[d.properties.stateId])
-							this.selectTheCounties(this.cache.selectedCounties[d.properties.stateId].counties);
-						
-						
-						
-			     }.bind(this))
-			     .on('mouseover', function(d){
-					 this._toolTip.style('visibility', 'visible' ).text(d.properties.name + " (" + d.properties.stateAbbr + ")"); 
-			     	}.bind(this))
-				 .on("mousemove", function(){
-					 return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
-				 	}.bind(this))
-				 .on('mouseout', function(){
-					 this._toolTip.style('visibility', 'hidden');
-					 }.bind(this))
-			     .append("path")
-			     .attr("d", this._path)
-			     .attr("class", "countyBorders");
-			} 
-			  
-			else { 
-				x = this._width / 2;
-				y = this._height / 2;
-				k = 1;
-				this._centered = null;
-		  
-			}
-
-//			  f.selectAll("path")
-//			      .classed("active", centered && function(d) { return d === centered; });
-
-			this._stateGrp.transition()
-			      .duration(750)
-			      .attr("transform", "translate(" + this._width / 2 + "," + this._height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-			      .style("stroke-width", 1.5 / k + "px");
-			
-			if(d)
-				{
-					if(this.cache.selectedCounties[d.id])
-						this.selectTheCounties(this.cache.selectedCounties[d.id].counties);
-				}
-		}
-		this._stateGrp.clickedState = gElement;
-	};
-	
-	
-	var addCountyLayer = function(geometries){
-		if(this.cache.selectedCounties){
-			for(stateID in this.cache.selectedCounties)
-				for(countyID in this.cache.selectedCounties[stateID].counties)
-					this._counties[countyID] = this.cache.selectedCounties[stateID].counties[countyID];
-		}
-		else
-			this._counties = {};
-		var chart = this;
-		
-		this._mapSvg.selectAll("*").remove();
-		
-		this._mapSvg.append("rect")
-		 .attr("class", "background")
-		 .attr("width", this._width)
-		 .attr("height", this._height)
-		 .on("click", this.addCountyLayerForState.bind(this));
-		
-		this._stateGrp = this._mapSvg.append('g');
-		
-		
-		this._statePaths = this._stateGrp
-		 .append("g")
-		 .attr("id", "states")
-		 .selectAll("g")
-		 .data(this.cache.stateTopoGeometries.features)
-		 .enter();
-		
-		this._statePaths.append("g")
-		.each(function(d){ 
-			chart._stateIdLookup[d.id] = this;
-		})
-		.on('click', this.addCountyLayerForState.bind(this))
-		 .append("path")
-		 .attr("d", this._path); 
-		
-		this._stateGrp.append("path")//just for the borders
-	      .datum(topojson.mesh(this.cache.US, this.cache.US.objects.states, function(a, b) { return a !== b; }))
-	      .attr("id", "state-borders")
-	      .attr("d", this._path);
-		
-		
-		//this runs if the selected states have already been cached
-		if(Object.keys(this.cache.selectedCounties).length != 0)
-		{
-			for(state in this.cache.selectedCounties){
-				for(var i = 0; i < this.cache.stateTopoGeometries.features.length; i++)
-					{
-						if(state == this.cache.stateTopoGeometries.features[i].id)
-							{
-								this.addCountyLayerForState(this.cache.stateTopoGeometries.features[i]);
-								break;
-							}
-					}
-				
-			}
-			
-		}
-	};
-	
-	
-	window.wa.d3_viz.mapTool = mapTool;
-}());
-
-
-/**
- * this renders column distributions of numerical columns using the d3 library
- * @author spurushe 
- */
-
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function sparkLine (){
-		this._container;
-		this._svg;
-		
-		this._breaks;
-		this._counts;
-		
-		this._heightScale;
-		this._widthScale;
-		this._width;
-		this._height;
-		this._barWidth;
-		
-		this.toolTip;
-		this._bar;
-	};
-	
-	var p = sparkLine.prototype;
-	window.wa.d3_viz.sparkLine = sparkLine;
-	
-	
-	
-	p.initialze_sparkLine = function(config){
-		
-		this._container = config.container;
-
-		//data
-		this._breaks = config.breaks;
-		this._counts = config.counts;
-		
-		this._margin = {top: 5, right: 5, bottom: 5, left: 5};
-		this._width = config.width; this._height= config.height;
-
-		//scales
-		this._heightScale = d3.scale.linear()
-				  .domain([0, d3.max(this._counts)])
-				  .range([this._height, 0]);//output should be between height and 0
-		
-		this._widthScale = d3.scale.linear()
-						   .domain([0, d3.max(this._breaks)])
-						   .range([0, this._width]);
-		
-		//tooltip
-		this._tooltip = d3.select(this._container)
-		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
-		.style("visibility", "hidden")
-		.text("")
-		.style("color", "red")
-		.style("font-weight", 'bold');
-		
-		this._barWidth = (this._width - this._margin.left - this._margin.right)/this._counts.length;
-		
-		//creating the svgS
-		this._svg = d3.select(this._container).append('svg')
-					  .attr('fill', 'black')
-					  .attr('width', this._width)//svg viewport dynamically generated
-					  .attr('height', this._height )
-					  .append('g')
-					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
-		
-	};
-	
-	
-
-	/**
-	 * this function draws the sparklines computed in R/STATA (one per column)
-	 * @param dom_element_to_append_to :the HTML element to which the sparkline D3 viz is appended
-	 * @param sparklineData : the distribution data calculated in R/STATA
-	 */
-	p.render_sparkLine = function(){
-		var slObj = this;
-		
-		if(!slObj._svg){
-			console.log("Still initializing chart");
-			setTimeout(p.render_sparkLine, 100);
-		}
-	
-		//making one g element per bar 
-		slObj._bar = slObj._svg.selectAll("g")
-	      			   .data(slObj._counts)
-	      			   .enter().append("svg:g")
-	      			   .attr("transform", function(d, i) {  return "translate(" + (i * slObj._barWidth ) + ",0)"; });
-
-		slObj._bar.append("rect")	
-	      .attr("y", function(d) { return slObj._heightScale(d); })
-	      .attr("height", function(d) { return slObj._height - slObj._heightScale(d); })
-	      .attr("width", slObj._barWidth)
-	      .on('mouseover', function(d){ slObj._tooltip.style('visibility', 'visible' ).text(d);   d3.select(this).style('stroke-opacity', 1);})
-          .on("mousemove", function(){return slObj._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-          .on('mouseout', function(){ slObj._tooltip.style('visibility', 'hidden'); 
-			             							 d3.select(this).style('stroke-opacity', 0);});
-	};
-})();
-
-/**
- * controls the attribute menu visualization tool  widget
- */
-(function(){
-	angular.module('weaveApp').controller("AttributeMenuController",AttributeMenuController );
-	AttributeMenuController.$inject = ['$scope', 'WeaveService', '$timeout'];
-	
-	function AttributeMenuController ($scope, WeaveService, $timeout){
-
-		var attCtrl = this;
-		attCtrl.WeaveService = WeaveService;
-		attCtrl.setAttributes = setAttributes;
-		attCtrl.tool = {
-			title : "",
-			enabled : false,
-			selectedVizTool : null, 
-			vizAttribute :{}, 
-			columns: []
-		};
-
-		$scope.$watch(function(){
-			return attCtrl.tool.selectedVizTool;
-		}, function(){
-			//console.log("tools selected", $scope.tool.selectedVizTool);
-			if(attCtrl.tool.selectedVizTool){
-				attCtrl.vizAttributeColl = [];
-				attCtrl.vizAttributeColl = attCtrl.WeaveService.getSelectableAttributes(attCtrl.tool.title, attCtrl.tool.selectedVizTool);
-			}
-		});
-		
-		$scope.$watch(function(){
-			return attCtrl.tool;
-		},function() {
-			if(attCtrl.toolId) // this gets triggered twice, the second time toolId with a undefined value.
-				attCtrl.WeaveService.AttributeMenuTool(attCtrl.tool, attCtrl.toolId);
-		}, true);
-		
-		function setAttributes (attr){
-			if(attr)
-				attCtrl.tool.chosenAttribute = attr;
-			//check for tha attrbite selected
-			if(attCtrl.tool.vizAttribute && attCtrl.tool.selectedVizTool && attCtrl.tool.chosenAttribute)
-				//set the attribute in weave
-				WeaveService.setVizAttribute(attCtrl.tool.title,
-											 attCtrl.tool.selectedVizTool,
-											 attCtrl.tool.vizAttribute,
-											 attCtrl.tool.chosenAttribute);
-		};
-	}
-})();
-/**
- * directive that creates the AdvancedTable tool widget
- * controls the Advanced Table in Weave
- * @spurushe
- */
-
-(function(){
-	angular.module('weaveApp').directive('dataTable', dataTable );
-	
-	function dataTable(){
-		return {
-			restrict : 'E',
-			templateUrl : 'tools/dataTable/data_table.tpl.html',
-			controller : dataTableController,
-			controllerAs : 'dtCtrl',
-			bindToController : true,
-			link : function(){
-				
-			}
-		};
-	}//end of directive definition
-	
-	function dataTableController (){
-		var dtCtrl = this;
-		var weave_wrapper;
-		
-		dtCtrl.request_dataTable = request_dataTable;
-		dtCtrl.initWeaveWrapper = initWeaveWerapper;
-		dtCtrl.items = ['a','d'];
-		
-		dtCtrl.config = {
-			checked: false,
-			toolName: null,
-			columns : null
-		};
-		
-		function initWeaveWrapper(){
-			//TODO put this retrieval in manager class later
-			if(!wa.wWrapper)
-				weave_wrapper = new wa.WeaveWrapper();
-			else
-				weave_wrapper = WeaveWrapper.instance;
-		};
-		
-		function request_dataTable (){
-			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
-				
-				dtCtrl.initWeaveWrapper();
-				
-				if(dtCtrl.config.checked)//if checked
-					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
-				else{//if unchecked
-					if(dtCtrl.config.toolName)//if the tool exists
-						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
-					else
-						return;
-				}
-			}
-			else
-				setTimeout(request_dataTable, 100);
-		};
-	};
-})();
-
-/**
  * directive that creates the bar chart visualization tool widget
  * controls the bar chart in Weave
  * @spurushe
@@ -6726,6 +6654,134 @@ if(!this.wa.d3_viz){
 	};
 })();
 /**
+ * controls the attribute menu visualization tool  widget
+ */
+(function(){
+	angular.module('weaveApp').controller("AttributeMenuController",AttributeMenuController );
+	AttributeMenuController.$inject = ['$scope', 'WeaveService', '$timeout'];
+	
+	function AttributeMenuController ($scope, WeaveService, $timeout){
+
+		var attCtrl = this;
+		attCtrl.WeaveService = WeaveService;
+		attCtrl.setAttributes = setAttributes;
+		attCtrl.tool = {
+			title : "",
+			enabled : false,
+			selectedVizTool : null, 
+			vizAttribute :{}, 
+			columns: []
+		};
+
+		$scope.$watch(function(){
+			return attCtrl.tool.selectedVizTool;
+		}, function(){
+			//console.log("tools selected", $scope.tool.selectedVizTool);
+			if(attCtrl.tool.selectedVizTool){
+				attCtrl.vizAttributeColl = [];
+				attCtrl.vizAttributeColl = attCtrl.WeaveService.getSelectableAttributes(attCtrl.tool.title, attCtrl.tool.selectedVizTool);
+			}
+		});
+		
+		$scope.$watch(function(){
+			return attCtrl.tool;
+		},function() {
+			if(attCtrl.toolId) // this gets triggered twice, the second time toolId with a undefined value.
+				attCtrl.WeaveService.AttributeMenuTool(attCtrl.tool, attCtrl.toolId);
+		}, true);
+		
+		function setAttributes (attr){
+			if(attr)
+				attCtrl.tool.chosenAttribute = attr;
+			//check for tha attrbite selected
+			if(attCtrl.tool.vizAttribute && attCtrl.tool.selectedVizTool && attCtrl.tool.chosenAttribute)
+				//set the attribute in weave
+				WeaveService.setVizAttribute(attCtrl.tool.title,
+											 attCtrl.tool.selectedVizTool,
+											 attCtrl.tool.vizAttribute,
+											 attCtrl.tool.chosenAttribute);
+		};
+	}
+})();
+angular.module('weaveApp').controller("ColorCtrl", function(){
+
+});
+angular.module('weaveApp').controller("keyColumnCtrl", function(){
+
+
+});
+/**
+ * directive that creates the AdvancedTable tool widget
+ * controls the Advanced Table in Weave
+ * @spurushe
+ */
+
+(function(){
+	angular.module('weaveApp').directive('dataTable', dataTable );
+	
+	function dataTable(){
+		return {
+			restrict : 'E',
+			templateUrl : 'tools/dataTable/data_table.tpl.html',
+			controller : dataTableController,
+			controllerAs : 'dtCtrl',
+			bindToController : true,
+			link : function(){
+				
+			}
+		};
+	}//end of directive definition
+	
+	function dataTableController (){
+		var dtCtrl = this;
+		var weave_wrapper;
+		
+		dtCtrl.request_dataTable = request_dataTable;
+		dtCtrl.initWeaveWrapper = initWeaveWerapper;
+		dtCtrl.items = ['a','d'];
+		
+		dtCtrl.config = {
+			checked: false,
+			toolName: null,
+			columns : null
+		};
+		
+		function initWeaveWrapper(){
+			//TODO put this retrieval in manager class later
+			if(!wa.wWrapper)
+				weave_wrapper = new wa.WeaveWrapper();
+			else
+				weave_wrapper = WeaveWrapper.instance;
+		};
+		
+		function request_dataTable (){
+			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
+				
+				dtCtrl.initWeaveWrapper();
+				
+				if(dtCtrl.config.checked)//if checked
+					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
+				else{//if unchecked
+					if(dtCtrl.config.toolName)//if the tool exists
+						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
+					else
+						return;
+				}
+			}
+			else
+				setTimeout(request_dataTable, 100);
+		};
+	};
+})();
+
+/**
+ * controls the map visualization tool widget
+ */
+
+angular.module('weaveApp').controller("MapCtrl", function(){
+
+});
+/**
  * directive that creates the scatter plot visualization tool widget
  * controls the scatter plot in Weave
  * @spurushe
@@ -6792,17 +6848,3 @@ if(!this.wa.d3_viz){
 	};
 	
 })();
-/**
- * controls the map visualization tool widget
- */
-
-angular.module('weaveApp').controller("MapCtrl", function(){
-
-});
-angular.module('weaveApp').controller("ColorCtrl", function(){
-
-});
-angular.module('weaveApp').controller("keyColumnCtrl", function(){
-
-
-});

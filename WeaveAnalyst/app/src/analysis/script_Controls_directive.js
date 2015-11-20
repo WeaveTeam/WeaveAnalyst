@@ -26,9 +26,9 @@ var qo;
 		};//directive definition object
 	};
 
-	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService'];
+	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService', '$log'];
 	
-	function scriptController ($scope, queryService, $filter, analysisService){
+	function scriptController ($scope, queryService, $filter, analysisService, $log){
 		var scriptCtrl = this;
 		
 		scriptCtrl.queryService = queryService;
@@ -43,7 +43,49 @@ var qo;
 		scriptCtrl.columnToRemap = {
 				value : {}
 		};
-	
+		
+		/*******************************slider stuff**********************************************/
+		scriptCtrl.handleSliderValueChange = handleSliderValueChange;
+		scriptCtrl.updateSliderValues = updateSliderValues;
+		
+		//temp sol
+		WeaveAPI.log = scriptCtrl.log = new weavecore.SessionStateLog(WeaveAPI.globalHashMap);
+		var cc = WeaveAPI.SessionManager.getCallbackCollection(scriptCtrl.log);
+        cc.addGroupedCallback({}, scriptCtrl.updateSliderValues, true);
+		
+		
+		scriptCtrl.labeledslider = {
+		            'options': {
+		                start: function (event, ui) {
+		                    $log.info('Event: Slider start');
+		                },
+		                stop: function (event, ui) {
+		                    $log.info('Event: Slider stop');
+		                    scriptCtrl.handleSliderValueChange(ui);
+		                }
+		            }
+        };
+		
+		function handleSliderValueChange(ui) {
+            var delta = ui.value - scriptCtrl.log.undoHistory.length;
+            if (delta < 0)
+            	scriptCtrl.log.undo(-delta);
+            else
+            	scriptCtrl.log.redo(delta);
+
+            $scope.$apply();
+        }
+		
+		function updateSliderValues() {
+            scriptCtrl.sliderPosition = scriptCtrl.log._undoHistory.length;
+            // since this function is called programatically in next frame in next frame ,
+            // and not called by UI event , we need to manually trigger digest cycle.
+            console.log('UpdateSliderValues called');
+            $scope.$apply();
+        }
+		
+		scriptCtrl.log.clearHistory();
+		/*******************************slider stuff**********************************************/
 		//watches for change in computation engine
 //		$scope.$watch(function(){
 //			return scriptCtrl.active_qo.ComputationEngine.value;
