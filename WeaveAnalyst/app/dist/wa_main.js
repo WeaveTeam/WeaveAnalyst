@@ -287,6 +287,12 @@ if(!this.wa)
 	    	    			that.cache.scriptList = result;
 	    	    		});	
 	    			break;
+	    			case("PYTHON"):
+	    				runQueryService.queryRequest(scriptManagementURL, 'getListOfPythonScripts', null, function(result){
+	    					that.cache.scriptList = [];
+	    	    			that.cache.scriptList = result;
+	    	    		});	
+	    			break;
 	    			default:
 	    				that.cache.scriptList = [];
 	    		}
@@ -496,23 +502,29 @@ if(!this.wa)
 		};//directive definition object
 	};
 
-	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService'];
+	scriptController.$inject = ['$scope', 'queryService', '$filter', 'analysisService', 'rUtils'];
 	
-	function scriptController ($scope, queryService, $filter, analysisService){
+	function scriptController ($scope, queryService, $filter, analysisService, rUtils){
 		var scriptCtrl = this;
-		
+	
 		scriptCtrl.queryService = queryService;
 		scriptCtrl.analysisService = analysisService;
+		scriptCtrl.rUtils = rUtils;
 		
 		scriptCtrl.getScriptMetadata = getScriptMetadata;
+		scriptCtrl.getInstalled_R_Packages = getInstalled_R_Packages;
+		scriptCtrl.get_Pkg_Objects = get_Pkg_Objects;
 		scriptCtrl.active_qo = $scope.anaCtrl.active_qo;
 		
 		scriptCtrl.values = [];
+		scriptCtrl.scriptOptions = [];
 		scriptCtrl.openAdvRModal = openAdvRModal;
 		scriptCtrl.columnToRemap = {
 				value : {}
 		};
 	
+		scriptCtrl.getInstalled_R_Packages();
+		
 		//watches for change in computation engine
 //		$scope.$watch(function(){
 //			return scriptCtrl.active_qo.ComputationEngine.value;
@@ -530,6 +542,16 @@ if(!this.wa)
 			$scope.anaCtrl.openAdvRModal();
 		} ;
 		
+		function getInstalled_R_Packages (){
+			scriptCtrl.rUtils.getInstalled_R_Packages().then(function(result){
+				scriptCtrl.gridOptions.data = result;
+			});
+		}
+		
+		function get_Pkg_Objects (){
+			scriptCtrl.rUtils.get_Pkg_Objects(scriptCtrl.pkg.Package);
+		}
+		
 		//watches for change in script selected
 		$scope.$watch(function(){
 			return scriptCtrl.active_qo.scriptSelected.value;
@@ -538,23 +560,20 @@ if(!this.wa)
 				scriptCtrl.getScriptMetadata(scriptCtrl.active_qo.scriptSelected.value, true);
 		});
 		
+		$scope.$watch('scriptCtrl.pkg', function(){
+			if(scriptCtrl.pkg)
+				scriptCtrl.get_Pkg_Objects();
+		});
 		
-		//clears scrip options when script clear button is hit
+		
+		//clears script options when script clear button is hit
 		function getScriptMetadata (scriptSelected, forceUpdate){
 			if(scriptSelected)
-//				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
-//				then(function(result){
-//					scriptCtrl.scriptOptions = [];//clear
-//					scriptCtrl.scriptOptions = result.inputs;
-//				});
-				scriptCtrl.scriptOptions =[{
-					"type": "column",
-					"param": "Year",
-					"description": "Time variable",
-					"columnType": "time",
-					"defaults": "year",
-					"dataSource" : null
-				}];
+				scriptCtrl.analysisService.getScriptMetadata(scriptSelected, forceUpdate).
+				then(function(result){
+					scriptCtrl.scriptOptions = [];//clear
+					scriptCtrl.scriptOptions = result.inputs;
+				});
 			else
 				scriptCtrl.analysisService.cache.scriptMetadata = {};
 		};
@@ -3319,8 +3338,11 @@ angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compi
 		var that = this; 
 		that.rPath; //stores the path of the user's R installation 
 		that.rInstalled_pkgs = [];
+		that.repo_pkgs = [];//list of packages present at a particular repo
 		that.cran_mirrors = [];
+		that.pkg_objects = {funcs : [], constants : []};//list of functions in a given package
 		
+		//gets the list of CRAN mirrors
 		that.getRMirrors = function(){
 			if(that.cran_mirrors.length > 1)
 				return that.cran_mirrors;
@@ -3329,7 +3351,15 @@ angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compi
 				var deferred = $q.defer();
 				
 				runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts',["getMirrors.R", null], function(result){
-					that.cran_mirrors = result.resultData[0];
+					var mirror_names = result.resultData[0];
+					var mirror_urls = result.resultData[3];
+					for(var i =0; i< mirror_names.length; i++){
+						var mObj = {};
+						mObj.name = mirror_names[i];
+						mObj.url = mirror_urls[i];
+						
+						that.cran_mirrors.push(mObj);
+					}
 					console.log("result", that.cran_mirrors);
 					deferred.resolve(that.cran_mirrors);
 				},
@@ -3344,9 +3374,11 @@ angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compi
 		//gets a list from the library folder of the installed R version
 		that.getInstalled_R_Packages = function(){
 			console.log("retreiving installed R packages");
+			that.rInstalled_pkgs = [];
 			
 			var deferred = $q.defer();
 			var rpath = "C:\\Program Files\\R\\R-3.1.2\\library";//hard coded for now
+
 			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackages.R", {path: rpath}],function (result){ 
 				var data = result.resultData;
 				for(var i = 0; i < data[0].length; i++){//figure way around hard coding
@@ -3364,7 +3396,42 @@ angular.module('weaveAnalyst.utils').directive('popoverWithTpl', function($compi
 			return deferred.promise;
 		};
 		
-		that.get_package_funcs = function(package_name){
+		that.get_packages_at_repo = function(repository){
+			
+			var deferred = $q.defer();
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getRepoPackages.R", {repo : repository}], function(result){
+				that.repo_pkgs = result;
+				console.log("repo_pkgs", result);
+				deferred.resolve(that.repo_pkgs);
+			}, function(error){
+				deferred.reject(error);
+			});
+			
+			return deferred.promise;
+		};
+		
+		//gets the objects in a particular package
+		that.get_Pkg_Objects = function(package_name){
+			if(!package_name)
+				return;
+			
+			var deferred = $q.defer();
+			runQueryService.queryRequest(computationServiceURL, 'runBuiltScripts', ["getPackageObjects.R", {packageName : package_name}], function(result){
+				console.log("pkg_objects", result);
+				
+				that.pkg_objects.funcs = result.resultData[0];
+				that.pkg_objects.constants = result.resultData[1];
+				
+				deferred.resolve(that.pkg_objects);
+			}, function(error){
+				deferred.reject(error);
+			});
+			
+			return deferred.promise;
+		};
+		
+		//verifies the path entered by user or else uses default
+		that.verify_Path = function(){
 			
 		};
 	}
@@ -4205,1202 +4272,159 @@ angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInsta
 angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
 
 }]);
-(function(){
-	angular.module('weaveAnalyst.WeaveModule', []);
-	angular.module('weaveAnalyst.WeaveModule').service("WeaveService", WeaveService);
-
-	WeaveService.$inject = ['$q','$rootScope','runQueryService', 'dataServiceURL','queryService'];
-	
-	function WeaveService ($q, rootScope, runQueryService, dataServiceURL, queryService){
-		
-		var that = this;
-		var ws= this;
-		
-		that.weave;
-		that.weaveWindow = window;
-		that.analysisWindow = window;
-		that.toolsEnabled = [];
-		that.columnNames = [];
-	
-	
-	/**
-	 * 
-	 * @param className {String}
-	 * @param path {Array} path to the desired location in the session state, if no path is provided
-	 * 					   it defaults to the root of the session state
-	 * 
-	 * @return {string}
-	 */
-	that.generateUniqueName = function(className, path) {
-		if(!ws.weave)
-			return null;
-		return ws.weave.path(path || []).getValue('generateUniqueName')(className);
-	};
-	
-	//TODO move this to app.js
-	//fetches the path of the given node in the weave tree
-	that.fetchNodePath = function(input_node, childrenFlag){
-		var deferred = $q.defer();
-		
-		//if(ws.cache.previousNodeId == input_node.metadata.weaveEntityId){
-		//	console.log("retrieving from cache");
-		//	return this.cache.columnReference;
-		//}
-		//else{
-		//	console.log("making fresh call");
-			
-			if(ws.weave && ws.checkWeaveReady()){
-					
-					var w = rootScope.weaveTree;
-					var weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
-					var indx = 0;
-					
-					(function retrievePathOnceReady(){
-						nodePath = w.findPath(input_node.dataSourceName, input_node.metadata);
-						if(nodePath){
-							if(weaveTreeIsBusy()){
-								setTimeout(retrievePathOnceReady, 500);
-							}
-							else{
-								indx = (nodePath.length) - 2;
-								if(childrenFlag){//retrieve children if children requested
-									var children = nodePath[indx].getChildren();
-									rootScope.$safeApply(function() {
-					    				deferred.resolve(children);
-					    			});
-								}
-								else{//retrieve label
-									var label = nodePath[indx].getLabel();
-									rootScope.$safeApply(function() {
-					    				deferred.resolve(label);
-					    			});
-								}
-							}
-								
-						}
-						else{
-							setTimeout(retrievePathOnceReady, 500);
-						}
-						
-					})();
-				}
-			
-			return deferred.promise;
-		//}
-		
-	};
-
-	
-	that.getPathToFilters = function() {
-		if(!ws.checkWeaveReady())
-			return;
-		return ws.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");//references the Linkableashmap 'filters' in a keyFilter
-	};
-	
-	that.tileWindows = function() {
-		if(!ws.checkWeaveReady())
-			return;
-		ws.weave.path()
-		 .libs("weave.ui.DraggablePanel")
-		 .exec("DraggablePanel.tileWindows()");
-	};
-	
-	
-	that.setWeaveWindow = function(window) {
-		var weave;
-		if(!window) {
-			ws.weave = null;
-			return;
-		}
-		try {
-			ws.weaveWindow = window;
-			weave = window.document.getElementById('weave');
-
-			if (weave && weave.WeavePath && weave.WeavePath.prototype.pushLayerSettings) {
-				ws.weave = weave;
-				console.log("weave and its api are ready");
-				rootScope.$safeApply();
-			}
-			else {
-				setTimeout(ws.setWeaveWindow, 50, window);
-			}
-		} catch (e)
-		{
-			console.error("fails", e);
-		}
-    };
-    
-    that.checkWeaveReady = function(){
-    	return ws.weave && ws.weave.WeavePath && ws.weave._jsonCall;
-    };
-    
-    that.setWeaveWindow(window);
-	
-    that.addCSVData = function(csvData, aDataSourceName, queryObject) {
-		var dataSourceName = "";
-		if(!aDataSourceName)
-			dataSourceName = ws.generateUniqueName("CSVDataSource");
-		else
-			dataSourceName = ws.generateUniqueName(aDataSourceName);
-	
-		ws.weave.path(dataSourceName)
-			.request('CSVDataSource')
-			.vars({rows: csvData})
-			.exec('setCSVData(rows)');
-		for(var i in csvData[0])
-		{
-			queryObject.resultSet.unshift({ id : csvData[0][i], title: csvData[0][i], dataSourceName : dataSourceName});
-		}
-	};
-	
-	// weave path func
-	var setQueryColumns = function(mapping) {
-		this.forEach(mapping, function(column, propertyName) {
-			//console.log("column", column);
-			//console.log("propertyName", propertyName);
-			if (Array.isArray(column))
-			{
-				this.push(propertyName).call(setQueryColumns, column);
-			}
-			else if (ws.checkWeaveReady() && column)
-			{
-				if(column.id == "" || angular.isUndefined(column.id))
-					return;
-				this.push(propertyName).setColumn(column.id, column.dataSourceName);
-			}
-		});
-		if (Array.isArray(mapping))
-			while (this.getType(mapping.length))
-				this.remove(mapping.length);
-		return this;
-	};
-	
-	//returns a list of visualization tools currently open in Weave
-	that.listOfTools = function(){
-		var tools = [];
-		if(ws.checkWeaveReady()){
-			tools =  ws.weave.path().libs('weave.api.ui.IVisTool').getValue('getNames(IVisTool)');
-		}
-
-		return tools;
-	};
-
-	Object.defineProperty(this, "toolsEnabled", {get: this.listOfTools});
-	
-	that.getSelectableAttributes = function(toolName, vizTool){
-		
-		var selAttributes =[];
-		
-		if(ws.checkWeaveReady()){
-			if(vizTool == 'MapTool'){//because we're naming the plot layers here
-				var plotLayers = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters').getNames();
-				
-				for(var i in plotLayers)
-				{
-					var attrs = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters', plotLayers[i]).getValue('getSelectableAttributeNames()');
-					for(var j in attrs){
-						selAttributes.push({plotLayer : plotLayers[i], title : attrs[j]});
-					}
-				}
-				
-			}
-			else{
-				
-				var attrs = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters', 'plot').getValue('getSelectableAttributeNames()');
-				for(var j in attrs){
-					selAttributes.push({plotLayer : 'plot', title : attrs[j]});
-				}
-			}
-			
-
-		}
-		
-		
-		return selAttributes;
-	};
-	
-	/**
-	 * this function sets the selected attribute(selected in the attribute widget tool) in the required tool
-	 * @param toolName the tool whose attribute is to be set
-	 * @param vizAttribute the attribute of tool to be set
-	 * @param attrObject the object used for setting vizAttribute
-	 */
-	
-	that.setVizAttribute = function(originalTool, toolName, vizAttribute, attrObject){
-		if((ws.checkWeaveReady))
-			{	
-				var selectedColumn;
-				//1. collect columns find the right one
-				var columnObjects = ws.weave.path(originalTool).request('AttributeMenuTool').push('choices').getState();
-				for (var i in columnObjects)
-				{
-					if(columnObjects[i].sessionState.metadata == attrObject.title)
-						selectedColumn = columnObjects[i].objectName;
-				}
-				//2. set it
-				ws.weave.path(originalTool).request('AttributeMenuTool').state({selectedAttribute : selectedColumn});
-				
-			};
-	};
-	
-	that.AttributeMenuTool = function(state, aToolName){
-		
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
-		var toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
-		if(state && state.enabled){
-			ws.weave.path(toolName).request('AttributeMenuTool')
-			//.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
-			.call(setQueryColumns, {choices: state.columns});
-			
-			if(state.vizAttribute && state.selectedVizTool)
-				ws.weave.path(toolName).request('AttributeMenuTool')
-				.state({targetAttribute : state.vizAttribute.title , targetToolPath : [state.selectedVizTool]});
-		}
-		else{//if the tool is disabled
-			ws.weave.path(toolName).remove();
-		}
-		
-		return toolName;
-	};
-	
-	that.BarChartTool = function(state, aToolName){
-
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
-		var toolName = aToolName || ws.generateUniqueName("BarChartTool");
-		
-		if(state && state.enabled){//if enabled
-			//create tool
-			//panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true,
-			ws.weave.path(toolName)
-			.request('CompoundBarChartTool')
-			.state({  showAllLabels : state.showAllLabels })
-			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
-			.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
-			.pop()
-			.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
-			.pop()
-			.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
-				return column.metadata;
-			}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
-			.pop()
-			.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
-				return column.metadata;
-			}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
-			.pop()
-			.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
-				return column.metadata;
-			}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
-			//capture session state
-			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-			//tiling
-			ws.tileWindows();
-		}
-		else{//if the tool is disabled
-			ws.weave.path(toolName).remove();
-		}
-		
-		return toolName;
-	};
-	
-	that.MapTool = function(state, aToolName){
-
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
-		var toolName = aToolName || ws.generateUniqueName("MapTool");
-
-		if(state && state.enabled){//if enabled
-			//create tool
-			ws.weave.path(toolName).request('MapTool');
-			//.state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
-			
-			//STATE LAYER
-			if(state.stateGeometryLayer)
-			{
-				var stateGeometry = state.stateGeometryLayer;
-
-				ws.weave.path(toolName).request('MapTool')
-				.push('children', 'visualization', 'plotManager', 'plotters')
-				.push('Albers_State_Layer').request('weave.visualization.plotters.GeometryPlotter')
-				.push('line', 'color', 'defaultValue').state('0').pop()
-				.call(setQueryColumns, {geometryColumn: stateGeometry});
-				
-			}
-			else{//to remove state layer
-				
-				if($.inArray('Albers_State_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
-					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_State_Layer').remove();
-			}
-			
-			
-			//COUNTY LAYER
-			if(state.countyGeometryLayer)
-			{
-				var countyGeometry = state.countyGeometryLayer;
-				
-				ws.weave.path(toolName).request('MapTool')
-				.push('children', 'visualization', 'plotManager', 'plotters')
-				.push('Albers_County_Layer').request('weave.visualization.plotters.GeometryPlotter')
-				.push('line', 'color', 'defaultValue').state('0').pop()
-				.call(setQueryColumns, {geometryColumn : countyGeometry});
-			
-				//TODO change following
-				//done for handling albers projection What about other projection?
-				if(state.stateGeometryLayer){
-					
-					ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
-				}
-				//ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
-			}
-			else{//to remove county layer
-				
-				if($.inArray('Albers_County_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
-					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_County_Layer').remove();
-			}
-			
-			
-			//LABEL LAYER
-			if(state.labelLayer && state.stateGeometryLayer)
-			{
-				var labelLayer = state.labelLayer;
-				//ws.weave.setSessionState([labelLayer.dataSourceName], {keyColName : "fips"});
-				
-				var stateGeometryLayer = state.stateGeometryLayer;
-				
-				ws.weave.path(toolName).request('MapTool')
-				.push('children', 'visualization', 'plotManager','plotters')
-				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
-				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
-				.push('text').setColumn(labelLayer.metadata, labelLayer.dataSourceName);
-			}
-			
-			//LAYER ZOOM
-			//HACK for demo
-//			if(state.zoomLevel)
-//				{
-//					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
-//					
-//					//for demo
-//					if(state.zoomLevel > 3 && state.countyGeometryLayer)
-//					{
-//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
-//			
-//					}
-//					else{
-//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
-//					}
-//					//for demo end
-//				}
-			
-			//
-			if(state.zoomLevel){
-					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
-			}
-			
-			
-			//capture session state
-			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-			//tiling
-			ws.tileWindows();
-		}
-		else{//if the tool is disabled
-			ws.weave.path(toolName).remove();
-		}
-		
-		return toolName;
-	};
-
-	that.ScatterPlotTool = function(state, aToolName){
-		
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-		
-		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
-
-		if(state && state.enabled){//if enabled
-			//create tool
-			ws.weave.path(toolName).request('ScatterPlotTool');
-			//.state({ panelTitle : state.title, enableTitle : true});
-			
-			if(state.X){
-				 ws.weave.path(toolName).request('ScatterPlotTool')
-				.push('children', 'visualization','plotManager', 'plotters', 'plot')
-				.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName);
-			}
-			else{
-				 ws.weave.path(toolName).request('ScatterPlotTool')
-					.push('children', 'visualization','plotManager', 'plotters', 'plot')
-					.push('dataX').state('null');
-			}
-			
-			if(state.Y){
-				ws.weave.path(toolName).request('ScatterPlotTool')
-				.push('children', 'visualization','plotManager', 'plotters', 'plot')
-				.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
-			}
-			else{
-				 ws.weave.path(toolName).request('ScatterPlotTool')
-					.push('children', 'visualization','plotManager', 'plotters', 'plot')
-					.push('dataY').state('null');
-			}
-			//capture session state
-			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-			//tiling
-			ws.tileWindows();
-		}
-		else {//if the tool is disabled
-			ws.weave.path(toolName).remove();
-		}
-		
-		return toolName;
-	};
-	
-	that.DataTableTool = function(state, aToolName){
-
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
-		var toolName = aToolName || ws.generateUniqueName("DataTableTool");
-		
-		if(state && state.enabled){//if enabled			
-			//create tool
-			ws.weave.path(toolName).request('AdvancedTableTool')
-			//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
-			.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
-				return column.metadata;
-			}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
-			
-			// empty columns
-			if(state.columns && !state.columns.length)
-				weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
-			//capture session state
-			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-			//tiling
-			ws.tileWindows();
-		}
-		else{//if the tool is disabled
-			ws.weave.path(toolName).remove();
-		}
-		
-		return toolName;
-	};
-	
-	that.DataFilterTool = function(state, aToolName) {
-		var toolName = aToolName || ws.generateUniqueName("DataFilterTool");
-				
-		if(state && state.enabled) {//if enabled
-			if(ws.checkWeaveReady()) {//if weave is ready
-				//add to the enabled tools collection
-				if($.inArray(toolName, this.toolsEnabled) == -1)
-					this.toolsEnabled.push(toolName);
-				//create tool
-				ws.weave.path(toolName).request('DataFilterTool');
-				//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, panelHeight: "10%"});
-				
-				if(state.filterStyle == "Discrete values") {
-					ws.weave.path(toolName, "editor", null).request("StringDataFilterEditor").state({
-						layoutMode : state.layoutMode.value,
-						showPlayButton : state.showPlayButton,
-						showToggle : state.showToggle
-					});
-				} else if(state.filterStyle == "Continuous range") {
-					ws.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
-				}
-				if(state.column) {
-					ws.weave.path(toolName, "filter", null, "column").setColumn(state.column.metadata, state.column.dataSourceName);
-				}
-			} else {//if weave not ready
-				ws.setWeaveWindow(window);
-			}
-		}
-		else{//if the tool is disabled
-			if(ws.checkWeaveReady()) {
-				//remove from enabled tool collection
-				if($.inArray(toolName, this.toolsEnabled) != -1) {
-					var index = this.toolsEnabled.indexOf(toolName);
-					this.toolsEnabled.splice(index, 1);
-				}
-				
-				ws.weave.path(toolName).remove();
-			}
-		}
-				
-		return toolName;
-	};
-//		
-	that.SummaryAnnotation = function (state, summaryName) {
-
-	    var toolName = summaryName || ws.generateUniqueName("SummaryBox");
-
-	    if (!ws.checkWeaveReady()) {
-
-	        ws.setWeaveWindow(window);
-
-	        return;
-
-	    }
-
-	    if (state && state.enabled) { //when auto-generation checked
-	        if (state.generated) { //content generation enabled
-	            //if data-source exists - contents come from WeaveAnalystDataSource
-	            if (ws.weave.path("WeaveAnalystDataSource").getType()) {
-	                var script;
-	                var inputStrings = [];
-	                var finalInputString;
-	                var filterString;
-	                script = "Script : " + queryService.queryObject.scriptSelected;
-	               
-	                //TODO replace all this concatenation code using function same code used in project service
-	                var options = queryService.queryObject.scriptOptions;
-	                for(input in options){
-	                	inputStrings.push(options[input].metadata.title);
-	                }
-
-	                finalInputString = "Inputs :" + inputStrings.join(", ");
-	                
-	                var filterStrings = [];
-	                var geoFilterOptions = queryService.queryObject.GeographyFilter;
-	                if (geoFilterOptions.geometrySelected)
-	                {
-	                  var filterString = "";
-
-	                  if (geoFilterOptions.countyColumn)
-	                  {
-	                    selection = geoFilterOptions.selectedCounties;
-	                    column = geoFilterOptions.countyColumn;
-	                  }
-	                  else if (geoFilterOptions.stateColumn)
-	                  {
-	                    selection = geoFilterOptions.selectedStates;
-	                    column = geoFilterOptions.stateColumn;
-	                  }
-	                  
-	                  if (column && selection)
-	                  {
-	                    var selectionStrings = [];
-	                    for (key in selection)
-	                    {
-	                      selectionStrings.push(selection[key].title || key);
-	                    }
-	                    filterStrings.push(column.metadata.title + ": " + selectionStrings.join(", "));
-	                  }
-	                }
-	                if (queryService.queryObject.rangeFilters.filter)
-	                {
-	                  column = queryService.queryObject.rangeFilters.filter.column;
-	                  selectionStrings = [queryService.queryObject.rangeFilters.filter.min, queryService.queryObject.rangeFilters.filter.max];
-	                  filterStrings.push(column.metadata.title + ":" + selectionStrings.join("-"));
-	                }
-	                filterString = "Filters :" +  filterStrings.join(", ");
-	                state.content = script + "\n" + finalInputString + "\n" + filterString;
-	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
-
-	            } else { //when no data-source: contents come from UI inputs
-	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
-	            }
-
-	        } else {
-	            ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
-	        }
-	    } else {
-	        ws.weave.path(toolName).remove();
-	    }
-
-
-
-	};
-
-	that.ColorColumn = function ()
-	{
-		// stub for compat;
-	};
-	
-	that.setColorGroup = function(toolName, plotName, groupName, columnInfo){
-		
-		var plotterPath = ws.weave.path(toolName).pushPlotter(plotName);
-		var plotType = plotterPath.getType();
-		if (!plotName) plotName = "plot";
-		var dynamicColumnPath;
-		console.log("tooltype", plotType);
-		
-		if (plotType == "weave.visualization.plotters::CompoundBarChartPlotter")
-		{
-			dynamicColumnPath = plotterPath.push("colorColumn", "internalDynamicColumn");
-		}
-		else
-		{
-			dynamicColumnPath = plotterPath.push("fill", "color", "internalDynamicColumn");
-		}
-		
-		console.log(dynamicColumnPath.getPath());
-		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
-		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
-	};
-
-	that.getColorGroups = function(){
-		return	ws.weave.path().getValue('getNames(ColorColumn)');
-	};
-	
-	that.cleanupColorGroups = function()
-	{
-		return;
-	};
-
-	that.setKeyColumn = function(dataSourceName, keyColumnName, keyType){
-
-		if (!ws.checkWeaveReady())
-		{
-			ws.setWeaveWindow(window);
-			return;
-		}
-
-		if(dataSourceName)
-		{
-			var type = ws.weave.path(dataSourceName).getType();
-			if(type == "weave.data.DataSources::CSVDataSource") {
-				if(keyColumnName) {
-					ws.weave.path(dataSourceName, "keyColName").state(keyColumnName);
-				}
-				if(keyType) {
-					ws.weave.path(dataSourceName, "keyType").state(keyType);
-				}
-			} else if (type == "weave.data.DataSources::WeaveAnalystDataSource") {
-				if(keyColumnName) {
-					ws.weave.path(dataSourceName, "outputKeyColumn").state(keyColumnName);
-				}
-				if(keyType) {
-					ws.weave.path(dataSourceName, "outputKeyType").state(keyType);
-				}
-			}
-			//capture session state
-			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
-		}
-	};
-	
-	//returns session state of Weave as objects
-	that.getSessionStateObjects = function(){
-		return ws.weave.path().getState();
-	};
-	
-	//returns session state of Weave as base64Encoded string
-	that.getBase64SessionState = function()
-	{
-		return ws.weave.path().getValue("\
-		        var e = new 'mx.utils.Base64Encoder'();\
-		        e.encodeBytes( Class('weave.Weave').createWeaveFileContent(true) );\
-		        return e.drain();\
-		    ");
-	};
-	
-	//returns session state by decoding a base64Encoded string representation of the Weave session state 
-	that.setBase64SessionState = function(base64encodedstring)
-	{
-		ws.weave.path()
-		.vars({encoded: base64encodedstring})
-		.getValue("\
-	        var d = new 'mx.utils.Base64Decoder'();\
-			var decodedStuff = d.decode(encoded);\
-			var decodeBytes =  d.toByteArray();\
-	      Class('weave.Weave').loadWeaveFileContent(decodeBytes);\
-	    ");
-	};
-	
-	that.clearSessionState = function(){
-		ws.weave.path().state(['WeaveDataSource']);
-	};
-	
-	//this function creates the CSV data format needed to create the CSVDataSource in Weave
-	/*[
-	["k","x","y","z"]
-	["k1",1,2,3]
-	["k2",3,4,6]
-	["k3",2,4,56]
-	] */
-	/**
-	 * @param resultData the actual data values
-	 * @param columnNames the names of the result columns returned
-	 */
-	that.createCSVDataFormat = function(resultData, columnNames){
-		var columns = resultData;
-
-
-		var final2DArray = [];
-
-	//getting the rowCounter variable 
-		var rowCounter = 0;
-		/*picking up first one to determine its length, 
-		all objects are different kinds of arrays that have the same length
-		hence it is necessary to check the type of the array*/
-		var currentRow = columns[0];
-		if(currentRow.length > 0)
-			rowCounter = currentRow.length;
-		//handling single row entry, that is the column has only one record
-		else{
-			rowCounter = 1;
-		}
-
-		var columnHeadingsCount = 1;
-
-		rowCounter = rowCounter + columnHeadingsCount;//we add an additional row for column Headings
-
-		final2DArray.unshift(columnNames);//first entry is column names
-
-			for( var j = 1; j < rowCounter; j++)
-			{
-				var tempList = [];//one added for every column in 'columns'
-				for(var f =0; f < columns.length; f++){
-					//pick up one column
-					var currentCol = columns[f];
-					if(currentCol.length > 0)//if it is an array
-					//the second index in the new list should coincide with the first index of the columns from which values are being picked
-						tempList[f]= currentCol[j-1];
-					
-					//handling single record
-					else 
-					{
-						tempList[f] = currentCol;
-					}
-
-				}
-				final2DArray[j] = tempList;//after the first entry (column Names)
-			}
-
-			return final2DArray;
-	};
-
-	};//end of service definition
-}());//end of IIFE
-
-
-
-
-
-(function(){
-	angular.module('weaveAnalyst.WeaveModule', []);
-	angular.module('weaveAnalyst.WeaveModule').service('WeaveService', weaveService);
-
-    weaveService.$inject = ['usSpinnerService','$timeout', 'queryService', '$window'];
-    function weaveService (usSpinnerService, $timeout, queryService, $window){
-        var that = this;
-
-        that.weave;
-        that.weave_Tree;
-        that.node_options;
-        that.blah = "bujumbarra";
-        
-        that.launch_Weave = function(){
-			
-			//check if it is open
-			if(that.weaveWindow)
-				return;
-			else{
-				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
-				//that.weaveWindow.wa_data = that.blah;
-				that.weaveWindow.addEventListener("load", that.request_WeaveTree);
-				//that.weaveWindow.addEventListener("load", that.create_weaveWrapper);//getting the instance
-			}
-		};
-
-        /*object of script input options
-        * keys are the script input names
-        * values are the trail (array of crumbs)*/
-
-        that.display_Options = function(input_node, getChildren){
-            var weaveTreeIsBusy = that.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
-
-
-            if(getChildren){//when request is for children
-                if(input_node.children && input_node.children.length){//use list if already there
-                    that.node_options = input_node.children;//set the provider
-                    //console.log("using cached list");
-                }
-
-                else{//make fresh request
-                    that.node_options = [];//clear
-                    usSpinnerService.spin('dataLoadSpinner');// start the spinner
-                    fetching_Children(input_node.w_node, getChildren);//use node
-                    //console.log("fetching new list");
-                }
-            }
-
-            else{//when request is for siblings
-                if(input_node.siblings && input_node.siblings.length){//use if list is already there
-                    that.node_options = input_node.siblings;//set the provider
-                    //console.log("using cached list");
-                }
-
-                else{//make fresh request
-                    that.node_options = [];//clear
-                    usSpinnerService.spin('dataLoadSpinner');// start the spinner
-                    fetching_Children(input_node.w_node.parent, getChildren);//use its parent
-                    //console.log("fetching new list");
-                }
-            }
-
-
-
-            function fetching_Children(i_node, getChildren) {
-               var chi = i_node.getChildren();
-                if (weaveTreeIsBusy())
-                    setTimeout(function () {
-                        fetching_Children(i_node, getChildren);
-                    }, 300);
-                else {
-                    var tempProvider = [];
-
-                    for (var u = 0; u < chi.length; u++) {
-                        var node_obj = {};
-                        chi[u].getLabel();//TODO get this confirmed w/o this line column labels appear ...
-
-                        if (weaveTreeIsBusy())
-                            setTimeout(function () {
-                                fetching_Children(i_node, getChildren);
-                            }, 300);
-                        //formats the children for displaying in the drop down selector
-                        node_obj.label = chi[u].getLabel();//need this for filter of options to work
-                        node_obj.w_node = chi[u];
-
-                        tempProvider[u] = node_obj;
-                    }
-                    $timeout(function () {
-                        that.node_options = tempProvider;
-                        if(getChildren)
-                            input_node.children = that.node_options;//set the provider
-                        else
-                            input_node.siblings = that.node_options;
-
-                        usSpinnerService.stop('dataLoadSpinner');//stops the spinner
-                    }, 300);
-
-                }
-            }//end of fetching children
-        };
-
-        /** requests the WeaveNodeTree hierarchy comprised of IWeaveTreeNode objects**/
-        that.request_WeaveTree = function (){
-            if(that.check_WeaveReady())//only if Weave is ready
-            {
-                if(!that.weave_Tree){
-                    that.weave_Tree = new that.weave.WeaveTreeNode();
-                    console.log("creating new Weave Tree");
-                    return that.weave_Tree;
-                }
-                else
-                    return that.weave_Tree;
-            }
-            else{
-                $timeout(that.request_WeaveTree, 100);
-            }
-        };
-
-        /** checks if the Weave software has loaded**/
-        that.check_WeaveReady = function(){
-
-            if(!that.weave)
-                that.weave = that.weaveWindow.document.getElementById('weave');
-            return that.weave && that.weave.WeavePath && that.weave._jsonCall;
-        };
-
-    }
-})();
 /**
- *this object serves as a wrapper for the API calls made when Weave is being used as a visualization engine 
- *@author spurushe
- */
+ * Created by Shweta on 8/5/15.
+ * this component represents one ui crumb in the hierarchy
+ * TODO import this as bower module from GITHUB
+ * */
+var shanti;
+(function (){
+    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
 
-if(!this.weaveApp)//the this refers to the weaveApp window object here
-	this.weaveApp = {};
+    selectorPillComponent.$inject= [];
+    function selectorPillComponent () {
+        return {
+            restrict: 'E',
+            scope:{
+            	column :'='
+            },
+            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
+            controller: sPillController,
+            controllerAs: 'p_Ctrl',
+            bindToController: true,
+            link: function (scope, elem, attrs) {
 
-(function(){
-	//static properties
-	WeaveWrapper.instance;
-	WeaveWrapper.weave;
-	WeaveWrapper.weave_Tree;
-	
-	//constructor
-	function WeaveWrapper (){
-		//TODO move this into a manager class
-		WeaveWrapper.instance = this;
-		
-	}
-	
-	//static function
-	/** requests the WeaveNodeTree hierarchy comprised of IWeaveTreeNode objects**/
-	WeaveWrapper.request_WeaveTree = function (){
-		if(!WeaveWrapper.weave_Tree){
-			WeaveWrapper.weave_Tree = new WeaveWrapper.weave.WeaveTreeNode();
-			return WeaveWrapper.weave_Tree;
-		}
-		else
-			return WeaveWrapper.weave_Tree;
-	};
-	
-	//static function
-	WeaveWrapper.check_WeaveReady = function(){
-		
-		if(!WeaveWrapper.weave)
-			WeaveWrapper.weave = document.getElementById('weave');
-		return WeaveWrapper.weave && WeaveWrapper.weave.WeavePath && WeaveWrapper.weave._jsonCall;
-	};
-	
-	//get list of children for a particular tree node
-	WeaveWrapper.get_tree_Children = function(node){
-		var children = [];
-		
-		for(var i = 0; i < node.length; i++){
-			children[i] = {name : node[i].getLabel() , source : node[i] };
-		}
-		return children;
-	};
-	
-	var p = WeaveWrapper.prototype;
-	//attaching it to the global wa object
-	window.weaveApp.WeaveWrapper = WeaveWrapper;
-	
-	//////////////
-	////VIZs
-	//////////////
-	p.request_BarChart = function(tool_config){
-		if(WeaveWrapper.check_WeaveReady()){
-			var toolName = this.generate_UniqueName("BarChartTool");
-			WeaveWrapper.weave.path(toolName)
-			.request('CompoundBarChartTool')
-			.tool_config({  showAllLabels : tool_config.showAllLabels })
-			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
-			.push('sortColumn').setColumn(tool_config && tool_config.sort ? tool_config.sort.metadata : "", tool_config && tool_config.sort ? tool_config.sort.dataSourceName : "")
-			.pop()
-			.push('labelColumn').setColumn(tool_config && tool_config.label ? tool_config.label.metadata : "", tool_config && tool_config.label ? tool_config.label.dataSourceName : "")
-			.pop()
-			.push("heightColumns").setColumns(tool_config && tool_config.heights && tool_config.heights.length ? tool_config.heights.map(function(column) {
-				return column.metadata;
-			}) : {}, tool_config && tool_config.heights && tool_config.heights[0] ? tool_config.heights[0].dataSourceName : "")
-			.pop()
-			.push("positiveErrorColumns").setColumns(tool_config && tool_config.posErr ? tool_config.posErr.map(function(column) {
-				return column.metadata;
-			}) : {}, tool_config && tool_config.posErr && tool_config.posErr[0] ? tool_config.posErr[0].dataSourceName : "")
-			.pop()
-			.push("negativeErrorColumns").setColumns(tool_config && tool_config.negErr && tool_config.negErr.map(function(column) {
-				return column.metadata;
-			}), tool_config && tool_config.negErr && tool_config.negErr[0] ? tool_config.negErr[0].dataSourceName : "");
-		}
-		else{
-			console.log("Weave and its api are not ready");
-			return;
-		}
-		
-	};
-	
-	
-	p.request_ScatterPlot = function(tool_config){
-		var toolName;
-		if(WeaveWrapper.check_WeaveReady()){
-			
-			if(tool_config.toolName)
-				toolName = tool_config.toolName;
-			else
-				toolName = this.generate_UniqueName("ScatterPlotTool");
-			
-			 WeaveWrapper.weave.path(toolName).request('ScatterPlotTool')
-			.push('children', 'visualization','plotManager', 'plotters', 'plot')
-			.push('dataX').setColumn(tool_config.X.metadata, tool_config.X.dataSourceName)
-			.pop()
-			.push('dataY').setColumn(tool_config.Y.metadata, tool_config.Y.dataSourceName);
-				
-		}
-		else{//if weave is not ready
-			console.log("Weave and its api are not ready");
-			return;
-		}
-		return toolName;
-	};
-	
-	
-	p.request_AdvancedDataTable = function(tool_config){
-		var toolName;
-		if (WeaveWrapper.check_WeaveReady())
-		{
-			if(tool_config.toolName)
-				toolName = tool_config.toolName;
-			else
-				toolName = this.generate_UniqueName("DataTableTool");
-			
-			WeaveWrapper.weave.path(toolName).request('AdvancedTableTool')
-			.push("columns").setColumns(tool_config && tool_config.columns && tool_config.columns.length ? tool_config.columns.map(function(column) {
-				return column.metadata;
-			}) : {}, tool_config && tool_config.columns && tool_config.columns[0] ? tool_config.columns[0].dataSourceName : ""); 
-			
-			// empty columns
-			if(tool_config.columns && !tool_config.columns.length)
-				weave.path(toolName).request("AdvancedTableTool").push("columns").tool_config({});
-		}
-		else{//if weave is not ready
-			console.log("Weave and its api are not ready");
-			return;
-		}
-		return toolName;
-	};
-	
-	
-	p.request_Map = function(){
-		
-	};
-	
-	
-	////////////////
-	//TOOLS
-	///////////////
-	p.request_AttributeMenu = function(){
-		var toolName;
-		if(WeaveWrapper.check_WeaveReady()){
-			toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
-			ws.weave.path(toolName).request('AttributeMenuTool').call(setQueryColumns, {choices: tool_config.columns});
-				
-				if(tool_config.vizAttribute && tool_config.selectedVizTool)
-					ws.weave.path(toolName).request('AttributeMenuTool')
-					.tool_config({targetAttribute : tool_config.vizAttribute.title , targetToolPath : [tool_config.selectedVizTool]});
-			}
-		else{
-			console.log('Weave and its api are not ready yet');
-		}
-	};
-	
-	
-	p.request_DataFilter = function(){
-		
-		if(WeaveWrapper.check_WeaveReady()){
-			
-			WeaveWrapper.weave.path(toolName).request('DataFilterTool');
-			
-			if(tool_config.filterStyle == "Discrete values") {
-				WeaveWrapper.weave.path(toolName, "editor", null).request("StringDataFilterEditor").tool_config({
-					layoutMode : tool_config.layoutMode.value,
-					showPlayButton : tool_config.showPlayButton,
-					showToggle : tool_config.showToggle
-				});
-			} else if(tool_config.filterStyle == "Continuous range") {
-				WeaveWrapper.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
-			}
-			if(tool_config.column) {
-				WeaveWrapper.weave.path(toolName, "filter", null, "column").setColumn(tool_config.column.metadata, tool_config.column.dataSourceName);
-			}
-		}
-		else{
-			console.log("Weave and its api are not ready");
-		}
-	};
-	
-	
-	p.request_SummaryAnnotation = function(){
-		
-	};
-	
-	///COLOR///////
-	
-	p.set_ColorGroup = function(toolName, plotName, groupName, column){
-		var plotterPath = WeaveWrapper.weave.path(toolName).pushPlotter(plotName);
-		var plotType = plotterPath.getType();
-		if (!plotName) plotName = "plot";
-		var dynamicColumnPath;
-		
-		if (plotType == "weave.visualization.plotters::CompoundBarChartPlotter")
-		{
-			dynamicColumnPath = plotterPath.push("colorColumn", "internalDynamicColumn");
-		}
-		else
-		{
-			dynamicColumnPath = plotterPath.push("fill", "color", "internalDynamicColumn");
-		}
-		
-		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
-		WeaveWrapper.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(column.metadata, column.dataSourceName);
-	};
-	
-	p.get_ColorGroups = function(){
-		return	WeaveWrapper.weave.path().getValue('getNames(ColorColumn)');
-	};
-	
-	/////////////
-	//UTILITY
-	////////////
-	
-	p.get_base64_SessionState = function(){
-		
-		return WeaveWrapper.weave.path().getValue("\
-		        var e = new 'mx.utils.Base64Encoder'();\
-		        e.encodeBytes( Class('weave.Weave').createWeaveFileContent(true) );\
-		        return e.drain();\
-		    ");
-	};
-	
-	p.set_base64_SessionState = function(){
-		
-		WeaveWrapper.weave.path()
-		.vars({encoded: base64encodedstring})
-		.getValue("\
-	        var d = new 'mx.utils.Base64Decoder'();\
-			var decodedStuff = d.decode(encoded);\
-			var decodeBytes =  d.toByteArray();\
-	      Class('weave.Weave').loadWeaveFileContent(decodeBytes);\
-	    ");
-	};
-	
-	p.clear_SessionState = function(){
-		WeaveWrapper.weave.path().state(['WeaveDataSource']);
-	};
-	
-	
-	
-	p.generate_UniqueName = function(className, path) {
-		if(!WeaveWrapper.weave)
-			return null;
-		return WeaveWrapper.weave.path(path || []).getValue('generateUniqueName')(className);
-	};
-	
-	p.get_PathToFilters = function() {
-		if(!this.checkWeaveReady())
-			return;
-		return WeaveWrapper.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");//references the Linkableashmap 'filters' in a keyFilter
-	};
-	
-	p.tile_Windows = function() {
-		if(!this.checkWeaveReady())
-			return;
-		WeaveWrapper.weave.path()
-		.libs("weave.ui.DraggablePanel")
-		.exec("DraggablePanel.tileWindows()");
-	};
-	
-	p.fetch_NodePath = function(){
-		
-	};
-	
-	p.get_listOfTools = function(){
-		
-	};
-	
-	p.remove_Object = function(object_name){
-		WeaveWrapper.weave.path(object_name).remove();
-	};
+            }
+        };//end of directive definition
+    }
 
+    sPillController.$inject = ['$scope', 'WeaveService'];
+    function sPillController (scope, WeaveService){
+       var p_Ctrl = this;
+        p_Ctrl.WeaveService = WeaveService;
+        p_Ctrl.display_Children = display_Children;
+        p_Ctrl.display_Siblings = display_Siblings;
+        p_Ctrl.add_init_Crumb = add_init_Crumb;
+        p_Ctrl.manage_Crumbs = manage_Crumbs;
+        p_Ctrl.populate_Defaults = populate_Defaults;
+        p_Ctrl.get_trail_from_column = get_trail_from_column;
+
+        p_Ctrl.showList = false;
+
+        //is the previously added node in the stack, needed for comparison
+        //structure of each node should be {w_node //actual node ; label: its label}
+        p_Ctrl.weave_node = {};
+        p_Ctrl.crumbTrail = [];
+        p_Ctrl.crumbLog = [];
+
+        shanti = p_Ctrl;
+        scope.$watch('p_Ctrl.column', function(){
+        	if(p_Ctrl.column.defaults)
+        		p_Ctrl.populate_Defaults();
+        });
+        
+        function populate_Defaults (){
+        	//clear existing logs and trails
+        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
+        	//create the new trail starting from the column
+        };
+        
+        function get_trail_from_column (in_column){
+        	var trailObj = {trail : [], logs : []};
+        	
+        	
+        	return trailObj;
+        };
+
+        function manage_Crumbs(i_node){
+            /*1. check if it is the previously added node*/
+            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
+                /*2. check if it in the trail already */
+                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
+                    /* for the very first crumb added; happens only once*/
+                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
+                       // console.log("first WeaveDataSource crumb added...");
+                        p_Ctrl.crumbTrail.push(i_node);
+                        p_Ctrl.crumbLog.push(i_node.label);
+                    }
+                    //remaining iterations
+                    else{
+                        /*3. check if previous crumb in trail is parent*/
+                        var p_name = i_node.w_node.parent.getLabel();
+                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
+                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
+
+                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
+                            /*4. check if a sibling is present after parent */
+                            if(p_Ctrl.crumbTrail[p_ind + 1]){
+                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
+                                var sib_parent_name = sib_node.w_node.parent.getLabel();
+                                if(p_name == sib_parent_name){
+                                    //if yes
+                                    //remove sibling and is trail
+                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
+                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
+                                    //add it
+                                    p_Ctrl.crumbTrail.push(i_node);
+                                    p_Ctrl.crumbLog.push(i_node.label);
+                                    //console.log("replacing sibling and updating ...");
+
+                                }
+                            }
+                            else{
+                                //if no then add
+                                //console.log("new child added after parent...");
+                                p_Ctrl.crumbTrail.push(i_node);
+                                p_Ctrl.crumbLog.push(i_node.label);
+                            }
+                        }
+                        else{}//don't add it anywhere in trail
+                    }
+                }
+                else{}//if it already exists in the trail
+            }
+            else{}// if it is old
+            p_Ctrl.weave_node = i_node;
+
+            //p_Ctrl.toggleList = false;
+            if(i_node.w_node.isBranch()){
+                if(i_node.label == 'WeaveDataSource')
+                    p_Ctrl.showList = false;
+                else{
+                    p_Ctrl.display_Children(i_node);
+                    p_Ctrl.showList = true;
+                }
+            }
+            else
+                p_Ctrl.showList = false;
+        }
+
+
+        //this function adds the data source initial pill, done only once as soon as weave loads
+        function add_init_Crumb (){
+            if(p_Ctrl.WeaveService.request_WeaveTree()){
+                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
+
+                var init_node = {};
+                init_node.label = ds[0].getLabel();
+                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
+                p_Ctrl.manage_Crumbs(init_node);
+                //scope.$apply();//because digest completes by the time the tree root is fetched
+            }
+            else
+                setTimeout(p_Ctrl.add_init_Crumb, 300);
+        }
+
+        function display_Children(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
+        }
+
+        function display_Siblings(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node);
+        }
+    }
 })();
 /**
  * this is a modified collapsible tree written in d3
@@ -6321,158 +5345,1259 @@ if(!this.wa.d3_viz){
 })();
 
 /**
- * Created by Shweta on 8/5/15.
- * this component represents one ui crumb in the hierarchy
- * TODO import this as bower module from GITHUB
- * */
-var shanti;
-(function (){
-    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
+ * 
+ */
+(function(){
+	angular.module('weaveApp', [ 'ngAnimate',
+	                             'ui.select',
+                              	 'ui.bootstrap',
+	                             'ngSanitize']);
+	
+	angular.module('weaveApp').controller('appController', appController);
+	appController.$inject = ['$window', '$scope'];
+	function appController($window, $scope){
+		var appCtrl = this;
+		appCtrl.vizToolOptions  = ['ScatterPlotTool', 'Barchart', 'DataTable'];
+		appCtrl.manage_Active_Tools = manage_Active_Tools;
+		appCtrl.addTool2Menu = addTool2Menu;
+		appCtrl.showToolList = false;
+		
+		appCtrl.scatterplots = {};
+		appCtrl.datatables = [];
+		
+		
+		
+		function manage_Active_Tools (toolKey, toolObject, addition){
+			switch (true) {
+			case toolKey.indexOf("ScatterPlotTool") > -1 ://if it contains the string
+				if(addition)//adding tools
+					appCtrl.scatterplots[toolKey] = toolObject;
+				if(!addition)//removing tools
+					delete appCtrl.scatterplots[toolKey];
+				break;
+			}
+			
+		};
+		
+		function addTool2Menu(tool){
+			appCtrl.showToolList = false;
+			var name = tool;
+			var toolKey;
+			var counter = Object.keys(appCtrl.scatterplots).length + 1;
+			if(counter > 1)
+				toolKey = name.concat(counter);
+			else
+				toolKey = name;
+			appCtrl.manage_Active_Tools(toolKey, null, true);
+		}
+		
+		
+		 $scope.oneAtATime = true;
 
-    selectorPillComponent.$inject= [];
-    function selectorPillComponent () {
-        return {
-            restrict: 'E',
-            scope:{
-            	column :'='
-            },
-            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
-            controller: sPillController,
-            controllerAs: 'p_Ctrl',
-            bindToController: true,
-            link: function (scope, elem, attrs) {
+		  $scope.items = ['Item 1', 'Item 2', 'Item 3'];
 
-            }
-        };//end of directive definition
-    }
+		  $scope.addItem = function() {
+		    var newItemNo = $scope.items.length + 1;
+		    $scope.items.push('Item ' + newItemNo);
+		  };
+	};
+})();
+(function(){
+	angular.module('weaveAnalyst.WeaveModule', []);
+	angular.module('weaveAnalyst.WeaveModule').service("WeaveService", WeaveService);
 
-    sPillController.$inject = ['$scope', 'WeaveService'];
-    function sPillController (scope, WeaveService){
-       var p_Ctrl = this;
-        p_Ctrl.WeaveService = WeaveService;
-        p_Ctrl.display_Children = display_Children;
-        p_Ctrl.display_Siblings = display_Siblings;
-        p_Ctrl.add_init_Crumb = add_init_Crumb;
-        p_Ctrl.manage_Crumbs = manage_Crumbs;
-        p_Ctrl.populate_Defaults = populate_Defaults;
-        p_Ctrl.get_trail_from_column = get_trail_from_column;
+	WeaveService.$inject = ['$q','$rootScope','runQueryService', 'dataServiceURL','queryService'];
+	
+	function WeaveService ($q, rootScope, runQueryService, dataServiceURL, queryService){
+		
+		var that = this;
+		var ws= this;
+		
+		that.weave;
+		that.weaveWindow = window;
+		that.analysisWindow = window;
+		that.toolsEnabled = [];
+		that.columnNames = [];
+	
+	
+	/**
+	 * 
+	 * @param className {String}
+	 * @param path {Array} path to the desired location in the session state, if no path is provided
+	 * 					   it defaults to the root of the session state
+	 * 
+	 * @return {string}
+	 */
+	that.generateUniqueName = function(className, path) {
+		if(!ws.weave)
+			return null;
+		return ws.weave.path(path || []).getValue('generateUniqueName')(className);
+	};
+	
+	//TODO move this to app.js
+	//fetches the path of the given node in the weave tree
+	that.fetchNodePath = function(input_node, childrenFlag){
+		var deferred = $q.defer();
+		
+		//if(ws.cache.previousNodeId == input_node.metadata.weaveEntityId){
+		//	console.log("retrieving from cache");
+		//	return this.cache.columnReference;
+		//}
+		//else{
+		//	console.log("making fresh call");
+			
+			if(ws.weave && ws.checkWeaveReady()){
+					
+					var w = rootScope.weaveTree;
+					var weaveTreeIsBusy = weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
+					var indx = 0;
+					
+					(function retrievePathOnceReady(){
+						nodePath = w.findPath(input_node.dataSourceName, input_node.metadata);
+						if(nodePath){
+							if(weaveTreeIsBusy()){
+								setTimeout(retrievePathOnceReady, 500);
+							}
+							else{
+								indx = (nodePath.length) - 2;
+								if(childrenFlag){//retrieve children if children requested
+									var children = nodePath[indx].getChildren();
+									rootScope.$safeApply(function() {
+					    				deferred.resolve(children);
+					    			});
+								}
+								else{//retrieve label
+									var label = nodePath[indx].getLabel();
+									rootScope.$safeApply(function() {
+					    				deferred.resolve(label);
+					    			});
+								}
+							}
+								
+						}
+						else{
+							setTimeout(retrievePathOnceReady, 500);
+						}
+						
+					})();
+				}
+			
+			return deferred.promise;
+		//}
+		
+	};
 
-        p_Ctrl.showList = false;
+	
+	that.getPathToFilters = function() {
+		if(!ws.checkWeaveReady())
+			return;
+		return ws.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");//references the Linkableashmap 'filters' in a keyFilter
+	};
+	
+	that.tileWindows = function() {
+		if(!ws.checkWeaveReady())
+			return;
+		ws.weave.path()
+		 .libs("weave.ui.DraggablePanel")
+		 .exec("DraggablePanel.tileWindows()");
+	};
+	
+	
+	that.setWeaveWindow = function(window) {
+		var weave;
+		if(!window) {
+			ws.weave = null;
+			return;
+		}
+		try {
+			ws.weaveWindow = window;
+			weave = window.document.getElementById('weave');
 
-        //is the previously added node in the stack, needed for comparison
-        //structure of each node should be {w_node //actual node ; label: its label}
-        p_Ctrl.weave_node = {};
-        p_Ctrl.crumbTrail = [];
-        p_Ctrl.crumbLog = [];
+			if (weave && weave.WeavePath && weave.WeavePath.prototype.pushLayerSettings) {
+				ws.weave = weave;
+				console.log("weave and its api are ready");
+				rootScope.$safeApply();
+			}
+			else {
+				setTimeout(ws.setWeaveWindow, 50, window);
+			}
+		} catch (e)
+		{
+			console.error("fails", e);
+		}
+    };
+    
+    that.checkWeaveReady = function(){
+    	return ws.weave && ws.weave.WeavePath && ws.weave._jsonCall;
+    };
+    
+    that.setWeaveWindow(window);
+	
+    that.addCSVData = function(csvData, aDataSourceName, queryObject) {
+		var dataSourceName = "";
+		if(!aDataSourceName)
+			dataSourceName = ws.generateUniqueName("CSVDataSource");
+		else
+			dataSourceName = ws.generateUniqueName(aDataSourceName);
+	
+		ws.weave.path(dataSourceName)
+			.request('CSVDataSource')
+			.vars({rows: csvData})
+			.exec('setCSVData(rows)');
+		for(var i in csvData[0])
+		{
+			queryObject.resultSet.unshift({ id : csvData[0][i], title: csvData[0][i], dataSourceName : dataSourceName});
+		}
+	};
+	
+	// weave path func
+	var setQueryColumns = function(mapping) {
+		this.forEach(mapping, function(column, propertyName) {
+			//console.log("column", column);
+			//console.log("propertyName", propertyName);
+			if (Array.isArray(column))
+			{
+				this.push(propertyName).call(setQueryColumns, column);
+			}
+			else if (ws.checkWeaveReady() && column)
+			{
+				if(column.id == "" || angular.isUndefined(column.id))
+					return;
+				this.push(propertyName).setColumn(column.id, column.dataSourceName);
+			}
+		});
+		if (Array.isArray(mapping))
+			while (this.getType(mapping.length))
+				this.remove(mapping.length);
+		return this;
+	};
+	
+	//returns a list of visualization tools currently open in Weave
+	that.listOfTools = function(){
+		var tools = [];
+		if(ws.checkWeaveReady()){
+			tools =  ws.weave.path().libs('weave.api.ui.IVisTool').getValue('getNames(IVisTool)');
+		}
 
-        shanti = p_Ctrl;
-        scope.$watch('p_Ctrl.column', function(){
-        	if(p_Ctrl.column.defaults)
-        		p_Ctrl.populate_Defaults();
-        });
+		return tools;
+	};
+
+	Object.defineProperty(this, "toolsEnabled", {get: this.listOfTools});
+	
+	that.getSelectableAttributes = function(toolName, vizTool){
+		
+		var selAttributes =[];
+		
+		if(ws.checkWeaveReady()){
+			if(vizTool == 'MapTool'){//because we're naming the plot layers here
+				var plotLayers = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters').getNames();
+				
+				for(var i in plotLayers)
+				{
+					var attrs = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters', plotLayers[i]).getValue('getSelectableAttributeNames()');
+					for(var j in attrs){
+						selAttributes.push({plotLayer : plotLayers[i], title : attrs[j]});
+					}
+				}
+				
+			}
+			else{
+				
+				var attrs = ws.weave.path(vizTool, 'children', 'visualization', 'plotManager', 'plotters', 'plot').getValue('getSelectableAttributeNames()');
+				for(var j in attrs){
+					selAttributes.push({plotLayer : 'plot', title : attrs[j]});
+				}
+			}
+			
+
+		}
+		
+		
+		return selAttributes;
+	};
+	
+	/**
+	 * this function sets the selected attribute(selected in the attribute widget tool) in the required tool
+	 * @param toolName the tool whose attribute is to be set
+	 * @param vizAttribute the attribute of tool to be set
+	 * @param attrObject the object used for setting vizAttribute
+	 */
+	
+	that.setVizAttribute = function(originalTool, toolName, vizAttribute, attrObject){
+		if((ws.checkWeaveReady))
+			{	
+				var selectedColumn;
+				//1. collect columns find the right one
+				var columnObjects = ws.weave.path(originalTool).request('AttributeMenuTool').push('choices').getState();
+				for (var i in columnObjects)
+				{
+					if(columnObjects[i].sessionState.metadata == attrObject.title)
+						selectedColumn = columnObjects[i].objectName;
+				}
+				//2. set it
+				ws.weave.path(originalTool).request('AttributeMenuTool').state({selectedAttribute : selectedColumn});
+				
+			};
+	};
+	
+	that.AttributeMenuTool = function(state, aToolName){
+		
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		var toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
+		if(state && state.enabled){
+			ws.weave.path(toolName).request('AttributeMenuTool')
+			//.state({ panelX : "50%", panelY : "0%", panelHeight: "15%", panelWidth :"50%",  panelTitle : state.title, enableTitle : true})
+			.call(setQueryColumns, {choices: state.columns});
+			
+			if(state.vizAttribute && state.selectedVizTool)
+				ws.weave.path(toolName).request('AttributeMenuTool')
+				.state({targetAttribute : state.vizAttribute.title , targetToolPath : [state.selectedVizTool]});
+		}
+		else{//if the tool is disabled
+			ws.weave.path(toolName).remove();
+		}
+		
+		return toolName;
+	};
+	
+	that.BarChartTool = function(state, aToolName){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		var toolName = aToolName || ws.generateUniqueName("BarChartTool");
+		
+		if(state && state.enabled){//if enabled
+			//create tool
+			//panelX : "0%", panelY : "50%", panelTitle : state.title, enableTitle : true,
+			ws.weave.path(toolName)
+			.request('CompoundBarChartTool')
+			.state({  showAllLabels : state.showAllLabels })
+			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
+			.push('sortColumn').setColumn(state && state.sort ? state.sort.metadata : "", state && state.sort ? state.sort.dataSourceName : "")
+			.pop()
+			.push('labelColumn').setColumn(state && state.label ? state.label.metadata : "", state && state.label ? state.label.dataSourceName : "")
+			.pop()
+			.push("heightColumns").setColumns(state && state.heights && state.heights.length ? state.heights.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.heights && state.heights[0] ? state.heights[0].dataSourceName : "")
+			.pop()
+			.push("positiveErrorColumns").setColumns(state && state.posErr ? state.posErr.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.posErr && state.posErr[0] ? state.posErr[0].dataSourceName : "")
+			.pop()
+			.push("negativeErrorColumns").setColumns(state && state.negErr && state.negErr.map(function(column) {
+				return column.metadata;
+			}), state && state.negErr && state.negErr[0] ? state.negErr[0].dataSourceName : "");
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+			//tiling
+			ws.tileWindows();
+		}
+		else{//if the tool is disabled
+			ws.weave.path(toolName).remove();
+		}
+		
+		return toolName;
+	};
+	
+	that.MapTool = function(state, aToolName){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		var toolName = aToolName || ws.generateUniqueName("MapTool");
+
+		if(state && state.enabled){//if enabled
+			//create tool
+			ws.weave.path(toolName).request('MapTool');
+			//.state({ panelX : "0%", panelY : "0%", panelTitle : state.title, enableTitle : true });
+			
+			//STATE LAYER
+			if(state.stateGeometryLayer)
+			{
+				var stateGeometry = state.stateGeometryLayer;
+
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager', 'plotters')
+				.push('Albers_State_Layer').request('weave.visualization.plotters.GeometryPlotter')
+				.push('line', 'color', 'defaultValue').state('0').pop()
+				.call(setQueryColumns, {geometryColumn: stateGeometry});
+				
+			}
+			else{//to remove state layer
+				
+				if($.inArray('Albers_State_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
+					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_State_Layer').remove();
+			}
+			
+			
+			//COUNTY LAYER
+			if(state.countyGeometryLayer)
+			{
+				var countyGeometry = state.countyGeometryLayer;
+				
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager', 'plotters')
+				.push('Albers_County_Layer').request('weave.visualization.plotters.GeometryPlotter')
+				.push('line', 'color', 'defaultValue').state('0').pop()
+				.call(setQueryColumns, {geometryColumn : countyGeometry});
+			
+				//TODO change following
+				//done for handling albers projection What about other projection?
+				if(state.stateGeometryLayer){
+					
+					ws.weave.path(toolName, 'projectionSRS').state(stateGeometry.projection);
+				}
+				//ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
+			}
+			else{//to remove county layer
+				
+				if($.inArray('Albers_County_Layer',ws.weave.path().getNames()))//check if the layer exists and then remove it
+					ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'plotters', 'Albers_County_Layer').remove();
+			}
+			
+			
+			//LABEL LAYER
+			if(state.labelLayer && state.stateGeometryLayer)
+			{
+				var labelLayer = state.labelLayer;
+				//ws.weave.setSessionState([labelLayer.dataSourceName], {keyColName : "fips"});
+				
+				var stateGeometryLayer = state.stateGeometryLayer;
+				
+				ws.weave.path(toolName).request('MapTool')
+				.push('children', 'visualization', 'plotManager','plotters')
+				.push('stateLabellayer').request('weave.visualization.plotters.GeometryLabelPlotter')
+				.call(setQueryColumns, {geometryColumn : stateGeometryLayer})
+				.push('text').setColumn(labelLayer.metadata, labelLayer.dataSourceName);
+			}
+			
+			//LAYER ZOOM
+			//HACK for demo
+//			if(state.zoomLevel)
+//				{
+//					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
+//					
+//					//for demo
+//					if(state.zoomLevel > 3 && state.countyGeometryLayer)
+//					{
+//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(1);
+//			
+//					}
+//					else{
+//						ws.weave.path(toolName, 'children', 'visualization', 'plotManager', 'layerSettings', 'Albers_County_Layer', 'alpha').state(0);
+//					}
+//					//for demo end
+//				}
+			
+			//
+			if(state.zoomLevel){
+					ws.weave.path('MapTool','children', 'visualization', 'plotManager').vars({myZoom: state.zoomLevel}).exec('setZoomLevel(myZoom)');
+			}
+			
+			
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+			//tiling
+			ws.tileWindows();
+		}
+		else{//if the tool is disabled
+			ws.weave.path(toolName).remove();
+		}
+		
+		return toolName;
+	};
+
+	that.ScatterPlotTool = function(state, aToolName){
+		
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+		
+		var toolName = aToolName || ws.generateUniqueName("ScatterPlotTool");
+
+		if(state && state.enabled){//if enabled
+			//create tool
+			ws.weave.path(toolName).request('ScatterPlotTool');
+			//.state({ panelTitle : state.title, enableTitle : true});
+			
+			if(state.X){
+				 ws.weave.path(toolName).request('ScatterPlotTool')
+				.push('children', 'visualization','plotManager', 'plotters', 'plot')
+				.push('dataX').setColumn(state.X.metadata, state.X.dataSourceName);
+			}
+			else{
+				 ws.weave.path(toolName).request('ScatterPlotTool')
+					.push('children', 'visualization','plotManager', 'plotters', 'plot')
+					.push('dataX').state('null');
+			}
+			
+			if(state.Y){
+				ws.weave.path(toolName).request('ScatterPlotTool')
+				.push('children', 'visualization','plotManager', 'plotters', 'plot')
+				.push('dataY').setColumn(state.Y.metadata, state.Y.dataSourceName);
+			}
+			else{
+				 ws.weave.path(toolName).request('ScatterPlotTool')
+					.push('children', 'visualization','plotManager', 'plotters', 'plot')
+					.push('dataY').state('null');
+			}
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+			//tiling
+			ws.tileWindows();
+		}
+		else {//if the tool is disabled
+			ws.weave.path(toolName).remove();
+		}
+		
+		return toolName;
+	};
+	
+	that.DataTableTool = function(state, aToolName){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		var toolName = aToolName || ws.generateUniqueName("DataTableTool");
+		
+		if(state && state.enabled){//if enabled			
+			//create tool
+			ws.weave.path(toolName).request('AdvancedTableTool')
+			//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, enableTitle : true})
+			.push("columns").setColumns(state && state.columns && state.columns.length ? state.columns.map(function(column) {
+				return column.metadata;
+			}) : {}, state && state.columns && state.columns[0] ? state.columns[0].dataSourceName : ""); 
+			
+			// empty columns
+			if(state.columns && !state.columns.length)
+				weave.path(toolName).request("AdvancedTableTool").push("columns").state({});
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+			//tiling
+			ws.tileWindows();
+		}
+		else{//if the tool is disabled
+			ws.weave.path(toolName).remove();
+		}
+		
+		return toolName;
+	};
+	
+	that.DataFilterTool = function(state, aToolName) {
+		var toolName = aToolName || ws.generateUniqueName("DataFilterTool");
+				
+		if(state && state.enabled) {//if enabled
+			if(ws.checkWeaveReady()) {//if weave is ready
+				//add to the enabled tools collection
+				if($.inArray(toolName, this.toolsEnabled) == -1)
+					this.toolsEnabled.push(toolName);
+				//create tool
+				ws.weave.path(toolName).request('DataFilterTool');
+				//.state({ panelX : "50%", panelY : "0%", panelTitle : state.title, panelHeight: "10%"});
+				
+				if(state.filterStyle == "Discrete values") {
+					ws.weave.path(toolName, "editor", null).request("StringDataFilterEditor").state({
+						layoutMode : state.layoutMode.value,
+						showPlayButton : state.showPlayButton,
+						showToggle : state.showToggle
+					});
+				} else if(state.filterStyle == "Continuous range") {
+					ws.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
+				}
+				if(state.column) {
+					ws.weave.path(toolName, "filter", null, "column").setColumn(state.column.metadata, state.column.dataSourceName);
+				}
+			} else {//if weave not ready
+				ws.setWeaveWindow(window);
+			}
+		}
+		else{//if the tool is disabled
+			if(ws.checkWeaveReady()) {
+				//remove from enabled tool collection
+				if($.inArray(toolName, this.toolsEnabled) != -1) {
+					var index = this.toolsEnabled.indexOf(toolName);
+					this.toolsEnabled.splice(index, 1);
+				}
+				
+				ws.weave.path(toolName).remove();
+			}
+		}
+				
+		return toolName;
+	};
+//		
+	that.SummaryAnnotation = function (state, summaryName) {
+
+	    var toolName = summaryName || ws.generateUniqueName("SummaryBox");
+
+	    if (!ws.checkWeaveReady()) {
+
+	        ws.setWeaveWindow(window);
+
+	        return;
+
+	    }
+
+	    if (state && state.enabled) { //when auto-generation checked
+	        if (state.generated) { //content generation enabled
+	            //if data-source exists - contents come from WeaveAnalystDataSource
+	            if (ws.weave.path("WeaveAnalystDataSource").getType()) {
+	                var script;
+	                var inputStrings = [];
+	                var finalInputString;
+	                var filterString;
+	                script = "Script : " + queryService.queryObject.scriptSelected;
+	               
+	                //TODO replace all this concatenation code using function same code used in project service
+	                var options = queryService.queryObject.scriptOptions;
+	                for(input in options){
+	                	inputStrings.push(options[input].metadata.title);
+	                }
+
+	                finalInputString = "Inputs :" + inputStrings.join(", ");
+	                
+	                var filterStrings = [];
+	                var geoFilterOptions = queryService.queryObject.GeographyFilter;
+	                if (geoFilterOptions.geometrySelected)
+	                {
+	                  var filterString = "";
+
+	                  if (geoFilterOptions.countyColumn)
+	                  {
+	                    selection = geoFilterOptions.selectedCounties;
+	                    column = geoFilterOptions.countyColumn;
+	                  }
+	                  else if (geoFilterOptions.stateColumn)
+	                  {
+	                    selection = geoFilterOptions.selectedStates;
+	                    column = geoFilterOptions.stateColumn;
+	                  }
+	                  
+	                  if (column && selection)
+	                  {
+	                    var selectionStrings = [];
+	                    for (key in selection)
+	                    {
+	                      selectionStrings.push(selection[key].title || key);
+	                    }
+	                    filterStrings.push(column.metadata.title + ": " + selectionStrings.join(", "));
+	                  }
+	                }
+	                if (queryService.queryObject.rangeFilters.filter)
+	                {
+	                  column = queryService.queryObject.rangeFilters.filter.column;
+	                  selectionStrings = [queryService.queryObject.rangeFilters.filter.min, queryService.queryObject.rangeFilters.filter.max];
+	                  filterStrings.push(column.metadata.title + ":" + selectionStrings.join("-"));
+	                }
+	                filterString = "Filters :" +  filterStrings.join(", ");
+	                state.content = script + "\n" + finalInputString + "\n" + filterString;
+	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+
+	            } else { //when no data-source: contents come from UI inputs
+	                ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+	            }
+
+	        } else {
+	            ws.weave.path(toolName).request("SessionedTextBox").push("htmlText").state(state.content);
+	        }
+	    } else {
+	        ws.weave.path(toolName).remove();
+	    }
+
+
+
+	};
+
+	that.ColorColumn = function ()
+	{
+		// stub for compat;
+	};
+	
+	that.setColorGroup = function(toolName, plotName, groupName, columnInfo){
+		
+		var plotterPath = ws.weave.path(toolName).pushPlotter(plotName);
+		var plotType = plotterPath.getType();
+		if (!plotName) plotName = "plot";
+		var dynamicColumnPath;
+		console.log("tooltype", plotType);
+		
+		if (plotType == "weave.visualization.plotters::CompoundBarChartPlotter")
+		{
+			dynamicColumnPath = plotterPath.push("colorColumn", "internalDynamicColumn");
+		}
+		else
+		{
+			dynamicColumnPath = plotterPath.push("fill", "color", "internalDynamicColumn");
+		}
+		
+		console.log(dynamicColumnPath.getPath());
+		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
+		ws.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(columnInfo.metadata, columnInfo.dataSourceName);
+	};
+
+	that.getColorGroups = function(){
+		return	ws.weave.path().getValue('getNames(ColorColumn)');
+	};
+	
+	that.cleanupColorGroups = function()
+	{
+		return;
+	};
+
+	that.setKeyColumn = function(dataSourceName, keyColumnName, keyType){
+
+		if (!ws.checkWeaveReady())
+		{
+			ws.setWeaveWindow(window);
+			return;
+		}
+
+		if(dataSourceName)
+		{
+			var type = ws.weave.path(dataSourceName).getType();
+			if(type == "weave.data.DataSources::CSVDataSource") {
+				if(keyColumnName) {
+					ws.weave.path(dataSourceName, "keyColName").state(keyColumnName);
+				}
+				if(keyType) {
+					ws.weave.path(dataSourceName, "keyType").state(keyType);
+				}
+			} else if (type == "weave.data.DataSources::WeaveAnalystDataSource") {
+				if(keyColumnName) {
+					ws.weave.path(dataSourceName, "outputKeyColumn").state(keyColumnName);
+				}
+				if(keyType) {
+					ws.weave.path(dataSourceName, "outputKeyType").state(keyType);
+				}
+			}
+			//capture session state
+			queryService.queryObject.weaveSessionState = ws.getSessionStateObjects();
+		}
+	};
+	
+	//returns session state of Weave as objects
+	that.getSessionStateObjects = function(){
+		return ws.weave.path().getState();
+	};
+	
+	//returns session state of Weave as base64Encoded string
+	that.getBase64SessionState = function()
+	{
+		return ws.weave.path().getValue("\
+		        var e = new 'mx.utils.Base64Encoder'();\
+		        e.encodeBytes( Class('weave.Weave').createWeaveFileContent(true) );\
+		        return e.drain();\
+		    ");
+	};
+	
+	//returns session state by decoding a base64Encoded string representation of the Weave session state 
+	that.setBase64SessionState = function(base64encodedstring)
+	{
+		ws.weave.path()
+		.vars({encoded: base64encodedstring})
+		.getValue("\
+	        var d = new 'mx.utils.Base64Decoder'();\
+			var decodedStuff = d.decode(encoded);\
+			var decodeBytes =  d.toByteArray();\
+	      Class('weave.Weave').loadWeaveFileContent(decodeBytes);\
+	    ");
+	};
+	
+	that.clearSessionState = function(){
+		ws.weave.path().state(['WeaveDataSource']);
+	};
+	
+	//this function creates the CSV data format needed to create the CSVDataSource in Weave
+	/*[
+	["k","x","y","z"]
+	["k1",1,2,3]
+	["k2",3,4,6]
+	["k3",2,4,56]
+	] */
+	/**
+	 * @param resultData the actual data values
+	 * @param columnNames the names of the result columns returned
+	 */
+	that.createCSVDataFormat = function(resultData, columnNames){
+		var columns = resultData;
+
+
+		var final2DArray = [];
+
+	//getting the rowCounter variable 
+		var rowCounter = 0;
+		/*picking up first one to determine its length, 
+		all objects are different kinds of arrays that have the same length
+		hence it is necessary to check the type of the array*/
+		var currentRow = columns[0];
+		if(currentRow.length > 0)
+			rowCounter = currentRow.length;
+		//handling single row entry, that is the column has only one record
+		else{
+			rowCounter = 1;
+		}
+
+		var columnHeadingsCount = 1;
+
+		rowCounter = rowCounter + columnHeadingsCount;//we add an additional row for column Headings
+
+		final2DArray.unshift(columnNames);//first entry is column names
+
+			for( var j = 1; j < rowCounter; j++)
+			{
+				var tempList = [];//one added for every column in 'columns'
+				for(var f =0; f < columns.length; f++){
+					//pick up one column
+					var currentCol = columns[f];
+					if(currentCol.length > 0)//if it is an array
+					//the second index in the new list should coincide with the first index of the columns from which values are being picked
+						tempList[f]= currentCol[j-1];
+					
+					//handling single record
+					else 
+					{
+						tempList[f] = currentCol;
+					}
+
+				}
+				final2DArray[j] = tempList;//after the first entry (column Names)
+			}
+
+			return final2DArray;
+	};
+
+	};//end of service definition
+}());//end of IIFE
+
+
+
+
+
+(function(){
+	angular.module('weaveAnalyst.WeaveModule', []);
+	angular.module('weaveAnalyst.WeaveModule').service('WeaveService', weaveService);
+
+    weaveService.$inject = ['usSpinnerService','$timeout', 'queryService', '$window'];
+    function weaveService (usSpinnerService, $timeout, queryService, $window){
+        var that = this;
+
+        that.weave;
+        that.weave_Tree;
+        that.node_options;
+        that.blah = "bujumbarra";
         
-        function populate_Defaults (){
-        	//clear existing logs and trails
-        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
-        	//create the new trail starting from the column
-        };
-        
-        function get_trail_from_column (in_column){
-        	var trailObj = {trail : [], logs : []};
-        	
-        	
-        	return trailObj;
-        };
+        that.launch_Weave = function(){
+			
+			//check if it is open
+			if(that.weaveWindow)
+				return;
+			else{
+				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=yes, fullscreen = no, scrollbars=no, addressbar=yes, resizable=yes");
+				that.weaveWindow.WeaveService = that;
+				that.weaveWindow.addEventListener("load", that.request_WeaveTree);
+				//that.weaveWindow.addEventListener("load", that.create_weaveWrapper);//getting the instance
+			}
+		};
 
-        function manage_Crumbs(i_node){
-            /*1. check if it is the previously added node*/
-            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
-                /*2. check if it in the trail already */
-                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
-                    /* for the very first crumb added; happens only once*/
-                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
-                       // console.log("first WeaveDataSource crumb added...");
-                        p_Ctrl.crumbTrail.push(i_node);
-                        p_Ctrl.crumbLog.push(i_node.label);
-                    }
-                    //remaining iterations
-                    else{
-                        /*3. check if previous crumb in trail is parent*/
-                        var p_name = i_node.w_node.parent.getLabel();
-                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
-                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
+        /*object of script input options
+        * keys are the script input names
+        * values are the trail (array of crumbs)*/
 
-                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
-                            /*4. check if a sibling is present after parent */
-                            if(p_Ctrl.crumbTrail[p_ind + 1]){
-                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
-                                var sib_parent_name = sib_node.w_node.parent.getLabel();
-                                if(p_name == sib_parent_name){
-                                    //if yes
-                                    //remove sibling and is trail
-                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
-                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
-                                    //add it
-                                    p_Ctrl.crumbTrail.push(i_node);
-                                    p_Ctrl.crumbLog.push(i_node.label);
-                                    //console.log("replacing sibling and updating ...");
+        that.display_Options = function(input_node, getChildren){
+            var weaveTreeIsBusy = that.weave.evaluateExpression(null, '() => WeaveAPI.SessionManager.linkableObjectIsBusy(WEAVE_TREE_NODE_LOOKUP[0])');
 
-                                }
-                            }
-                            else{
-                                //if no then add
-                                //console.log("new child added after parent...");
-                                p_Ctrl.crumbTrail.push(i_node);
-                                p_Ctrl.crumbLog.push(i_node.label);
-                            }
-                        }
-                        else{}//don't add it anywhere in trail
-                    }
+
+            if(getChildren){//when request is for children
+                if(input_node.children && input_node.children.length){//use list if already there
+                    that.node_options = input_node.children;//set the provider
+                    //console.log("using cached list");
                 }
-                else{}//if it already exists in the trail
-            }
-            else{}// if it is old
-            p_Ctrl.weave_node = i_node;
 
-            //p_Ctrl.toggleList = false;
-            if(i_node.w_node.isBranch()){
-                if(i_node.label == 'WeaveDataSource')
-                    p_Ctrl.showList = false;
-                else{
-                    p_Ctrl.display_Children(i_node);
-                    p_Ctrl.showList = true;
+                else{//make fresh request
+                    that.node_options = [];//clear
+                    usSpinnerService.spin('dataLoadSpinner');// start the spinner
+                    fetching_Children(input_node.w_node, getChildren);//use node
+                    //console.log("fetching new list");
                 }
             }
-            else
-                p_Ctrl.showList = false;
-        }
 
+            else{//when request is for siblings
+                if(input_node.siblings && input_node.siblings.length){//use if list is already there
+                    that.node_options = input_node.siblings;//set the provider
+                    //console.log("using cached list");
+                }
 
-        //this function adds the data source initial pill, done only once as soon as weave loads
-        function add_init_Crumb (){
-            if(p_Ctrl.WeaveService.request_WeaveTree()){
-                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
-
-                var init_node = {};
-                init_node.label = ds[0].getLabel();
-                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
-                p_Ctrl.manage_Crumbs(init_node);
-                //scope.$apply();//because digest completes by the time the tree root is fetched
+                else{//make fresh request
+                    that.node_options = [];//clear
+                    usSpinnerService.spin('dataLoadSpinner');// start the spinner
+                    fetching_Children(input_node.w_node.parent, getChildren);//use its parent
+                    //console.log("fetching new list");
+                }
             }
-            else
-                setTimeout(p_Ctrl.add_init_Crumb, 300);
-        }
 
-        function display_Children(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
-        }
 
-        function display_Siblings(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node);
-        }
+
+            function fetching_Children(i_node, getChildren) {
+               var chi = i_node.getChildren();
+                if (weaveTreeIsBusy())
+                    setTimeout(function () {
+                        fetching_Children(i_node, getChildren);
+                    }, 300);
+                else {
+                    var tempProvider = [];
+
+                    for (var u = 0; u < chi.length; u++) {
+                        var node_obj = {};
+                        chi[u].getLabel();//TODO get this confirmed w/o this line column labels appear ...
+
+                        if (weaveTreeIsBusy())
+                            setTimeout(function () {
+                                fetching_Children(i_node, getChildren);
+                            }, 300);
+                        //formats the children for displaying in the drop down selector
+                        node_obj.label = chi[u].getLabel();//need this for filter of options to work
+                        node_obj.w_node = chi[u];
+
+                        tempProvider[u] = node_obj;
+                    }
+                    $timeout(function () {
+                        that.node_options = tempProvider;
+                        if(getChildren)
+                            input_node.children = that.node_options;//set the provider
+                        else
+                            input_node.siblings = that.node_options;
+
+                        usSpinnerService.stop('dataLoadSpinner');//stops the spinner
+                    }, 300);
+
+                }
+            }//end of fetching children
+        };
+
+        /** requests the WeaveNodeTree hierarchy comprised of IWeaveTreeNode objects**/
+        that.request_WeaveTree = function (){
+            if(that.check_WeaveReady())//only if Weave is ready
+            {
+                if(!that.weave_Tree){
+                    that.weave_Tree = new that.weave.WeaveTreeNode();
+                    console.log("creating new Weave Tree");
+                    return that.weave_Tree;
+                }
+                else
+                    return that.weave_Tree;
+            }
+            else{
+                $timeout(that.request_WeaveTree, 100);
+            }
+        };
+
+        /** checks if the Weave software has loaded**/
+        that.check_WeaveReady = function(){
+
+            if(!that.weave)
+                that.weave = that.weaveWindow.document.getElementById('weave');
+            return that.weave && that.weave.WeavePath && that.weave._jsonCall;
+        };
+
     }
+})();
+/**
+ *this object serves as a wrapper for the API calls made when Weave is being used as a visualization engine 
+ *@author spurushe
+ */
+
+if(!this.weaveApp)//the this refers to the weaveApp window object here
+	this.weaveApp = {};
+
+(function(){
+	//static properties
+	WeaveWrapper.instance;
+	WeaveWrapper.weave;
+	WeaveWrapper.weave_Tree;
+	
+	//constructor
+	function WeaveWrapper (){
+		//TODO move this into a manager class
+		WeaveWrapper.instance = this;
+		
+	}
+	
+	//static function
+	/** requests the WeaveNodeTree hierarchy comprised of IWeaveTreeNode objects**/
+	WeaveWrapper.request_WeaveTree = function (){
+		if(!WeaveWrapper.weave_Tree){
+			WeaveWrapper.weave_Tree = new WeaveWrapper.weave.WeaveTreeNode();
+			return WeaveWrapper.weave_Tree;
+		}
+		else
+			return WeaveWrapper.weave_Tree;
+	};
+	
+	//static function
+	WeaveWrapper.check_WeaveReady = function(){
+		
+		if(!WeaveWrapper.weave)
+			WeaveWrapper.weave = document.getElementById('weave');
+		return WeaveWrapper.weave && WeaveWrapper.weave.WeavePath && WeaveWrapper.weave._jsonCall;
+	};
+	
+	//get list of children for a particular tree node
+	WeaveWrapper.get_tree_Children = function(node){
+		var children = [];
+		
+		for(var i = 0; i < node.length; i++){
+			children[i] = {name : node[i].getLabel() , source : node[i] };
+		}
+		return children;
+	};
+	
+	var p = WeaveWrapper.prototype;
+	//attaching it to the global wa object
+	window.weaveApp.WeaveWrapper = WeaveWrapper;
+	
+	//////////////
+	////VIZs
+	//////////////
+	p.request_BarChart = function(tool_config){
+		if(WeaveWrapper.check_WeaveReady()){
+			var toolName = this.generate_UniqueName("BarChartTool");
+			WeaveWrapper.weave.path(toolName)
+			.request('CompoundBarChartTool')
+			.tool_config({  showAllLabels : tool_config.showAllLabels })
+			.push('children', 'visualization', 'plotManager', 'plotters', 'plot')
+			.push('sortColumn').setColumn(tool_config && tool_config.sort ? tool_config.sort.metadata : "", tool_config && tool_config.sort ? tool_config.sort.dataSourceName : "")
+			.pop()
+			.push('labelColumn').setColumn(tool_config && tool_config.label ? tool_config.label.metadata : "", tool_config && tool_config.label ? tool_config.label.dataSourceName : "")
+			.pop()
+			.push("heightColumns").setColumns(tool_config && tool_config.heights && tool_config.heights.length ? tool_config.heights.map(function(column) {
+				return column.metadata;
+			}) : {}, tool_config && tool_config.heights && tool_config.heights[0] ? tool_config.heights[0].dataSourceName : "")
+			.pop()
+			.push("positiveErrorColumns").setColumns(tool_config && tool_config.posErr ? tool_config.posErr.map(function(column) {
+				return column.metadata;
+			}) : {}, tool_config && tool_config.posErr && tool_config.posErr[0] ? tool_config.posErr[0].dataSourceName : "")
+			.pop()
+			.push("negativeErrorColumns").setColumns(tool_config && tool_config.negErr && tool_config.negErr.map(function(column) {
+				return column.metadata;
+			}), tool_config && tool_config.negErr && tool_config.negErr[0] ? tool_config.negErr[0].dataSourceName : "");
+		}
+		else{
+			console.log("Weave and its api are not ready");
+			return;
+		}
+		
+	};
+	
+	
+	p.request_ScatterPlot = function(tool_config){
+		var toolName;
+		if(WeaveWrapper.check_WeaveReady()){
+			
+			if(tool_config.toolName)
+				toolName = tool_config.toolName;
+			else
+				toolName = this.generate_UniqueName("ScatterPlotTool");
+			
+			 WeaveWrapper.weave.path(toolName).request('ScatterPlotTool');
+//			.push('children', 'visualization','plotManager', 'plotters', 'plot')
+//			.push('dataX').setColumn(tool_config.X.metadata, tool_config.X.dataSourceName)
+//			.pop()
+//			.push('dataY').setColumn(tool_config.Y.metadata, tool_config.Y.dataSourceName);
+				
+		}
+		else{//if weave is not ready
+			console.log("Weave and its api are not ready");
+			return;
+		}
+		return toolName;
+	};
+	
+	
+	p.request_AdvancedDataTable = function(tool_config){
+		var toolName;
+		if (WeaveWrapper.check_WeaveReady())
+		{
+			if(tool_config.toolName)
+				toolName = tool_config.toolName;
+			else
+				toolName = this.generate_UniqueName("DataTableTool");
+			
+			WeaveWrapper.weave.path(toolName).request('AdvancedTableTool')
+			.push("columns").setColumns(tool_config && tool_config.columns && tool_config.columns.length ? tool_config.columns.map(function(column) {
+				return column.metadata;
+			}) : {}, tool_config && tool_config.columns && tool_config.columns[0] ? tool_config.columns[0].dataSourceName : ""); 
+			
+			// empty columns
+			if(tool_config.columns && !tool_config.columns.length)
+				weave.path(toolName).request("AdvancedTableTool").push("columns").tool_config({});
+		}
+		else{//if weave is not ready
+			console.log("Weave and its api are not ready");
+			return;
+		}
+		return toolName;
+	};
+	
+	
+	p.request_Map = function(){
+		
+	};
+	
+	
+	////////////////
+	//TOOLS
+	///////////////
+	p.request_AttributeMenu = function(){
+		var toolName;
+		if(WeaveWrapper.check_WeaveReady()){
+			toolName = aToolName || ws.generateUniqueName("AttributeMenuTool");
+			ws.weave.path(toolName).request('AttributeMenuTool').call(setQueryColumns, {choices: tool_config.columns});
+				
+				if(tool_config.vizAttribute && tool_config.selectedVizTool)
+					ws.weave.path(toolName).request('AttributeMenuTool')
+					.tool_config({targetAttribute : tool_config.vizAttribute.title , targetToolPath : [tool_config.selectedVizTool]});
+			}
+		else{
+			console.log('Weave and its api are not ready yet');
+		}
+	};
+	
+	
+	p.request_DataFilter = function(){
+		
+		if(WeaveWrapper.check_WeaveReady()){
+			
+			WeaveWrapper.weave.path(toolName).request('DataFilterTool');
+			
+			if(tool_config.filterStyle == "Discrete values") {
+				WeaveWrapper.weave.path(toolName, "editor", null).request("StringDataFilterEditor").tool_config({
+					layoutMode : tool_config.layoutMode.value,
+					showPlayButton : tool_config.showPlayButton,
+					showToggle : tool_config.showToggle
+				});
+			} else if(tool_config.filterStyle == "Continuous range") {
+				WeaveWrapper.weave.path(toolName, "editor", null).request("NumberDataFilterEditor");
+			}
+			if(tool_config.column) {
+				WeaveWrapper.weave.path(toolName, "filter", null, "column").setColumn(tool_config.column.metadata, tool_config.column.dataSourceName);
+			}
+		}
+		else{
+			console.log("Weave and its api are not ready");
+		}
+	};
+	
+	
+	p.request_SummaryAnnotation = function(){
+		
+	};
+	
+	///COLOR///////
+	
+	p.set_ColorGroup = function(toolName, plotName, groupName, column){
+		var plotterPath = WeaveWrapper.weave.path(toolName).pushPlotter(plotName);
+		var plotType = plotterPath.getType();
+		if (!plotName) plotName = "plot";
+		var dynamicColumnPath;
+		
+		if (plotType == "weave.visualization.plotters::CompoundBarChartPlotter")
+		{
+			dynamicColumnPath = plotterPath.push("colorColumn", "internalDynamicColumn");
+		}
+		else
+		{
+			dynamicColumnPath = plotterPath.push("fill", "color", "internalDynamicColumn");
+		}
+		
+		dynamicColumnPath.vars({name: groupName}).getValue("ColumnUtils.unlinkNestedColumns(this); globalName = name");
+		WeaveWrapper.weave.path(groupName).getValue("ColumnUtils.hack_findInternalDynamicColumn(this)").setColumn(column.metadata, column.dataSourceName);
+	};
+	
+	p.get_ColorGroups = function(){
+		return	WeaveWrapper.weave.path().getValue('getNames(ColorColumn)');
+	};
+	
+	/////////////
+	//UTILITY
+	////////////
+	
+	p.get_base64_SessionState = function(){
+		
+		return WeaveWrapper.weave.path().getValue("\
+		        var e = new 'mx.utils.Base64Encoder'();\
+		        e.encodeBytes( Class('weave.Weave').createWeaveFileContent(true) );\
+		        return e.drain();\
+		    ");
+	};
+	
+	p.set_base64_SessionState = function(){
+		
+		WeaveWrapper.weave.path()
+		.vars({encoded: base64encodedstring})
+		.getValue("\
+	        var d = new 'mx.utils.Base64Decoder'();\
+			var decodedStuff = d.decode(encoded);\
+			var decodeBytes =  d.toByteArray();\
+	      Class('weave.Weave').loadWeaveFileContent(decodeBytes);\
+	    ");
+	};
+	
+	p.clear_SessionState = function(){
+		WeaveWrapper.weave.path().state(['WeaveDataSource']);
+	};
+	
+	
+	
+	p.generate_UniqueName = function(className, path) {
+		if(!WeaveWrapper.weave)
+			return null;
+		return WeaveWrapper.weave.path(path || []).getValue('generateUniqueName')(className);
+	};
+	
+	p.get_PathToFilters = function() {
+		if(!this.checkWeaveReady())
+			return;
+		return WeaveWrapper.weave.path("scriptKeyFilter").request("KeyFilter").push("filters");//references the Linkableashmap 'filters' in a keyFilter
+	};
+	
+	p.tile_Windows = function() {
+		if(!this.checkWeaveReady())
+			return;
+		WeaveWrapper.weave.path()
+		.libs("weave.ui.DraggablePanel")
+		.exec("DraggablePanel.tileWindows()");
+	};
+	
+	p.fetch_NodePath = function(){
+		
+	};
+	
+	p.get_listOfTools = function(){
+		
+	};
+	
+	p.remove_Object = function(object_name){
+		WeaveWrapper.weave.path(object_name).remove();
+	};
+
 })();
 /**
  * controls the attribute menu visualization tool  widget
@@ -6524,13 +6649,6 @@ var shanti;
 		};
 	}
 })();
-angular.module('weaveApp').controller("ColorCtrl", function(){
-
-});
-angular.module('weaveApp').controller("keyColumnCtrl", function(){
-
-
-});
 /**
  * directive that creates the bar chart visualization tool widget
  * controls the bar chart in Weave
@@ -6598,6 +6716,13 @@ angular.module('weaveApp').controller("keyColumnCtrl", function(){
 		};
 	};
 })();
+angular.module('weaveApp').controller("ColorCtrl", function(){
+
+});
+angular.module('weaveApp').controller("keyColumnCtrl", function(){
+
+
+});
 /**
  * directive that creates the AdvancedTable tool widget
  * controls the Advanced Table in Weave
@@ -6682,7 +6807,6 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 	function scatterPlot (){
 		return {
 			restrict: 'E',
-			scope:{},
 			templateUrl:'tools/scatterPlot/scatter_plot.tpl.html', 
 			controller : scatter_plotController,
 			controllerAs : 'spCtrl',
@@ -6693,7 +6817,8 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 		};//directive definition object
 	}
 	
-	function scatter_plotController (){
+	scatter_plotController.$inject = ['$scope'];
+	function scatter_plotController ($scope){
 		var spCtrl = this;
 		var weave_wrapper;
 		
@@ -6702,6 +6827,7 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 		spCtrl.items = ['a','d'];
 		
 		spCtrl.config = {
+			type : 'ScatterPlotTool',	
 			checked : false,
 			toolName: null,
 			X : null,
@@ -6710,17 +6836,17 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 		
 		function initWeaveWrapper(){
 			//TODO put this retrieval in manager class later
-			if(!wa.wWrapper)
-				weave_wrapper = new wa.WeaveWrapper();
+			if(!weaveApp.WeaveWrapper.instance)
+				weave_wrapper = new weaveApp.WeaveWrapper();
 			else
-				weave_wrapper = WeaveWrapper.instance;
+				weave_wrapper = weaveApp.WeaveWrapper.instance;
 		};
 		
 		function request_scatterPlot (){
-			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
-				
-				spCtrl.initWeaveWrapper();
-				
+			spCtrl.initWeaveWrapper();
+			
+			if(weaveApp.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
+								
 				if(spCtrl.config.checked)//if checked
 					spCtrl.config.toolName = weave_wrapper.request_ScatterPlot(spCtrl.config);//request it with config
 				else{//if unchecked
@@ -6729,6 +6855,9 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 					else
 						return;
 				}
+				
+				$scope.appCtrl.scatterplots[spCtrl.config.toolName] = spCtrl.config;
+				console.log("scatterplots", $scope.appCtrl.scatterplots);
 			}
 			else
 				setTimeout(request_scatterPlot, 100);

@@ -17,8 +17,8 @@
 			if(that.weaveWindow)
 				return;
 			else{
-				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=no, fullscreen = no, scrollbars=no, addressbar=no, resizable=yes");
-				//that.weaveWindow.wa_data = that.blah;
+				that.weaveWindow = $window.open("src/visualization/weave/weaveApp.html","abc","toolbar=yes, fullscreen = no, scrollbars=no, addressbar=yes, resizable=yes");
+				that.weaveWindow.WeaveService = that;
 				that.weaveWindow.addEventListener("load", that.request_WeaveTree);
 				//that.weaveWindow.addEventListener("load", that.create_weaveWrapper);//getting the instance
 			}

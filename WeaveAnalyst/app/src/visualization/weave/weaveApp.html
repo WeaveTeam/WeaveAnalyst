@@ -6,6 +6,7 @@
 		<link href="../../../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
 		<link href="../../../bower_components/angular-ui-select/dist/select.css" rel="stylesheet" />
 		<link href="../../../lib/ui-select2/select2.css"  rel="stylesheet"/>
+		<link href="../../../css/font-awesome.css" rel="stylesheet">
 		<link href="../../../css/weaveApp.css" rel="stylesheet">
 	</head>
 
@@ -13,21 +14,24 @@
 <body>
 
 <!--Contains the widgets and weave  -->
-		<div id= "parentDiv" ng-controller = "appCtrl as c">
+		<div id= "parentDiv" ng-controller = "appController as appCtrl">
+		
 		<!-- Viz tool widgets -->
 			<div id= "widgetContainer">
+				<div ng-click = "appCtrl.showToolList = true" style = "padding-left:10px">Tools</div>
+				<div ng-show = 'appCtrl.showToolList' class="optionList" style="width: 90%;">
+					<ul id = "myList" ng-repeat="tool in appCtrl.vizToolOptions">
+       					 <li id = "myListOption" ng-click = "appCtrl.addTool2Menu(tool)">+ {{tool}}</li>
+   					 </ul>
+				</div>
+				
 				<accordion close-others="oneAtATime">
-   					 <accordion-group heading="Scatterplot">
+   					 <accordion-group ng-repeat="sp in appCtrl.scatterplots">
+   					  <accordion-heading>Scatterplot <span style = "padding-left: 50px" class="fa fa-times-circle"></span></accordion-heading>
      					 <scatter-Plot></scatter-Plot>
     				 </accordion-group>
-   					 <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
-     					 {{group.content}}
-    				 </accordion-group>
-   			   		 <accordion-group heading="Dynamic Body Content">
-      					<p>The body of the accordion group grows to fit the contents</p>
-      				 	 <button class="btn btn-small" ng-click="addItem()">Add Item</button>
-       				 <div ng-repeat="item in items">{{item}}</div>
-    				</accordion-group>
+    				 
+   			
  				 </accordion>
 			</div>
 			
@@ -80,38 +84,7 @@
 	            });
         </script>
 		
-		<script type = "text/javascript">
-			angular.module('weaveApp', [ 'ngAnimate',
-			                             'ui.select',
-		                              	 'ui.bootstrap',
-			                             'ngSanitize']);
-			
-			angular.module('weaveApp').controller('appCtrl', appCtrl);
-			appCtrl.$inject = ['$window', '$scope'];
-			function appCtrl($window, $scope){
-				
-				var c = this;
-				 $scope.oneAtATime = true;
-
-				  $scope.groups = [
-				    {
-				      title: "Dynamic Group Header - 1",
-				      content: "Dynamic Group Body - 1"
-				    },
-				    {
-				      title: "Dynamic Group Header - 2",
-				      content: "Dynamic Group Body - 2"
-				    }
-				  ];
-
-				  $scope.items = ['Item 1', 'Item 2', 'Item 3'];
-
-				  $scope.addItem = function() {
-				    var newItemNo = $scope.items.length + 1;
-				    $scope.items.push('Item ' + newItemNo);
-				  };
-			};
-		</script>
+		<script type = "text/javascript" src= "weaveapp.js"></script>
 		<script type= "text/javascript" src="tools/scatterPlot/scatter_plot_directive.js"></script>
 </body>
 </html>

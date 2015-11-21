@@ -95,11 +95,11 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 			else
 				toolName = this.generate_UniqueName("ScatterPlotTool");
 			
-			 WeaveWrapper.weave.path(toolName).request('ScatterPlotTool')
-			.push('children', 'visualization','plotManager', 'plotters', 'plot')
-			.push('dataX').setColumn(tool_config.X.metadata, tool_config.X.dataSourceName)
-			.pop()
-			.push('dataY').setColumn(tool_config.Y.metadata, tool_config.Y.dataSourceName);
+			 WeaveWrapper.weave.path(toolName).request('ScatterPlotTool');
+//			.push('children', 'visualization','plotManager', 'plotters', 'plot')
+//			.push('dataX').setColumn(tool_config.X.metadata, tool_config.X.dataSourceName)
+//			.pop()
+//			.push('dataY').setColumn(tool_config.Y.metadata, tool_config.Y.dataSourceName);
 				
 		}
 		else{//if weave is not ready
