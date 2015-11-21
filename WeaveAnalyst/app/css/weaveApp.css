@@ -29,3 +29,29 @@ body{
 	height: 100%;
 	float:left;
 }
+.optionList{
+    border: solid 1px #619BD4;
+    width: 100%;
+    max-height : 500px;
+    border-radius : 7px;
+    padding : 5px 5px 5px 5px;
+    margin : 0 5px 5px 5px;
+    overflow-y : scroll;
+}
+#myList{
+    list-style-type: none;
+    margin: 5px;
+    line-height: 100%;
+    padding:0;
+}
+
+#myListOption{
+    font-size: 15px;
+    padding:5px;
+}
+
+#myListOption:hover{
+    cursor:pointer;
+    background-color: rgba(12, 99, 207, 0.69);
+    color: #FAFFFE;
+} 

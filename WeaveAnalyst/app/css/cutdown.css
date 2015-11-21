@@ -609,7 +609,7 @@ accordion .panel-heading {
 }
 
 .panel-body {
-	min-height: 310px;
+	min-height: 510px;
 	/*border-bottom: 1px solid #ccc;*/
 	padding: 10px;
 	width: 100%;
@@ -901,7 +901,8 @@ select {
 
 .body {
 	width: 750px;
-	height: calc(100% - 30px);
+/* 	height: calc(100% - 30px); */
+	height: 500px;
 	padding: 5px 5px;
 	background-color: #ffffff;
 	border-color: rgba(255, 255, 255, 0.2);
@@ -1245,7 +1246,7 @@ select {
 }
 
 /* everything to do with the drop down options selector*/
-#optionList{
+.optionList{
     border: solid 1px #619BD4;
     width: 100%;
     max-height : 500px;
@@ -1254,23 +1255,23 @@ select {
     margin : 0 5px 5px 5px;
     overflow-y : scroll;
 }
-/* ul{
+#myList{
     list-style-type: none;
     margin: 5px;
     line-height: 100%;
     padding:0;
 }
 
-ul li{
+#myListOption{
     font-size: 15px;
     padding:5px;
 }
 
-li:hover{
+#myListOption:hover{
     cursor:pointer;
     background-color: rgba(12, 99, 207, 0.69);
     color: #FAFFFE;
-} */
+} 
 
 .searchC{
     width : 95%;
