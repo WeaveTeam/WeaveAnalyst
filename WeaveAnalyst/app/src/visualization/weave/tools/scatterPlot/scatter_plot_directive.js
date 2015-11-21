@@ -59,7 +59,7 @@
 					else
 						return;
 				}
-				
+				//**********for the entry made earlier populate object here (in scatterplot directive)**********/
 				$scope.appCtrl.scatterplots[spCtrl.config.toolName] = spCtrl.config;
 				console.log("scatterplots", $scope.appCtrl.scatterplots);
 			}

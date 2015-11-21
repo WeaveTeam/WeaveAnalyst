@@ -583,6 +583,81 @@ if(!this.wa)
 	
 })();
 /**
+ * controller for the error log that is universal to all tabs
+ * Also includes the service for logging errors
+ */
+(function(){
+	angular.module('weaveAnalyst.errorLog', []);
+	
+	/////////////////////
+	//CONTROLLERS
+	/////////////////////
+	
+	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
+
+	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
+	function analystErrorLogController($modal, errorLogService){
+		var aEl = this;
+		aEl.errorLogService = errorLogService;
+		aEl.openErrorLog = function(){
+			$modal.open(aEl.errorLogService.errorLogModalOptions);
+		};
+	}
+	
+	
+	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
+	errorLogInstanceController.$inject= ['errorLogService'];
+	function errorLogInstanceController(errorLogService){
+		var inst_Ctrl = this;
+		
+		inst_Ctrl.errorLogService = errorLogService;
+	};
+	
+	/////////////////
+	//SERVICES
+	/////////////////
+	
+	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
+	errorLogService.$inject = ['$modal'];
+	
+	function errorLogService ($modal){
+
+		var that = this;
+		that.logs = "";
+		
+		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
+				 backdrop: true,
+		         backdropClick: true,
+		         dialogFade: true,
+		         keyboard: true,
+		         templateUrl: 'src/errorLog/analystErrorLog.html',
+		         controller: 'errorLogInstanceController',
+		         controllerAs : 'inst_Ctrl',
+		         windowClass : 'errorLog-modal'
+			};
+		
+		that.showErrorLog = false;
+		//function to pop open the error log when required
+		that.openErrorLog = function(error){
+			that.logInErrorLog(error);
+			$modal.open(that.errorLogModalOptions);
+		};
+
+		/**
+		 *this is the function that will be used over all tabs to log errors to the error log
+		 *@param the string you want to log to the error log
+		 */
+		that.logInErrorLog = function(error){
+			this.logs += error  + new Date().toLocaleTimeString();
+		};
+		
+	};
+	
+})();//end of IIFE
+
+
+
+/**
  * this directive contains the UI and logic for the correlation Matrix
 @author spurushe
  */
@@ -928,81 +1003,6 @@ if(!this.wa)
 	};
 			
 })();
-/**
- * controller for the error log that is universal to all tabs
- * Also includes the service for logging errors
- */
-(function(){
-	angular.module('weaveAnalyst.errorLog', []);
-	
-	/////////////////////
-	//CONTROLLERS
-	/////////////////////
-	
-	angular.module('weaveAnalyst.errorLog').controller('analystErrorLogController', analystErrorLogController);
-
-	analystErrorLogController.$inject = ['$modal', 'errorLogService'];
-	function analystErrorLogController($modal, errorLogService){
-		var aEl = this;
-		aEl.errorLogService = errorLogService;
-		aEl.openErrorLog = function(){
-			$modal.open(aEl.errorLogService.errorLogModalOptions);
-		};
-	}
-	
-	
-	angular.module('weaveAnalyst.errorLog').controller('errorLogInstanceController', errorLogInstanceController);
-	errorLogInstanceController.$inject= ['errorLogService'];
-	function errorLogInstanceController(errorLogService){
-		var inst_Ctrl = this;
-		
-		inst_Ctrl.errorLogService = errorLogService;
-	};
-	
-	/////////////////
-	//SERVICES
-	/////////////////
-	
-	angular.module('weaveAnalyst.errorLog').service('errorLogService',errorLogService);
-	errorLogService.$inject = ['$modal'];
-	
-	function errorLogService ($modal){
-
-		var that = this;
-		that.logs = "";
-		
-		that.errorLogModalOptions = {//TODO find out how to push error log to bottom of page
-				 backdrop: true,
-		         backdropClick: true,
-		         dialogFade: true,
-		         keyboard: true,
-		         templateUrl: 'src/errorLog/analystErrorLog.html',
-		         controller: 'errorLogInstanceController',
-		         controllerAs : 'inst_Ctrl',
-		         windowClass : 'errorLog-modal'
-			};
-		
-		that.showErrorLog = false;
-		//function to pop open the error log when required
-		that.openErrorLog = function(error){
-			that.logInErrorLog(error);
-			$modal.open(that.errorLogModalOptions);
-		};
-
-		/**
-		 *this is the function that will be used over all tabs to log errors to the error log
-		 *@param the string you want to log to the error log
-		 */
-		that.logInErrorLog = function(error){
-			this.logs += error  + new Date().toLocaleTimeString();
-		};
-		
-	};
-	
-})();//end of IIFE
-
-
-
 /**
  *this tree is an d3 interactive interface for creating the nested query object. 
  *@shwetapurushe
@@ -3520,9 +3520,6 @@ if(!this.wa)
 })();
 
 
-angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
-
-});
 angular.module('weaveAnalyst.AnalysisModule').controller('byVariableCtrl', function(){
 
 }); 
@@ -3791,1559 +3788,9 @@ treeUtils.getSelectedNodes = function(treeId) {
 	return selectedNodes;
 };
 
-/**
- * this service deals with login credentials
- */
-(function (){
-	angular.module('weaveAnalyst.configure.auth', []);
-	
-	//experimenting with another kind of angular provider factory vs service (works!!)
-	angular.module('weaveAnalyst.configure.auth').factory('authenticationService', authenticationService);
-
-	authenticationService.$inject = ['$rootScope', 'runQueryService', 'adminServiceURL'];
-
-	function authenticationService (rootScope, runQueryService, adminServiceURL){
-		var authenticationService = {};
-		authenticationService.user;
-		authenticationService.password;
-		authenticationService.authenticated = false;
-		
-		//make call to server to authenticate
-		 authenticationService.authenticate = function(user, password){
-
-			 runQueryService.queryRequest(adminServiceURL, 'authenticate', [user, password], function(result){
-	    		authenticationService.authenticated = result;
-	          //if accepted
-	            if(authenticationService.authenticated){
-	            	
-	            	authenticationService.user = user;
-	            	authenticationService.password = password;
-	            }
-	            rootScope.$apply();
-	        }.bind(authenticationService));
-	   };
-	   
-	    authenticationService.logout = function(){
-	    	console.log("loggin out");
-	    	//resetting variables
-	    	authenticationService.authenticated = false;
-	    	authenticationService.user = "";
-	    	authenticationService.password = "";
-	    };
-	   
-	   
-	   return authenticationService;
-	};
-})();//end of IIFE
-
-(function(){
-	angular.module('weaveAnalyst.configure.metadata', []);
-	
-	
-	// SOURCE: from stack overflow : http://stackoverflow.com/questions/25531961/angularjs-bootstrap-progressbar-max-changing
-	//adding a decorator that encapsulates the progressbar and bar directives provided by ui-bootstrap
-	angular.module('weaveAnalyst.configure.metadata').config(function($provide){
-		var progressDecorator = function($delegate){//$delegate is the original service instance which is decorated
-			var directive = $delegate[0];
-			var compile = directive.compile;
-			var link = directive.link;
-			
-			directive.compile = function(){
-				compile.apply(this,arguments);
-				
-				return function(scope, elem, attr, ctrl){
-					link.apply(this,arguments);
-					
-					if(angular.isDefined(attr.dynamicMax)){
-						attr.$observe('dynamicMax', function(max) {
-				              scope.max = max;
-			              scope.percent = +(100 * scope.value / max).toFixed(2);
-				        }); 
-				}
-				};
-			};//end of compile function
-			
-			return $delegate;
-		};//end of progressIndicator;
-		
-		//the decorator function decorates the given service while instantiating it and returns the decorated service instance
-		$provide.decorator('progressbarDirective', progressDecorator);
-	    $provide.decorator('barDirective', progressDecorator);
-		
-	});
-	
-
-	angular.module('weaveAnalyst.configure.metadata').controller("MetadataManagerController", MetadataManagerController );	
-	MetadataManagerController.$inject = ['$scope','$rootScope', 'dataServiceURL','queryService', 'authenticationService', 'runQueryService','errorLogService', 'metadataService'];
-	
-	function MetadataManagerController ($scope,$rootScope, dataServiceURL,queryService, authenticationService, runQueryService,errorLogService, metadataService){
-		
-		var mDataCtrl = this;
-		
-		mDataCtrl.queryService = queryService;
-		mDataCtrl.authenticationService = authenticationService;
-		mDataCtrl.metadataService = metadataService;
-		mDataCtrl.selectedDataTableId;//datatable selected by the user
-		
-		mDataCtrl.addNewRow = addNewRow;
-		mDataCtrl.removeRow = removeRow;
-		mDataCtrl.refresh = refresh;
-		
-		$scope.selectedItems = [];
-		var treeData = [];
-
-		//TODO try moving this to the directive controller or to the service
-
-		//generated when the dynatree directive loads
-		$scope.generateTree = function(element) {
-
-				queryService.getDataTableList(true).then(function(dataTableList) {
-					for (var i = 0; i < dataTableList.length; i++) {
-							dataTable = dataTableList[i];
-							treeNode = { title: dataTable.title, key : dataTable.id,
-							children : [], isFolder : true, isLazy : true
-					};
-					treeData.push(treeNode);
-					if( treeData.length == dataTableList.length) {
-						$(element).dynatree({
-							minExpandLevel: 1,
-							children :treeData,
-						keyBoard : true,
-						onPostInit: function(isReloading, isError) {
-									this.reactivate();
-									},
-						onActivate: function(node) {
-							//handling nodes when tables TODO check if handling is done correctly
-							if(!node.data.metadata)
-							{
-						
-								mDataCtrl.selectedDataTableId = parseInt(node.data.key);
-								//clears the grid when nodes are selected
-								mDataCtrl.metadataService.setGridData([]);
-							}
-					
-							//handle when node is a column
-							if(node.data.metadata){
-								mDataCtrl.selectedDataTableId = node.data.id;
-								mDataCtrl.metadataService.getColumnMetadata(node.data);
-							}
-						},
-						//******************************************lazy loading*****************************************************
-						onLazyRead : function(node){
-							var request = {
-							jsonrpc: "2.0",
-							id: "no_id",
-							method : "getEntityChildIds",
-							params : [node.data.key]
-							};
-					
-							node.appendAjax({
-								url : dataServiceURL,
-								data : JSON.stringify(request),
-								type: "POST",
-								dataType : "json",
-								error : function(node, XMLHttpRequest, textStatus, errorThrown)//refer to dynatree documentation
-								{
-									errorLogService.openErrorLog(errorThrown);
-								},
-								success : function(node, status, jqxhr)//this success function is different from the regular ajax success (modified by dynatree)
-								{
-									if(status.error)
-										errorLogService.openErrorLog(status.error.message);
-										
-									if(status.result)
-										{
-											node.removeChildren();
-											var list = status.result;// the actual result from ajax
-											
-											var columnChildren= [];
-											//as soon as ids are returned retrieve their metadata
-											runQueryService.queryRequest(dataServiceURL, 'getEntitiesById', [list], function(columnsWithMetadata){
-												for(var i=0, l=columnsWithMetadata.length; i<l; i++){
-													var singleColumn = columnsWithMetadata[i];
-								                    columnChildren.push({title: singleColumn.publicMetadata.title,
-								                        	id: singleColumn.id,
-								                        	metadata: singleColumn.publicMetadata,
-								                        	addClass : "custom1",// for a particular kind of document representation
-								                        	focus: true});
-								                }
-								                node.setLazyNodeStatus(DTNodeStatus_Ok);//look at dynatree documentation
-								                node.addChild(columnChildren);
-											});
-										}
-									
-								}
-							});
-						},
-						debugLevel: 0
-						});
-					}
-					}
-				});
-		};//controller;
-		
-
-		//$scope.gridOptions = { 
-		//data: 'myData',
-		//enableRowSelection: true,
-		//enableCellEdit: true,
-		//columnDefs: [{field: 'property', displayName: 'Property', enableCellEdit: true}, 
-		//{field:'value', displayName:'Value', enableCellEdit: true}],
-		//multiSelect : false,
-		//selectedItems : $scope.selectedItems
-		//
-		//};
-
-		$scope.$on('ngGridEventEndCellEdit', function(){
-		this.metadataService.updateMetadata(this.metadataService.gridData);
-		});
-
-
-		/**
-		* Editing
-		* function calls for editing a column metadata property
-		*/
-		//adding
-		function addNewRow () {
-			mDataCtrl.metadataService.gridData.push({property: 'Property Name', value: 'Value'});
-			mDataCtrl.metadataService.updateMetadata(mDataCtrl.metadataService.gridData);
-		};
-
-		//deleting
-		function removeRow () {
-			var index = mDataCtrl.metadataService.gridData.indexOf($scope.gridOptions.selectedItems[0]);
-			mDataCtrl.metadataService.gridData.splice(index, 1);
-			mDataCtrl.metadataService.updateMetadata(mDataCtrl.metadataService.gridData);
-		};
-
-
-		//refreshing the hierarchy
-		function refresh () {
-			$("#tree").dynatree("getTree").reload();
-			var node = $("#tree").dynatree("getRoot");
-			node.sortChildren(this.metadataService.cmp, true);
-		};
-
-	};//end of MetadataManagerController
-	
-	
-	
-	/*
-	 *applies metadata standards defined by user in a csv to the selected datatable 
-	 *updates the aws-metadata property of columns in a datatable 
-	 */
-	angular.module('weaveAnalyst.configure.metadata').controller("MetadataFileController",MetadataFileController );	
-	MetadataFileController.$inject = ['$scope', 'queryService', 'authenticationService', 'errorLogService'];
-	
-	function MetadataFileController ($scope, queryService, authenticationService, errorLogService){
-		var mFCtrl = this;
-		
-		mFCtrl.maxTasks= 0;
-		mFCtrl.progressValue = 0;
-		
-		//object representation of the metadata csv uploaded 
-		mFCtrl.metadataUploaded = {
-				file : {
-					filename : "",
-					content :""
-				}
-		};
-		
-		$scope.$watch(function(){
-			return mFCtrl.metadataUploaded.file;
-			}, function(n, o) {
-			if(mFCtrl.metadataUploaded.file.content){
-				
-				/****///this is how you access parent controller instance properties
-				mFCtrl.selectedDataTableId = $scope.mDataCtrl.selectedDataTableId;
-				
-		        	  //metadata file(.csv) uploaded by the user is converted to update the columns
-		           var metadataArray = queryService.CSVToArray(mFCtrl.metadataUploaded.file.content);
-		            
-		    	  if(mFCtrl.selectedDataTableId) {//works only if a selection is made
-		    		  queryService.getDataColumnsEntitiesFromId(mFCtrl.selectedDataTableId, true).then(function(columns) {
-		    			 // console.log("columns", columns);
-		    			  if(columns.length) {//works only if a datatable that contains column children is selected, will not work if a column is selected
-			    				  var end = columns.length;
-			    				  mFCtrl.maxTasks = end;
-			    				  
-		        				  for (var i = 1; i < metadataArray.length; i++) {//starting the loop from index 1 to avoid headers
-		        						var title = metadataArray[i][0];//gets the title of a single column
-		        						
-		        						var metadata = metadataArray[i][1];//gets the metadata to be updated per column
-		        						
-		        						var id;
-		        						for(var j = 0; j < columns.length; j++) {
-		        							if(columns[j].title == title) {
-		        								id = columns[j].id;
-		        								break; // we assume there is only one match
-		        							}
-		        						}
-			        					if(id) {
-			        								//TODO handle columns with missing metadata
-			        								if(!(angular.isUndefined(metadata)))//if a particular column does not have metadata
-			        									metadata = metadata;
-			        								
-			        								
-			        								//updating the column metadata(adding the aws_metadata property to the public metadata) on the server 
-			        								queryService.updateEntity(authenticationService.user, authenticationService.password, id, {publicMetadata :{ 
-			        																												aws_metadata : metadata
-			        																											 }
-			        																							}
-				        							 ).then(function() {
-				        								 mFCtrl.progressValue++;
-				        							 });								
-			        							}
-									 }
-		        			  } else {
-		        				  //if a column is selected
-		        				  errorLogService.openErrorLog("Selected entity is not a table or table does not contain any columns.");
-		        				  console.log("selected entity is not a table or table does not contain any columns.");
-		        			  }
-					  });
-		    	  } else {
-		    		  		errorLogService.openErrorLog("no selected tables");
-							console.log("no selected tables");
-		    	  		};
-	        }
-
-	      }, true);
-		
-		//watch expression to reset the progress bar after the task has been completed
-		 $scope.$watch(function(){
-			return mFCtrl.progressValue;
-		 }, function(){
-			 //console.log("progress", $scope.progressValue);
-			if(mFCtrl.progressValue == mFCtrl.maxTasks) {
-				//console.log("equal");
-				setTimeout(function() {
-					//resetting variables
-					mFCtrl.inProgress = false;
-					mFCtrl.progressValue = 0;
-					mFCtrl.maxTasks = 0;
-					//resetting the uploaded file (because if we repeated upload same file)
-					mFCtrl.metadataUploaded.file.filename = "";
-					mFCtrl.metadataUploaded.file.content = "";
-					
-					$scope.$apply();
-				}, 5000);
-			} else {
-				//console.log("not equal");
-				mFCtrl.inProgress = true;
-			}
-		 });
-	};//end of MetadataFileController
-
-		
-})();//end of IIFE
-
-
-//TODO include diretives in IIFE
-angular.module('weaveAnalyst.configure.metadata').directive('dynatree', function() {
-	return {
-        link: function(scope, element, attrs) {
-        	scope.generateTree(element);
-        }
-   };	
-});
-(function (){
-	
-	angular.module('weaveAnalyst.configure.metadata').service('metadataService', metadataService);
-	
-	metadataService.$inject = ['$q', '$rootScope','queryService', 'authenticationService'];
-	
-	function metadataService($q, rootScope, queryService, authenticationService){
-		
-		var that = this;
-		that.gridData = [];
-		
-		/**
-		  * this function is called whenever the user adds or deletes a column metadata property
-		  * function converts an object into a json string to send to server
-		  */
-		 that.updateMetadata = function(metadata) {
-			 var jsonaws_metadata = angular.toJson(that.convertToMetadataFormat(metadata));
-			 if(angular.isDefined($scope.selectedDataTableId))
-				 {
-							 queryService.updateEntity($scope.authenticationService.user, 
-					 				   $scope.authenticationService.password, 
-					 				   $scope.selectedDataTableId, 
-					 				   { 
-											publicMetadata : { aws_metadata : jsonaws_metadata }
-					 				   }).then(function() {
-					 				   });
-				 }
-			 
-			 alert("Metadata Updated for id : " + $scope.selectedDataTableId);
-		 };
-	 
-		 that.setGridData = function(data) {
-			  that.gridData = data;
-			 // rootScope.$safeApply();
-		 };
-		 
-		 
-		/**
-		 * function that converts a aws-metadata json object into an array of objects that look like this { property:
-		 * 																	 								value : }
-		 * for using in the grid
-		 * */
-		that.convertToTableFormat = function(aws_metadata) {
-			var data = [];
-			for (var key in aws_metadata) {
-				data.push({property : key, value : angular.toJson(aws_metadata[key]) });
-			}
-			return data;
-		};
-		
-
-
-		/**
-		* function that converts a object { property: , value : } into an aws_metadata json object
-		* for updating to the server
-		* */
-		that.convertToMetadataFormat = function (tableData) {
-			var aws_metadata = {};
-			for (var i in tableData) {
-			aws_metadata[tableData[i].property] = angular.fromJson(tableData[i].value);
-			}
-			return aws_metadata;
-		};
-
-
-			
-		/**
-		 * retrieves the metadata for a single column
-		 * */
-		that.getColumnMetadata = function (columnObject) {
-			if(columnObject && columnObject.id) {
-				queryService.getEntitiesById([columnObject.id], true).then(function(entity) {
-						entity = entity[0];
-						if(entity.publicMetadata.hasOwnProperty('aws_metadata')) {
-							var data = [];
-							var aws_metadata = angular.fromJson(entity.publicMetadata.aws_metadata);//converts the json string into an object
-							data = that.convertToTableFormat(aws_metadata);//to use in the grid
-							that.setGridData(data);
-						}
-				});
-			} else {
-					that.setGridData([]);
-			}
-		};
-
-		that.cmp = function(a, b) {
-			key1 = a.data.key;
-			key2 = b.data.key;
-			return key1 > key2 ? 1 : key1 < key2 ? -1 : 0;
-		};		
-	};
-	
-})();//end of IIFE
-angular.module('weaveAnalyst.configure.script', []);
-
-var tryParseJSON = function(jsonString){
-    try {
-        var o = JSON.parse(jsonString);
-
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
-        // so we must check for that, too.
-        if (o && typeof o === "object" && o !== null) {
-            return o;
-        }
-    }
-    catch (e) { }
-
-    return false;
-};
-
-angular.module('weaveAnalyst.configure.script').controller("ScriptManagerCtrl", function() {
-
-
-    
-});
-
-//this controller deals with the script wizard
-angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInstanceCtrl', function () {
-
+angular.module('weaveAnalyst.AnalysisModule').controller('CrossTabCtrl', function() {
 
 });
-angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
-
-}]);
-/**
- * Created by Shweta on 8/5/15.
- * this component represents one ui crumb in the hierarchy
- * TODO import this as bower module from GITHUB
- * */
-var shanti;
-(function (){
-    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
-
-    selectorPillComponent.$inject= [];
-    function selectorPillComponent () {
-        return {
-            restrict: 'E',
-            scope:{
-            	column :'='
-            },
-            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
-            controller: sPillController,
-            controllerAs: 'p_Ctrl',
-            bindToController: true,
-            link: function (scope, elem, attrs) {
-
-            }
-        };//end of directive definition
-    }
-
-    sPillController.$inject = ['$scope', 'WeaveService'];
-    function sPillController (scope, WeaveService){
-       var p_Ctrl = this;
-        p_Ctrl.WeaveService = WeaveService;
-        p_Ctrl.display_Children = display_Children;
-        p_Ctrl.display_Siblings = display_Siblings;
-        p_Ctrl.add_init_Crumb = add_init_Crumb;
-        p_Ctrl.manage_Crumbs = manage_Crumbs;
-        p_Ctrl.populate_Defaults = populate_Defaults;
-        p_Ctrl.get_trail_from_column = get_trail_from_column;
-
-        p_Ctrl.showList = false;
-
-        //is the previously added node in the stack, needed for comparison
-        //structure of each node should be {w_node //actual node ; label: its label}
-        p_Ctrl.weave_node = {};
-        p_Ctrl.crumbTrail = [];
-        p_Ctrl.crumbLog = [];
-
-        shanti = p_Ctrl;
-        scope.$watch('p_Ctrl.column', function(){
-        	if(p_Ctrl.column.defaults)
-        		p_Ctrl.populate_Defaults();
-        });
-        
-        function populate_Defaults (){
-        	//clear existing logs and trails
-        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
-        	//create the new trail starting from the column
-        };
-        
-        function get_trail_from_column (in_column){
-        	var trailObj = {trail : [], logs : []};
-        	
-        	
-        	return trailObj;
-        };
-
-        function manage_Crumbs(i_node){
-            /*1. check if it is the previously added node*/
-            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
-                /*2. check if it in the trail already */
-                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
-                    /* for the very first crumb added; happens only once*/
-                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
-                       // console.log("first WeaveDataSource crumb added...");
-                        p_Ctrl.crumbTrail.push(i_node);
-                        p_Ctrl.crumbLog.push(i_node.label);
-                    }
-                    //remaining iterations
-                    else{
-                        /*3. check if previous crumb in trail is parent*/
-                        var p_name = i_node.w_node.parent.getLabel();
-                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
-                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
-
-                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
-                            /*4. check if a sibling is present after parent */
-                            if(p_Ctrl.crumbTrail[p_ind + 1]){
-                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
-                                var sib_parent_name = sib_node.w_node.parent.getLabel();
-                                if(p_name == sib_parent_name){
-                                    //if yes
-                                    //remove sibling and is trail
-                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
-                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
-                                    //add it
-                                    p_Ctrl.crumbTrail.push(i_node);
-                                    p_Ctrl.crumbLog.push(i_node.label);
-                                    //console.log("replacing sibling and updating ...");
-
-                                }
-                            }
-                            else{
-                                //if no then add
-                                //console.log("new child added after parent...");
-                                p_Ctrl.crumbTrail.push(i_node);
-                                p_Ctrl.crumbLog.push(i_node.label);
-                            }
-                        }
-                        else{}//don't add it anywhere in trail
-                    }
-                }
-                else{}//if it already exists in the trail
-            }
-            else{}// if it is old
-            p_Ctrl.weave_node = i_node;
-
-            //p_Ctrl.toggleList = false;
-            if(i_node.w_node.isBranch()){
-                if(i_node.label == 'WeaveDataSource')
-                    p_Ctrl.showList = false;
-                else{
-                    p_Ctrl.display_Children(i_node);
-                    p_Ctrl.showList = true;
-                }
-            }
-            else
-                p_Ctrl.showList = false;
-        }
-
-
-        //this function adds the data source initial pill, done only once as soon as weave loads
-        function add_init_Crumb (){
-            if(p_Ctrl.WeaveService.request_WeaveTree()){
-                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
-
-                var init_node = {};
-                init_node.label = ds[0].getLabel();
-                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
-                p_Ctrl.manage_Crumbs(init_node);
-                //scope.$apply();//because digest completes by the time the tree root is fetched
-            }
-            else
-                setTimeout(p_Ctrl.add_init_Crumb, 300);
-        }
-
-        function display_Children(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
-        }
-
-        function display_Siblings(i_node){
-            p_Ctrl.showList = true;
-            p_Ctrl.WeaveService.display_Options(i_node);
-        }
-    }
-})();
-/**
- * this is a modified collapsible tree written in d3
- * reference : http://bl.ocks.org/mbostock/4339083
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	//constructor
-	function collapsibleTree (){
-		this._container;
-		this._margin;
-		this._height;
-		this._width;
-		
-		this._root;
-		this._diagnol;
-		this._duration;
-		
-		this._treeSvg;
-		this._tree;
-		this._nodes;
-		this._links;
-		this._i;
-	};
-	
-	var p = collapsibleTree.prototype;
-	window.wa.d3_viz.collapsibleTree = collapsibleTree;
-	
-	//inits the tree initial parameters
-	p.intialize_tree = function(config){
-		
-		this._container = config.container;
-		
-		console.log(config.container.offsetHeight);
-		
-		this._margin = {top: 20, right: 20, bottom: 20, left: 20};
-	    //this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
-	    //this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
-		
-		this._width= 500 - this._margin.right - this._margin.left,
-		this._height = 500 - this._margin.top - this._margin.bottom;
-
-		this._i = 0;
-		this._duration = 750;
-
-		this._tree = d3.layout.tree()
-	    	.size([this._height, this._width]);
-
-		this._diagonal = d3.svg.diagonal()
-	    .projection(function(d) { return [d.x, d.y]; });
-		
-		this._treeSvg = d3.select(this._container).append("svg")
-	    .attr("width", this._width + this._margin.right + this._margin.left)
-	    .attr("height", 1000)
-	    .append("g")
-	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
-		
-		this.create_Root_Node();
-		
-	};
-	
-	//creates the first root node
-	p.create_Root_Node = function(){
-
-		d3.json("src/visualization/d3_viz/flare.json", function(error, flare) {
-		  if (error) throw error;
-
-		  this._root = flare;
-		  this._root.x0 =  this._height / 2;
-		  this._root.y0 = 0;
-
-		  function collapse(d) {
-			    if (d.children) {
-			      d._children = d.children;
-			      d._children.forEach(collapse);
-			      d.children = null;
-			    }
-			  }
-		  
-		  this._root.children.forEach(collapse);
-		  this.update(this._root);
-		}.bind(this));
-
-		d3.select(self.frameElement).style("height", "800px");
-	};
-	
-
-	// Toggle children on click.
-	p.click = function (d){
-	  if (d.children) {
-	    d._children = d.children;
-	    d.children = null;
-	  } else {
-	    d.children = d._children;
-	    d._children = null;
-	  }
-	  this.update(d);
-	};
-	
-	p.update = function(source){
-		
-		var t = this;
-
-		//console.log("this", this);
-		  // Compute the new tree layout.
-		t._nodes = t._tree.nodes(t._root).reverse(),
-		t._links = t._tree.links(t._nodes);
-
-		  // Normalize for fixed-depth.
-		 t._nodes.forEach(function(d) { d.y = d.depth * 180; });
-
-		  // Update the nodes…
-		  var node = t._treeSvg.selectAll("g.node")
-		      .data( t._nodes, function(d) { return d.id || (d.id = ++t._i); });
-
-		  // Enter any new nodes at the parent's previous position.
-		  var nodeEnter = node.enter().append("g")
-		      .attr("class", "node")
-		      .attr("transform", function(d) { return "translate(" + source.x0 + "," + source.y0 + ")"; })
-		      .on("click",function(d){ t.click (d)});
-
-		  nodeEnter.append("circle")
-		      .attr("r", 1e-6)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		  nodeEnter.append("text")
-		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-		      .attr("dy", ".35em")
-		      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-		      .text(function(d) { return d.name; })
-		      .style("fill-opacity", 1e-6);
-
-		// Transition nodes to their new position.
-		  var nodeUpdate = node.transition()
-		      .duration(t._duration)
-		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-
-
-		  nodeUpdate.select("circle")
-		      .attr("r", 4.5)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		  nodeUpdate.select("text")
-		      .style("fill-opacity", 1);
-
-		// Transition exiting nodes to the parent's new position.
-		  var nodeExit = node.exit().transition()
-		      .duration( t._duration)
-		      .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
-		      .remove();
-
-		  nodeExit.select("circle")
-		      .attr("r", 1e-6);
-
-		  nodeExit.select("text")
-		      .style("fill-opacity", 1e-6);
-
-		  // Update the links…
-		  var link =  t._treeSvg.selectAll("path.link")
-		      .data( t._links, function(d) { return d.target.id; });
-
-		  // Enter any new links at the parent's previous position.
-		  link.enter().insert("path", "g")
-		      .attr("class", "link")
-		      .attr("d", function(d) {
-		        var o = {x: source.x0, y: source.y0};
-		        return  t._diagonal({source: o, target: o});
-		      }.bind(this));
-
-		  // Transition links to their new position.
-		  link.transition()
-		      .duration( t._duration)
-		      .attr("d",  t._diagonal);
-
-		  // Transition exiting nodes to the parent's new position.
-		  link.exit().transition()
-		      .duration( t._duration)
-		      .attr("d", function(d) {
-		        var o = {x: source.x, y: source.y};
-		        return  t._diagonal({source: o, target: o});
-		      })
-		      .remove();
-
-		  // Stash the old positions for transition.
-		  this._nodes.forEach(function(d) {
-		    d.x0 = d.x;
-		    d.y0 = d.y;
-		  });
-	};
-})();
-/**
- * this d3 file renders a d3 heat map using different metrics
- * for example correlation matrix etc
- * 
- * @ author spurushe
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function heatMap (){
-		this._container;
-		this._margin;
-		this._width;
-		this._height;
-		this._heatMapSvg;
-		
-		this._colScale;
-		this._rowScale;
-		this._rowObjects;
-		this._rowCells;
-		
-		
-		this._colorRamp;
-		this._colorScale;
-		this._toolTip;
-		
-		this._data;
-		this._labels;
-	};
-	
-	var p = heatMap.prototype;
-	
-	window.wa.d3_viz.heatMap = heatMap;
-	
-	
-	//initializes the heat map 
-	p.initialize_heatMap = function(config){
-		
-		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
-		this._container = config.container;
-		
-		this._width = this._container.offsetWidth - this._margin.left;
-		this._height = this._container.offsetHeight - this._margin.top;
-
-		//original SVG
-		this._heatMapSvg = d3.select(this._container).append("svg")
-			.attr("width", this._width )
-			.attr("height",this._height );
-		
-		this._data = config.data;
-		this._labels = config.labels;
-		
-		  // Scaling Functions
-		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
-
-		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
-
-		//toolTip
-		this._toolTip = d3.select(this._container)
-		.append("div")
-		.style("visibility", "hidden")
-		.attr("class", "toolTip")
-		.text("");
-	};
-	
-	/**
-	 * function to draw a heatmap using a matrix computed in R/STATA
-	 *  dom_element_to_append_to: the HTML element to which the heatmap D3 viz is appended
-	 *  data: the computed matrix   
-	 *  columnTitles required for labeling the matrix
-	 */
-	p.render_heatMap = function(){
-		
-		var hmObj = this;
-		
-		if(!hmObj._heatMapSvg){
-			console.log("Heat Map still initializing");
-			setTimeout(p.render_heatMap, 100);
-		}
-		
-		this.setColor();
-
-		// remove all previous items before render
-	    if(hmObj._heatMapSvg)
-	    	hmObj._heatMapSvg.selectAll('*').remove();
-	    else
-	    	return;
-		
-		
-		//row creation
-	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
-						.data(hmObj._data)
-						.enter().append("svg:g")
-						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
-						.attr("class", "row");
-		
-		//appending text for row
-	    hmObj._rowObjects.append("text")
-	      .attr("x", -1)
-	      .attr("y", function(d, i) { return hmObj._colScale(i); })
-	      .attr("dy", "0.25")
-	      .attr("fill", 'darkOrange')
-	      .attr("text-anchor", "end")
-	      .text(function(d, i) { return hmObj._labels[i]; });
-	    
-
-	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
-		    			.data(function (d,i)
-				    		{ 
-				    			return d.map(function(a) 
-				    				{ 
-				    					return {value: a, row: i};} ) ;
-							})//returning a key function
-			            .enter().append("svg:rect")
-			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
-			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
-			             .attr("width", hmObj._rowScale(1))
-			             .attr("height", hmObj._colScale(1))
-			             .style("fill", function(d) { return hmObj._colorScale(d.value);})
-			             .style('stroke', "black")
-			             .style('stroke-width', 1)
-			             .style('stroke-opacity', 0)
-			             .on('mouseover', function(d){ hmObj._toolTip.style('visibility', 'visible' ).text(d.value); 
-			             							   d3.select(this).style('stroke-opacity', 1);})
-			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
-			             							 d3.select(this).style('stroke-opacity', 0);});
-	    
-	    //TEMPORARY SOLUTION for getting column names
-	    var btm_Label_g = hmObj._rowObjects[0][3];
-	    
-	   console.log("entire g element", btm_Label_g);
-	   console.log("the object", d3.select(btm_Label_g));
-	    
-	   var x = d3.select(btm_Label_g)
-	    .data(hmObj._labels)
-	    .enter()
-	    .append('g');
-	   
-	   
-	   console.log("four gs", x);
-	    
-	    
-//	    .append("text")
-//	    .attr("x", -1)
-//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
-//	    .attr("dy", "0.25")
-//	    .attr("fill", 'darkOrange')
-//	    .text(function(d, i) {
-//	    	console.log(d);
-//	    	return hmObj._labels[i]; });
-	};
-	
-	//sets the color of the heat map
-	p.setColor = function(){//to parameterize color scales
-		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
-
-		this._colorScale = d3.scale.linear()
-		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
-		     .range([colorLow, colorMed, colorHigh]);
-	};
-})();
-
-
-/**
- * code for rendering the d3 map filter tool used in the Weave Analyst
- * @ author spurushe
- * @ author sanjay1909
- */
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function mapTool(){
-		
-		this._zoom;
-		this._centered;
-		this._width;
-		this._height;
-		this._projection;
-		this._path;
-		this._toolTip;
-		
-		
-		this._stateGrp;
-		this._countyGrp;
-		this._counties = {};
-		this._statePaths;
-		this._countyPaths;
-		this._heirarchy;
-		this._stateIdLookup = {};
-		
-		//is a pointer to the geometries after GEO-Jsons are loaded the first time
-		this.cache = {
-				stateTopoGeometries : [],
-				countyTopoGeometries : [],
-				selectedStates : {},
-				selectedCounties : {},
-				US: []
-		};
-		
-		
-		
-	}
-	
-	var p = mapTool.prototype;
-	
-	p.intializeChart = function(config){
-		
-		this._container = config.container;
-		this._margin = config.margin;
-		
-		this._fileName = config.fileName;
-		this._stateFile = config.stateFile;
-		this._countyFile = config.countyFile;
-		
-		this._width = (this._container.offsetWidth) - this._margin.left - this._margin.right;
-		this._height = (this._container.offsetHeight) - this._margin.top - this._margin.bottom;
-	    
-		
-		//original SVG
-		this._mapSvg = d3.select(this._container).append("svg")
-			.attr("width", this._width )
-			.attr("height",this._height );
-		
-		//projection
-		this._projection = d3.geo.albersUsa()
-							 .translate([this._width/2, this._height/2])
-							 .scale([550]);
-		//path generator
-		this._path = d3.geo.path()
-					   .projection(this._projection);
-		
-		this._zoom = d3.behavior.zoom()
-	    .translate(this._projection.translate())
-	    .scale(this._projection.scale())
-	    .scaleExtent([this._height, 8 * this._height])
-	    .on("zoom", this.zoomMap.bind(this));
-		
-		this._toolTip = d3.select(this._container)
-		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
-		.style("visibility", "hidden")
-		.text("")
-		.style("color", "red")
-		.style("font-weight", 'bold');
-		
-		// these updates the map
-		
-	};
-	
-
-	p.zoomMap = function() {
-		  this._projection.translate(d3.event.translate).scale(d3.event.scale);
-		  this._stateGrp.selectAll("path").attr("d", this._path);
-	};
-	
-	/**
-	 * @param heirarchy the hierarchy you want to render at eg State vs country vs county
-	 * @param selectedStates states selected in a previous run
-	 * @param selectedCounties counties selected in a previous run
-	 */
-	p.renderLayer = function(heirarchy, selectedStates, selectedCounties){
-		if(!this._mapSvg){
-			console.log("Chart not initialized yet");
-			return;
-		}
-		
-		
-		this._heirarchy = heirarchy;
-		if(selectedStates)
-			this.cache.selectedStates = selectedStates;
-		if(selectedCounties){
-			this.cache.selectedCounties = selectedCounties;
-		}
-			
-		
-		if(this.cache.US.length == 0)
-		{//first time call
-			this.loadGeoJson(this._fileName,this._heirarchy);
-		}
-		else{
-			if(this._heirarchy == 'State'){//handling state level geometries
-				addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
-				
-			}
-			else if(this._heirarchy == 'County'){ //handling county level
-				if('name' in this.cache.countyTopoGeometries.features[0].properties)//if this property has been assigned add it
-					addCountyLayer.call(this,this.cache.countyTopoGeometries.features);
-				else
-					this.loadCountyLayer(this._countyFile);
-				
-			}
-			
-		}
-	};
-	
-	p.loadGeoJson = function(filename,heirarchy) {		
-		d3.json(filename, function(error, USGeometries){
-			
-			this.cache.US = USGeometries;
-			
-			var states = topojson.feature(USGeometries, USGeometries.objects.states);
-			this.cache.stateTopoGeometries = states;
-			
-			var counties = topojson.feature(USGeometries, USGeometries.objects.counties);
-			this.cache.countyTopoGeometries = counties;
-			
-			if(heirarchy== 'State'){//handling state level geometries
-				this.loadStateLayer(this._stateFile);
-				
-			}
-			else if(heirarchy== 'County'){ //handling county level
-				this.loadCountyLayer(this._countyFile);
-			}
-		}.bind(this));		
-	};
-	
-
-	p.loadStateLayer = function(fileName){
-		d3.csv(fileName, function(state_fips){
-			for(i in state_fips){
-				var fips = parseFloat(state_fips[i].US_STATE_FIPS_CODE);
-				for(j in this.cache.stateTopoGeometries.features){
-					var id = this.cache.stateTopoGeometries.features[j].id;
-					if(fips == id){
-						this.cache.stateTopoGeometries.features[j].properties.name = state_fips[i].NAME10;
-						break;
-					}
-				}//j loop
-			}//i loop
-			addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
-			
-		}.bind(this));//end of csv load
-	};
-	
-	var addStatelayer = function(geometries){
-		//adding map layer
-		
-		this._mapSvg.selectAll("*").remove();
-		
-		this._stateGrp = this._mapSvg.append("g")
-	    .call(this._zoom);
-		
-		this._statePaths = this._stateGrp.selectAll(".path")
-		.data(geometries)
-		.enter()
-		.append("path")
-		.attr("d", this._path)
-		.attr("class", "geometryFill");
-		
-		
-		//handling selections							
-		this._statePaths							
-		.on('click', function(d){
-			console.log("d", d);
-			//if it is selected for the first time
-			if(!(d.id in this.cache.selectedStates)){
-				this.cache.selectedStates[d.id] = { title: d.properties.name };
-			}
-			//if already selected; remove it
-			else{
-				delete this.cache.selectedStates[d.id];
-			}
-			this.selectTheStates(this.cache.selectedStates);
-			
-		}.bind(this))
-		.on('mouseover', function(d){
-				this._toolTip.style('visibility', 'visible' ).text(d.properties.name); 
-			}.bind(this))
-	    .on("mousemove", function(){
-	    	return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
-	    	}.bind(this))
-	    .on('mouseout', function(){ 
-	    	this._toolTip.style('visibility', 'hidden');
-	    	}.bind(this));
-		
-		//this runs if the selected states have already been cached
-		if(Object.keys(this.cache.selectedStates).length != 0)
-		{
-			this.selectTheStates(this.cache.selectedStates);
-		}
-	};
-	
-	p.selectTheStates = function(selectedStates){
-			//TODO it needs improvement
-			//apply the selected class for the selected state
-		
-			this._statePaths.classed('selected', function(d){	
-				if(d.id in selectedStates)
-					d.selected = true;
-				else
-					d.selected = false;
-				return d.selected;
-			});
-			
-		
-	};
-	
-	p.selectTheCounties = function(selectedCounties){
-		this._countyPaths.classed('selected', function(d){
-			if(d.id in selectedCounties)
-				d.selected = true;
-			else
-				d.selected = false;
-			return d.selected;
-		});
-	};
-	
-	
-	p.loadCountyLayer = function(fileNmae){
-		//adding county name property from csv to topojson
-		d3.csv(fileNmae, function(county_fips){
-			
-			for(i in county_fips){
-				var county_fips_code = parseFloat(county_fips[i].FIPS);
-				for(j in this.cache.countyTopoGeometries.features){
-					var id = this.cache.countyTopoGeometries.features[j].id;
-					if(county_fips_code == id){
-						this.cache.countyTopoGeometries.features[j].properties.name = county_fips[i].County_Name;
-						this.cache.countyTopoGeometries.features[j].properties.state = county_fips[i].State_Name;
-						this.cache.countyTopoGeometries.features[j].properties.stateAbbr = county_fips[i].State_Abbr;
-						this.cache.countyTopoGeometries.features[j].properties.stateId = parseFloat(county_fips[i].STFIPS);
-						break;
-					}
-				}//j loop
-			}//i loop
-			
-			addCountyLayer.call(this);
-			
-		}.bind(this));//end of csv load
-	};
-	
-	
-	p.addCountyLayerForState = function(d){
-		if(d)
-			var gElement = this._stateIdLookup[d.id];
-		if( this._stateGrp.clickedState != gElement){
-			var chart = this;
-			var x, y, k;
-			
-			if (d  && this._centered !== d) {
-			    var centroid = this._path.centroid(d);
-			    x = centroid[0];
-			    y = centroid[1];
-			    k = 2;
-			    this._centered = d;
-			    
-			   
-			    //drawing counties in d
-			    var gAr = d3.select(gElement);
-			    this._countyPaths= gAr.selectAll("path")
-			     .data(this.cache.countyTopoGeometries.features)
-			     .enter().append("g")
-			     .filter(function(cd,i){
-			    	 return d.id == cd.properties.stateId;
-			    	
-			     })
-			     .attr("class", "geometryFill");
-			    
-			    
-			    this._countyPaths
-			     .on('click', function(d){
-						var countyObj;
-						// first check county object there for stateID , then check countyID there for that state
-						if(!this.cache.selectedCounties[d.properties.stateId] || !(d.id in this.cache.selectedCounties[d.properties.stateId].counties)){
-							countyObj = this.cache.selectedCounties[d.properties.stateId];
-							if(!countyObj) 
-								countyObj = {title: d.properties.state, state: d.properties.stateId ,counties:{} };
-							countyObj.counties[d.id] = { title: d.properties.name };
-							
-							this.cache.selectedCounties[d.properties.stateId] = countyObj;
-							this._counties[d.id] = d.properties.name;
-						}
-						//if already selected; remove it
-						else{
-							countyObj = this.cache.selectedCounties[d.properties.stateId];
-							if(countyObj){
-								delete this.cache.selectedCounties[d.properties.stateId].counties[d.id];
-								delete chart._counties[d.id];
-							}
-						}
-						if(this.cache.selectedCounties[d.properties.stateId])
-							this.selectTheCounties(this.cache.selectedCounties[d.properties.stateId].counties);
-						
-						
-						
-			     }.bind(this))
-			     .on('mouseover', function(d){
-					 this._toolTip.style('visibility', 'visible' ).text(d.properties.name + " (" + d.properties.stateAbbr + ")"); 
-			     	}.bind(this))
-				 .on("mousemove", function(){
-					 return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
-				 	}.bind(this))
-				 .on('mouseout', function(){
-					 this._toolTip.style('visibility', 'hidden');
-					 }.bind(this))
-			     .append("path")
-			     .attr("d", this._path)
-			     .attr("class", "countyBorders");
-			} 
-			  
-			else { 
-				x = this._width / 2;
-				y = this._height / 2;
-				k = 1;
-				this._centered = null;
-		  
-			}
-
-//			  f.selectAll("path")
-//			      .classed("active", centered && function(d) { return d === centered; });
-
-			this._stateGrp.transition()
-			      .duration(750)
-			      .attr("transform", "translate(" + this._width / 2 + "," + this._height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-			      .style("stroke-width", 1.5 / k + "px");
-			
-			if(d)
-				{
-					if(this.cache.selectedCounties[d.id])
-						this.selectTheCounties(this.cache.selectedCounties[d.id].counties);
-				}
-		}
-		this._stateGrp.clickedState = gElement;
-	};
-	
-	
-	var addCountyLayer = function(geometries){
-		if(this.cache.selectedCounties){
-			for(stateID in this.cache.selectedCounties)
-				for(countyID in this.cache.selectedCounties[stateID].counties)
-					this._counties[countyID] = this.cache.selectedCounties[stateID].counties[countyID];
-		}
-		else
-			this._counties = {};
-		var chart = this;
-		
-		this._mapSvg.selectAll("*").remove();
-		
-		this._mapSvg.append("rect")
-		 .attr("class", "background")
-		 .attr("width", this._width)
-		 .attr("height", this._height)
-		 .on("click", this.addCountyLayerForState.bind(this));
-		
-		this._stateGrp = this._mapSvg.append('g');
-		
-		
-		this._statePaths = this._stateGrp
-		 .append("g")
-		 .attr("id", "states")
-		 .selectAll("g")
-		 .data(this.cache.stateTopoGeometries.features)
-		 .enter();
-		
-		this._statePaths.append("g")
-		.each(function(d){ 
-			chart._stateIdLookup[d.id] = this;
-		})
-		.on('click', this.addCountyLayerForState.bind(this))
-		 .append("path")
-		 .attr("d", this._path); 
-		
-		this._stateGrp.append("path")//just for the borders
-	      .datum(topojson.mesh(this.cache.US, this.cache.US.objects.states, function(a, b) { return a !== b; }))
-	      .attr("id", "state-borders")
-	      .attr("d", this._path);
-		
-		
-		//this runs if the selected states have already been cached
-		if(Object.keys(this.cache.selectedCounties).length != 0)
-		{
-			for(state in this.cache.selectedCounties){
-				for(var i = 0; i < this.cache.stateTopoGeometries.features.length; i++)
-					{
-						if(state == this.cache.stateTopoGeometries.features[i].id)
-							{
-								this.addCountyLayerForState(this.cache.stateTopoGeometries.features[i]);
-								break;
-							}
-					}
-				
-			}
-			
-		}
-	};
-	
-	
-	window.wa.d3_viz.mapTool = mapTool;
-}());
-
-
-/**
- * this renders column distributions of numerical columns using the d3 library
- * @author spurushe 
- */
-
-
-if(!this.wa){
-	this.wa = {};
-}
-
-if(!this.wa.d3_viz){
-	this.wa.d3_viz = {};
-}
-
-(function(){
-	
-	function sparkLine (){
-		this._container;
-		this._svg;
-		
-		this._breaks;
-		this._counts;
-		
-		this._heightScale;
-		this._widthScale;
-		this._width;
-		this._height;
-		this._barWidth;
-		
-		this.toolTip;
-		this._bar;
-	};
-	
-	var p = sparkLine.prototype;
-	window.wa.d3_viz.sparkLine = sparkLine;
-	
-	
-	
-	p.initialze_sparkLine = function(config){
-		
-		this._container = config.container;
-
-		//data
-		this._breaks = config.breaks;
-		this._counts = config.counts;
-		
-		this._margin = {top: 5, right: 5, bottom: 5, left: 5};
-		this._width = config.width; this._height= config.height;
-
-		//scales
-		this._heightScale = d3.scale.linear()
-				  .domain([0, d3.max(this._counts)])
-				  .range([this._height, 0]);//output should be between height and 0
-		
-		this._widthScale = d3.scale.linear()
-						   .domain([0, d3.max(this._breaks)])
-						   .range([0, this._width]);
-		
-		//tooltip
-		this._tooltip = d3.select(this._container)
-		.append("div")
-		.style("position", "absolute")
-		.style("z-index", "10")
-		.style("visibility", "hidden")
-		.text("")
-		.style("color", "red")
-		.style("font-weight", 'bold');
-		
-		this._barWidth = (this._width - this._margin.left - this._margin.right)/this._counts.length;
-		
-		//creating the svgS
-		this._svg = d3.select(this._container).append('svg')
-					  .attr('fill', 'black')
-					  .attr('width', this._width)//svg viewport dynamically generated
-					  .attr('height', this._height )
-					  .append('g')
-					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
-		
-	};
-	
-	
-
-	/**
-	 * this function draws the sparklines computed in R/STATA (one per column)
-	 * @param dom_element_to_append_to :the HTML element to which the sparkline D3 viz is appended
-	 * @param sparklineData : the distribution data calculated in R/STATA
-	 */
-	p.render_sparkLine = function(){
-		var slObj = this;
-		
-		if(!slObj._svg){
-			console.log("Still initializing chart");
-			setTimeout(p.render_sparkLine, 100);
-		}
-	
-		//making one g element per bar 
-		slObj._bar = slObj._svg.selectAll("g")
-	      			   .data(slObj._counts)
-	      			   .enter().append("svg:g")
-	      			   .attr("transform", function(d, i) {  return "translate(" + (i * slObj._barWidth ) + ",0)"; });
-
-		slObj._bar.append("rect")	
-	      .attr("y", function(d) { return slObj._heightScale(d); })
-	      .attr("height", function(d) { return slObj._height - slObj._heightScale(d); })
-	      .attr("width", slObj._barWidth)
-	      .on('mouseover', function(d){ slObj._tooltip.style('visibility', 'visible' ).text(d);   d3.select(this).style('stroke-opacity', 1);})
-          .on("mousemove", function(){return slObj._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-          .on('mouseout', function(){ slObj._tooltip.style('visibility', 'hidden'); 
-			             							 d3.select(this).style('stroke-opacity', 0);});
-	};
-})();
-
 /**
  * 
  */
@@ -5353,19 +3800,25 @@ if(!this.wa.d3_viz){
                               	 'ui.bootstrap',
 	                             'ngSanitize']);
 	
+	
 	angular.module('weaveApp').controller('appController', appController);
 	appController.$inject = ['$window', '$scope'];
+	
 	function appController($window, $scope){
 		var appCtrl = this;
 		appCtrl.vizToolOptions  = ['ScatterPlotTool', 'Barchart', 'DataTable'];
-		appCtrl.manage_Active_Tools = manage_Active_Tools;
-		appCtrl.addTool2Menu = addTool2Menu;
-		appCtrl.showToolList = false;
-		
 		appCtrl.scatterplots = {};
 		appCtrl.datatables = [];
+		var weave_wrapper;
+		var counter= 0;
 		
+		appCtrl.manage_Active_Tools = manage_Active_Tools;
+		appCtrl.addTool2Menu = addTool2Menu;
+		appCtrl.removeToolFromMenu = removeToolFromMenu;
+		appCtrl.initWeaveWrapper = initWeaveWrapper;
+		appCtrl.showToolList = false;
 		
+		appCtrl.initWeaveWrapper();
 		
 		function manage_Active_Tools (toolKey, toolObject, addition){
 			switch (true) {
@@ -5379,27 +3832,36 @@ if(!this.wa.d3_viz){
 			
 		};
 		
+		function initWeaveWrapper(){
+			//TODO put this retrieval in manager class later
+			if(!weaveApp.WeaveWrapper.instance)
+				weave_wrapper = new weaveApp.WeaveWrapper();
+			else
+				weave_wrapper = weaveApp.WeaveWrapper.instance;
+		};
+		
 		function addTool2Menu(tool){
+			counter ++;
 			appCtrl.showToolList = false;
 			var name = tool;
 			var toolKey;
-			var counter = Object.keys(appCtrl.scatterplots).length + 1;
+			
 			if(counter > 1)
 				toolKey = name.concat(counter);
 			else
 				toolKey = name;
+			//*******Empty object added here, object populated in scatter plot directive**********/
 			appCtrl.manage_Active_Tools(toolKey, null, true);
+		}
+		
+		function removeToolFromMenu(tool){
+			appCtrl.manage_Active_Tools(tool.toolName, tool.config, false);//removing tools from widget stack
+			weave_wrapper.remove_Object(tool.toolName);//remove corresponding object from weave session state
 		}
 		
 		
 		 $scope.oneAtATime = true;
 
-		  $scope.items = ['Item 1', 'Item 2', 'Item 3'];
-
-		  $scope.addItem = function() {
-		    var newItemNo = $scope.items.length + 1;
-		    $scope.items.push('Item ' + newItemNo);
-		  };
 	};
 })();
 (function(){
@@ -6600,6 +5062,1559 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 
 })();
 /**
+ * this is a modified collapsible tree written in d3
+ * reference : http://bl.ocks.org/mbostock/4339083
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	//constructor
+	function collapsibleTree (){
+		this._container;
+		this._margin;
+		this._height;
+		this._width;
+		
+		this._root;
+		this._diagnol;
+		this._duration;
+		
+		this._treeSvg;
+		this._tree;
+		this._nodes;
+		this._links;
+		this._i;
+	};
+	
+	var p = collapsibleTree.prototype;
+	window.wa.d3_viz.collapsibleTree = collapsibleTree;
+	
+	//inits the tree initial parameters
+	p.intialize_tree = function(config){
+		
+		this._container = config.container;
+		
+		console.log(config.container.offsetHeight);
+		
+		this._margin = {top: 20, right: 20, bottom: 20, left: 20};
+	    //this._width = this._container.offsetWidth - this._margin.right - this._margin.left,
+	    //this._height = this._container.offsetHeight - this._margin.top - this._margin.bottom;
+		
+		this._width= 500 - this._margin.right - this._margin.left,
+		this._height = 500 - this._margin.top - this._margin.bottom;
+
+		this._i = 0;
+		this._duration = 750;
+
+		this._tree = d3.layout.tree()
+	    	.size([this._height, this._width]);
+
+		this._diagonal = d3.svg.diagonal()
+	    .projection(function(d) { return [d.x, d.y]; });
+		
+		this._treeSvg = d3.select(this._container).append("svg")
+	    .attr("width", this._width + this._margin.right + this._margin.left)
+	    .attr("height", 1000)
+	    .append("g")
+	    .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+		
+		this.create_Root_Node();
+		
+	};
+	
+	//creates the first root node
+	p.create_Root_Node = function(){
+
+		d3.json("src/visualization/d3_viz/flare.json", function(error, flare) {
+		  if (error) throw error;
+
+		  this._root = flare;
+		  this._root.x0 =  this._height / 2;
+		  this._root.y0 = 0;
+
+		  function collapse(d) {
+			    if (d.children) {
+			      d._children = d.children;
+			      d._children.forEach(collapse);
+			      d.children = null;
+			    }
+			  }
+		  
+		  this._root.children.forEach(collapse);
+		  this.update(this._root);
+		}.bind(this));
+
+		d3.select(self.frameElement).style("height", "800px");
+	};
+	
+
+	// Toggle children on click.
+	p.click = function (d){
+	  if (d.children) {
+	    d._children = d.children;
+	    d.children = null;
+	  } else {
+	    d.children = d._children;
+	    d._children = null;
+	  }
+	  this.update(d);
+	};
+	
+	p.update = function(source){
+		
+		var t = this;
+
+		//console.log("this", this);
+		  // Compute the new tree layout.
+		t._nodes = t._tree.nodes(t._root).reverse(),
+		t._links = t._tree.links(t._nodes);
+
+		  // Normalize for fixed-depth.
+		 t._nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+		  // Update the nodes…
+		  var node = t._treeSvg.selectAll("g.node")
+		      .data( t._nodes, function(d) { return d.id || (d.id = ++t._i); });
+
+		  // Enter any new nodes at the parent's previous position.
+		  var nodeEnter = node.enter().append("g")
+		      .attr("class", "node")
+		      .attr("transform", function(d) { return "translate(" + source.x0 + "," + source.y0 + ")"; })
+		      .on("click",function(d){ t.click (d)});
+
+		  nodeEnter.append("circle")
+		      .attr("r", 1e-6)
+		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+		  nodeEnter.append("text")
+		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+		      .attr("dy", ".35em")
+		      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+		      .text(function(d) { return d.name; })
+		      .style("fill-opacity", 1e-6);
+
+		// Transition nodes to their new position.
+		  var nodeUpdate = node.transition()
+		      .duration(t._duration)
+		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+
+		  nodeUpdate.select("circle")
+		      .attr("r", 4.5)
+		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+		  nodeUpdate.select("text")
+		      .style("fill-opacity", 1);
+
+		// Transition exiting nodes to the parent's new position.
+		  var nodeExit = node.exit().transition()
+		      .duration( t._duration)
+		      .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
+		      .remove();
+
+		  nodeExit.select("circle")
+		      .attr("r", 1e-6);
+
+		  nodeExit.select("text")
+		      .style("fill-opacity", 1e-6);
+
+		  // Update the links…
+		  var link =  t._treeSvg.selectAll("path.link")
+		      .data( t._links, function(d) { return d.target.id; });
+
+		  // Enter any new links at the parent's previous position.
+		  link.enter().insert("path", "g")
+		      .attr("class", "link")
+		      .attr("d", function(d) {
+		        var o = {x: source.x0, y: source.y0};
+		        return  t._diagonal({source: o, target: o});
+		      }.bind(this));
+
+		  // Transition links to their new position.
+		  link.transition()
+		      .duration( t._duration)
+		      .attr("d",  t._diagonal);
+
+		  // Transition exiting nodes to the parent's new position.
+		  link.exit().transition()
+		      .duration( t._duration)
+		      .attr("d", function(d) {
+		        var o = {x: source.x, y: source.y};
+		        return  t._diagonal({source: o, target: o});
+		      })
+		      .remove();
+
+		  // Stash the old positions for transition.
+		  this._nodes.forEach(function(d) {
+		    d.x0 = d.x;
+		    d.y0 = d.y;
+		  });
+	};
+})();
+/**
+ * this d3 file renders a d3 heat map using different metrics
+ * for example correlation matrix etc
+ * 
+ * @ author spurushe
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function heatMap (){
+		this._container;
+		this._margin;
+		this._width;
+		this._height;
+		this._heatMapSvg;
+		
+		this._colScale;
+		this._rowScale;
+		this._rowObjects;
+		this._rowCells;
+		
+		
+		this._colorRamp;
+		this._colorScale;
+		this._toolTip;
+		
+		this._data;
+		this._labels;
+	};
+	
+	var p = heatMap.prototype;
+	
+	window.wa.d3_viz.heatMap = heatMap;
+	
+	
+	//initializes the heat map 
+	p.initialize_heatMap = function(config){
+		
+		this._margin =  {top: 10, right: 200, bottom: 50, left: 50};
+		this._container = config.container;
+		
+		this._width = this._container.offsetWidth - this._margin.left;
+		this._height = this._container.offsetHeight - this._margin.top;
+
+		//original SVG
+		this._heatMapSvg = d3.select(this._container).append("svg")
+			.attr("width", this._width )
+			.attr("height",this._height );
+		
+		this._data = config.data;
+		this._labels = config.labels;
+		
+		  // Scaling Functions
+		this._rowScale = d3.scale.linear().range([0, this._width/1.25]).domain([0,this._data.length]);
+
+		this._colScale = d3.scale.linear().range([0, this._height/1.25]).domain([0,this._data.length]);
+
+		//toolTip
+		this._toolTip = d3.select(this._container)
+		.append("div")
+		.style("visibility", "hidden")
+		.attr("class", "toolTip")
+		.text("");
+	};
+	
+	/**
+	 * function to draw a heatmap using a matrix computed in R/STATA
+	 *  dom_element_to_append_to: the HTML element to which the heatmap D3 viz is appended
+	 *  data: the computed matrix   
+	 *  columnTitles required for labeling the matrix
+	 */
+	p.render_heatMap = function(){
+		
+		var hmObj = this;
+		
+		if(!hmObj._heatMapSvg){
+			console.log("Heat Map still initializing");
+			setTimeout(p.render_heatMap, 100);
+		}
+		
+		this.setColor();
+
+		// remove all previous items before render
+	    if(hmObj._heatMapSvg)
+	    	hmObj._heatMapSvg.selectAll('*').remove();
+	    else
+	    	return;
+		
+		
+		//row creation
+	    hmObj._rowObjects = hmObj._heatMapSvg.selectAll(".row")//.row is a predefined grid class
+						.data(hmObj._data)
+						.enter().append("svg:g")
+						.attr("transform", "translate(" + hmObj._margin.right + "," + hmObj._margin.bottom + ")")
+						.attr("class", "row");
+		
+		//appending text for row
+	    hmObj._rowObjects.append("text")
+	      .attr("x", -1)
+	      .attr("y", function(d, i) { return hmObj._colScale(i); })
+	      .attr("dy", "0.25")
+	      .attr("fill", 'darkOrange')
+	      .attr("text-anchor", "end")
+	      .text(function(d, i) { return hmObj._labels[i]; });
+	    
+
+	    hmObj._rowCells = hmObj._rowObjects.selectAll(".cell")
+		    			.data(function (d,i)
+				    		{ 
+				    			return d.map(function(a) 
+				    				{ 
+				    					return {value: a, row: i};} ) ;
+							})//returning a key function
+			            .enter().append("svg:rect")
+			             .attr("x", function(d, i) {  return hmObj._rowScale(i); })
+			             .attr("y", function(d, i) { return hmObj._colScale(d.row); })
+			             .attr("width", hmObj._rowScale(1))
+			             .attr("height", hmObj._colScale(1))
+			             .style("fill", function(d) { return hmObj._colorScale(d.value);})
+			             .style('stroke', "black")
+			             .style('stroke-width', 1)
+			             .style('stroke-opacity', 0)
+			             .on('mouseover', function(d){ hmObj._toolTip.style('visibility', 'visible' ).text(d.value); 
+			             							   d3.select(this).style('stroke-opacity', 1);})
+			             .on("mousemove", function(){return hmObj._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+			             .on('mouseout', function(){ hmObj._toolTip.style('visibility', 'hidden'); 
+			             							 d3.select(this).style('stroke-opacity', 0);});
+	    
+	    //TEMPORARY SOLUTION for getting column names
+	    var btm_Label_g = hmObj._rowObjects[0][3];
+	    
+	   console.log("entire g element", btm_Label_g);
+	   console.log("the object", d3.select(btm_Label_g));
+	    
+	   var x = d3.select(btm_Label_g)
+	    .data(hmObj._labels)
+	    .enter()
+	    .append('g');
+	   
+	   
+	   console.log("four gs", x);
+	    
+	    
+//	    .append("text")
+//	    .attr("x", -1)
+//	    .attr("y", function(d, i) { return hmObj._colScale(i); })
+//	    .attr("dy", "0.25")
+//	    .attr("fill", 'darkOrange')
+//	    .text(function(d, i) {
+//	    	console.log(d);
+//	    	return hmObj._labels[i]; });
+	};
+	
+	//sets the color of the heat map
+	p.setColor = function(){//to parameterize color scales
+		var colorLow = 'green', colorMed = 'yellow', colorHigh = 'red';
+
+		this._colorScale = d3.scale.linear()
+		     .domain([0, 5, 10])//TODO parameterize this according to the matrix  
+		     .range([colorLow, colorMed, colorHigh]);
+	};
+})();
+
+
+/**
+ * code for rendering the d3 map filter tool used in the Weave Analyst
+ * @ author spurushe
+ * @ author sanjay1909
+ */
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function mapTool(){
+		
+		this._zoom;
+		this._centered;
+		this._width;
+		this._height;
+		this._projection;
+		this._path;
+		this._toolTip;
+		
+		
+		this._stateGrp;
+		this._countyGrp;
+		this._counties = {};
+		this._statePaths;
+		this._countyPaths;
+		this._heirarchy;
+		this._stateIdLookup = {};
+		
+		//is a pointer to the geometries after GEO-Jsons are loaded the first time
+		this.cache = {
+				stateTopoGeometries : [],
+				countyTopoGeometries : [],
+				selectedStates : {},
+				selectedCounties : {},
+				US: []
+		};
+		
+		
+		
+	}
+	
+	var p = mapTool.prototype;
+	
+	p.intializeChart = function(config){
+		
+		this._container = config.container;
+		this._margin = config.margin;
+		
+		this._fileName = config.fileName;
+		this._stateFile = config.stateFile;
+		this._countyFile = config.countyFile;
+		
+		this._width = (this._container.offsetWidth) - this._margin.left - this._margin.right;
+		this._height = (this._container.offsetHeight) - this._margin.top - this._margin.bottom;
+	    
+		
+		//original SVG
+		this._mapSvg = d3.select(this._container).append("svg")
+			.attr("width", this._width )
+			.attr("height",this._height );
+		
+		//projection
+		this._projection = d3.geo.albersUsa()
+							 .translate([this._width/2, this._height/2])
+							 .scale([550]);
+		//path generator
+		this._path = d3.geo.path()
+					   .projection(this._projection);
+		
+		this._zoom = d3.behavior.zoom()
+	    .translate(this._projection.translate())
+	    .scale(this._projection.scale())
+	    .scaleExtent([this._height, 8 * this._height])
+	    .on("zoom", this.zoomMap.bind(this));
+		
+		this._toolTip = d3.select(this._container)
+		.append("div")
+		.style("position", "absolute")
+		.style("z-index", "10")
+		.style("visibility", "hidden")
+		.text("")
+		.style("color", "red")
+		.style("font-weight", 'bold');
+		
+		// these updates the map
+		
+	};
+	
+
+	p.zoomMap = function() {
+		  this._projection.translate(d3.event.translate).scale(d3.event.scale);
+		  this._stateGrp.selectAll("path").attr("d", this._path);
+	};
+	
+	/**
+	 * @param heirarchy the hierarchy you want to render at eg State vs country vs county
+	 * @param selectedStates states selected in a previous run
+	 * @param selectedCounties counties selected in a previous run
+	 */
+	p.renderLayer = function(heirarchy, selectedStates, selectedCounties){
+		if(!this._mapSvg){
+			console.log("Chart not initialized yet");
+			return;
+		}
+		
+		
+		this._heirarchy = heirarchy;
+		if(selectedStates)
+			this.cache.selectedStates = selectedStates;
+		if(selectedCounties){
+			this.cache.selectedCounties = selectedCounties;
+		}
+			
+		
+		if(this.cache.US.length == 0)
+		{//first time call
+			this.loadGeoJson(this._fileName,this._heirarchy);
+		}
+		else{
+			if(this._heirarchy == 'State'){//handling state level geometries
+				addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
+				
+			}
+			else if(this._heirarchy == 'County'){ //handling county level
+				if('name' in this.cache.countyTopoGeometries.features[0].properties)//if this property has been assigned add it
+					addCountyLayer.call(this,this.cache.countyTopoGeometries.features);
+				else
+					this.loadCountyLayer(this._countyFile);
+				
+			}
+			
+		}
+	};
+	
+	p.loadGeoJson = function(filename,heirarchy) {		
+		d3.json(filename, function(error, USGeometries){
+			
+			this.cache.US = USGeometries;
+			
+			var states = topojson.feature(USGeometries, USGeometries.objects.states);
+			this.cache.stateTopoGeometries = states;
+			
+			var counties = topojson.feature(USGeometries, USGeometries.objects.counties);
+			this.cache.countyTopoGeometries = counties;
+			
+			if(heirarchy== 'State'){//handling state level geometries
+				this.loadStateLayer(this._stateFile);
+				
+			}
+			else if(heirarchy== 'County'){ //handling county level
+				this.loadCountyLayer(this._countyFile);
+			}
+		}.bind(this));		
+	};
+	
+
+	p.loadStateLayer = function(fileName){
+		d3.csv(fileName, function(state_fips){
+			for(i in state_fips){
+				var fips = parseFloat(state_fips[i].US_STATE_FIPS_CODE);
+				for(j in this.cache.stateTopoGeometries.features){
+					var id = this.cache.stateTopoGeometries.features[j].id;
+					if(fips == id){
+						this.cache.stateTopoGeometries.features[j].properties.name = state_fips[i].NAME10;
+						break;
+					}
+				}//j loop
+			}//i loop
+			addStatelayer.call(this,this.cache.stateTopoGeometries.features);	
+			
+		}.bind(this));//end of csv load
+	};
+	
+	var addStatelayer = function(geometries){
+		//adding map layer
+		
+		this._mapSvg.selectAll("*").remove();
+		
+		this._stateGrp = this._mapSvg.append("g")
+	    .call(this._zoom);
+		
+		this._statePaths = this._stateGrp.selectAll(".path")
+		.data(geometries)
+		.enter()
+		.append("path")
+		.attr("d", this._path)
+		.attr("class", "geometryFill");
+		
+		
+		//handling selections							
+		this._statePaths							
+		.on('click', function(d){
+			console.log("d", d);
+			//if it is selected for the first time
+			if(!(d.id in this.cache.selectedStates)){
+				this.cache.selectedStates[d.id] = { title: d.properties.name };
+			}
+			//if already selected; remove it
+			else{
+				delete this.cache.selectedStates[d.id];
+			}
+			this.selectTheStates(this.cache.selectedStates);
+			
+		}.bind(this))
+		.on('mouseover', function(d){
+				this._toolTip.style('visibility', 'visible' ).text(d.properties.name); 
+			}.bind(this))
+	    .on("mousemove", function(){
+	    	return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+	    	}.bind(this))
+	    .on('mouseout', function(){ 
+	    	this._toolTip.style('visibility', 'hidden');
+	    	}.bind(this));
+		
+		//this runs if the selected states have already been cached
+		if(Object.keys(this.cache.selectedStates).length != 0)
+		{
+			this.selectTheStates(this.cache.selectedStates);
+		}
+	};
+	
+	p.selectTheStates = function(selectedStates){
+			//TODO it needs improvement
+			//apply the selected class for the selected state
+		
+			this._statePaths.classed('selected', function(d){	
+				if(d.id in selectedStates)
+					d.selected = true;
+				else
+					d.selected = false;
+				return d.selected;
+			});
+			
+		
+	};
+	
+	p.selectTheCounties = function(selectedCounties){
+		this._countyPaths.classed('selected', function(d){
+			if(d.id in selectedCounties)
+				d.selected = true;
+			else
+				d.selected = false;
+			return d.selected;
+		});
+	};
+	
+	
+	p.loadCountyLayer = function(fileNmae){
+		//adding county name property from csv to topojson
+		d3.csv(fileNmae, function(county_fips){
+			
+			for(i in county_fips){
+				var county_fips_code = parseFloat(county_fips[i].FIPS);
+				for(j in this.cache.countyTopoGeometries.features){
+					var id = this.cache.countyTopoGeometries.features[j].id;
+					if(county_fips_code == id){
+						this.cache.countyTopoGeometries.features[j].properties.name = county_fips[i].County_Name;
+						this.cache.countyTopoGeometries.features[j].properties.state = county_fips[i].State_Name;
+						this.cache.countyTopoGeometries.features[j].properties.stateAbbr = county_fips[i].State_Abbr;
+						this.cache.countyTopoGeometries.features[j].properties.stateId = parseFloat(county_fips[i].STFIPS);
+						break;
+					}
+				}//j loop
+			}//i loop
+			
+			addCountyLayer.call(this);
+			
+		}.bind(this));//end of csv load
+	};
+	
+	
+	p.addCountyLayerForState = function(d){
+		if(d)
+			var gElement = this._stateIdLookup[d.id];
+		if( this._stateGrp.clickedState != gElement){
+			var chart = this;
+			var x, y, k;
+			
+			if (d  && this._centered !== d) {
+			    var centroid = this._path.centroid(d);
+			    x = centroid[0];
+			    y = centroid[1];
+			    k = 2;
+			    this._centered = d;
+			    
+			   
+			    //drawing counties in d
+			    var gAr = d3.select(gElement);
+			    this._countyPaths= gAr.selectAll("path")
+			     .data(this.cache.countyTopoGeometries.features)
+			     .enter().append("g")
+			     .filter(function(cd,i){
+			    	 return d.id == cd.properties.stateId;
+			    	
+			     })
+			     .attr("class", "geometryFill");
+			    
+			    
+			    this._countyPaths
+			     .on('click', function(d){
+						var countyObj;
+						// first check county object there for stateID , then check countyID there for that state
+						if(!this.cache.selectedCounties[d.properties.stateId] || !(d.id in this.cache.selectedCounties[d.properties.stateId].counties)){
+							countyObj = this.cache.selectedCounties[d.properties.stateId];
+							if(!countyObj) 
+								countyObj = {title: d.properties.state, state: d.properties.stateId ,counties:{} };
+							countyObj.counties[d.id] = { title: d.properties.name };
+							
+							this.cache.selectedCounties[d.properties.stateId] = countyObj;
+							this._counties[d.id] = d.properties.name;
+						}
+						//if already selected; remove it
+						else{
+							countyObj = this.cache.selectedCounties[d.properties.stateId];
+							if(countyObj){
+								delete this.cache.selectedCounties[d.properties.stateId].counties[d.id];
+								delete chart._counties[d.id];
+							}
+						}
+						if(this.cache.selectedCounties[d.properties.stateId])
+							this.selectTheCounties(this.cache.selectedCounties[d.properties.stateId].counties);
+						
+						
+						
+			     }.bind(this))
+			     .on('mouseover', function(d){
+					 this._toolTip.style('visibility', 'visible' ).text(d.properties.name + " (" + d.properties.stateAbbr + ")"); 
+			     	}.bind(this))
+				 .on("mousemove", function(){
+					 return this._toolTip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+				 	}.bind(this))
+				 .on('mouseout', function(){
+					 this._toolTip.style('visibility', 'hidden');
+					 }.bind(this))
+			     .append("path")
+			     .attr("d", this._path)
+			     .attr("class", "countyBorders");
+			} 
+			  
+			else { 
+				x = this._width / 2;
+				y = this._height / 2;
+				k = 1;
+				this._centered = null;
+		  
+			}
+
+//			  f.selectAll("path")
+//			      .classed("active", centered && function(d) { return d === centered; });
+
+			this._stateGrp.transition()
+			      .duration(750)
+			      .attr("transform", "translate(" + this._width / 2 + "," + this._height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+			      .style("stroke-width", 1.5 / k + "px");
+			
+			if(d)
+				{
+					if(this.cache.selectedCounties[d.id])
+						this.selectTheCounties(this.cache.selectedCounties[d.id].counties);
+				}
+		}
+		this._stateGrp.clickedState = gElement;
+	};
+	
+	
+	var addCountyLayer = function(geometries){
+		if(this.cache.selectedCounties){
+			for(stateID in this.cache.selectedCounties)
+				for(countyID in this.cache.selectedCounties[stateID].counties)
+					this._counties[countyID] = this.cache.selectedCounties[stateID].counties[countyID];
+		}
+		else
+			this._counties = {};
+		var chart = this;
+		
+		this._mapSvg.selectAll("*").remove();
+		
+		this._mapSvg.append("rect")
+		 .attr("class", "background")
+		 .attr("width", this._width)
+		 .attr("height", this._height)
+		 .on("click", this.addCountyLayerForState.bind(this));
+		
+		this._stateGrp = this._mapSvg.append('g');
+		
+		
+		this._statePaths = this._stateGrp
+		 .append("g")
+		 .attr("id", "states")
+		 .selectAll("g")
+		 .data(this.cache.stateTopoGeometries.features)
+		 .enter();
+		
+		this._statePaths.append("g")
+		.each(function(d){ 
+			chart._stateIdLookup[d.id] = this;
+		})
+		.on('click', this.addCountyLayerForState.bind(this))
+		 .append("path")
+		 .attr("d", this._path); 
+		
+		this._stateGrp.append("path")//just for the borders
+	      .datum(topojson.mesh(this.cache.US, this.cache.US.objects.states, function(a, b) { return a !== b; }))
+	      .attr("id", "state-borders")
+	      .attr("d", this._path);
+		
+		
+		//this runs if the selected states have already been cached
+		if(Object.keys(this.cache.selectedCounties).length != 0)
+		{
+			for(state in this.cache.selectedCounties){
+				for(var i = 0; i < this.cache.stateTopoGeometries.features.length; i++)
+					{
+						if(state == this.cache.stateTopoGeometries.features[i].id)
+							{
+								this.addCountyLayerForState(this.cache.stateTopoGeometries.features[i]);
+								break;
+							}
+					}
+				
+			}
+			
+		}
+	};
+	
+	
+	window.wa.d3_viz.mapTool = mapTool;
+}());
+
+
+/**
+ * this renders column distributions of numerical columns using the d3 library
+ * @author spurushe 
+ */
+
+
+if(!this.wa){
+	this.wa = {};
+}
+
+if(!this.wa.d3_viz){
+	this.wa.d3_viz = {};
+}
+
+(function(){
+	
+	function sparkLine (){
+		this._container;
+		this._svg;
+		
+		this._breaks;
+		this._counts;
+		
+		this._heightScale;
+		this._widthScale;
+		this._width;
+		this._height;
+		this._barWidth;
+		
+		this.toolTip;
+		this._bar;
+	};
+	
+	var p = sparkLine.prototype;
+	window.wa.d3_viz.sparkLine = sparkLine;
+	
+	
+	
+	p.initialze_sparkLine = function(config){
+		
+		this._container = config.container;
+
+		//data
+		this._breaks = config.breaks;
+		this._counts = config.counts;
+		
+		this._margin = {top: 5, right: 5, bottom: 5, left: 5};
+		this._width = config.width; this._height= config.height;
+
+		//scales
+		this._heightScale = d3.scale.linear()
+				  .domain([0, d3.max(this._counts)])
+				  .range([this._height, 0]);//output should be between height and 0
+		
+		this._widthScale = d3.scale.linear()
+						   .domain([0, d3.max(this._breaks)])
+						   .range([0, this._width]);
+		
+		//tooltip
+		this._tooltip = d3.select(this._container)
+		.append("div")
+		.style("position", "absolute")
+		.style("z-index", "10")
+		.style("visibility", "hidden")
+		.text("")
+		.style("color", "red")
+		.style("font-weight", 'bold');
+		
+		this._barWidth = (this._width - this._margin.left - this._margin.right)/this._counts.length;
+		
+		//creating the svgS
+		this._svg = d3.select(this._container).append('svg')
+					  .attr('fill', 'black')
+					  .attr('width', this._width)//svg viewport dynamically generated
+					  .attr('height', this._height )
+					  .append('g')
+					  .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+		
+	};
+	
+	
+
+	/**
+	 * this function draws the sparklines computed in R/STATA (one per column)
+	 * @param dom_element_to_append_to :the HTML element to which the sparkline D3 viz is appended
+	 * @param sparklineData : the distribution data calculated in R/STATA
+	 */
+	p.render_sparkLine = function(){
+		var slObj = this;
+		
+		if(!slObj._svg){
+			console.log("Still initializing chart");
+			setTimeout(p.render_sparkLine, 100);
+		}
+	
+		//making one g element per bar 
+		slObj._bar = slObj._svg.selectAll("g")
+	      			   .data(slObj._counts)
+	      			   .enter().append("svg:g")
+	      			   .attr("transform", function(d, i) {  return "translate(" + (i * slObj._barWidth ) + ",0)"; });
+
+		slObj._bar.append("rect")	
+	      .attr("y", function(d) { return slObj._heightScale(d); })
+	      .attr("height", function(d) { return slObj._height - slObj._heightScale(d); })
+	      .attr("width", slObj._barWidth)
+	      .on('mouseover', function(d){ slObj._tooltip.style('visibility', 'visible' ).text(d);   d3.select(this).style('stroke-opacity', 1);})
+          .on("mousemove", function(){return slObj._tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+          .on('mouseout', function(){ slObj._tooltip.style('visibility', 'hidden'); 
+			             							 d3.select(this).style('stroke-opacity', 0);});
+	};
+})();
+
+/**
+ * Created by Shweta on 8/5/15.
+ * this component represents one ui crumb in the hierarchy
+ * TODO import this as bower module from GITHUB
+ * */
+var shanti;
+(function (){
+    angular.module('weaveAnalyst.utils').directive('crumbSelector', selectorPillComponent);
+
+    selectorPillComponent.$inject= [];
+    function selectorPillComponent () {
+        return {
+            restrict: 'E',
+            scope:{
+            	column :'='
+            },
+            templateUrl:"src/utils/crumbs/crumbPartial.html" ,
+            controller: sPillController,
+            controllerAs: 'p_Ctrl',
+            bindToController: true,
+            link: function (scope, elem, attrs) {
+
+            }
+        };//end of directive definition
+    }
+
+    sPillController.$inject = ['$scope', 'WeaveService'];
+    function sPillController (scope, WeaveService){
+       var p_Ctrl = this;
+        p_Ctrl.WeaveService = WeaveService;
+        p_Ctrl.display_Children = display_Children;
+        p_Ctrl.display_Siblings = display_Siblings;
+        p_Ctrl.add_init_Crumb = add_init_Crumb;
+        p_Ctrl.manage_Crumbs = manage_Crumbs;
+        p_Ctrl.populate_Defaults = populate_Defaults;
+        p_Ctrl.get_trail_from_column = get_trail_from_column;
+
+        p_Ctrl.showList = false;
+
+        //is the previously added node in the stack, needed for comparison
+        //structure of each node should be {w_node //actual node ; label: its label}
+        p_Ctrl.weave_node = {};
+        p_Ctrl.crumbTrail = [];
+        p_Ctrl.crumbLog = [];
+
+        shanti = p_Ctrl;
+        scope.$watch('p_Ctrl.column', function(){
+        	if(p_Ctrl.column.defaults)
+        		p_Ctrl.populate_Defaults();
+        });
+        
+        function populate_Defaults (){
+        	//clear existing logs and trails
+        	p_Ctrl.crumbLog = []; p_Ctrl.crumbTrail = [];
+        	//create the new trail starting from the column
+        };
+        
+        function get_trail_from_column (in_column){
+        	var trailObj = {trail : [], logs : []};
+        	
+        	
+        	return trailObj;
+        };
+
+        function manage_Crumbs(i_node){
+            /*1. check if it is the previously added node*/
+            if(i_node.label != p_Ctrl.weave_node.label && p_Ctrl.weave_node) {//proceed only if it is new
+                /*2. check if it in the trail already */
+                if($.inArray(i_node.label, p_Ctrl.crumbLog) == -1) {//proceed if it is new
+                    /* for the very first crumb added; happens only once*/
+                    if(!p_Ctrl.crumbTrail.length && !p_Ctrl.crumbLog.length){
+                       // console.log("first WeaveDataSource crumb added...");
+                        p_Ctrl.crumbTrail.push(i_node);
+                        p_Ctrl.crumbLog.push(i_node.label);
+                    }
+                    //remaining iterations
+                    else{
+                        /*3. check if previous crumb in trail is parent*/
+                        var p_name = i_node.w_node.parent.getLabel();
+                        var p_ind = p_Ctrl.crumbLog.indexOf(p_name);
+                        var trail_parent = p_Ctrl.crumbTrail[p_ind].label;
+
+                        if(p_name == trail_parent) {//proceed only if previous one in trail is parent
+                            /*4. check if a sibling is present after parent */
+                            if(p_Ctrl.crumbTrail[p_ind + 1]){
+                                var sib_node = p_Ctrl.crumbTrail[p_ind + 1];
+                                var sib_parent_name = sib_node.w_node.parent.getLabel();
+                                if(p_name == sib_parent_name){
+                                    //if yes
+                                    //remove sibling and is trail
+                                    p_Ctrl.crumbTrail.splice(p_ind+1, Number.MAX_VALUE);
+                                    p_Ctrl.crumbLog.splice(p_ind+1, Number.MAX_VALUE);
+                                    //add it
+                                    p_Ctrl.crumbTrail.push(i_node);
+                                    p_Ctrl.crumbLog.push(i_node.label);
+                                    //console.log("replacing sibling and updating ...");
+
+                                }
+                            }
+                            else{
+                                //if no then add
+                                //console.log("new child added after parent...");
+                                p_Ctrl.crumbTrail.push(i_node);
+                                p_Ctrl.crumbLog.push(i_node.label);
+                            }
+                        }
+                        else{}//don't add it anywhere in trail
+                    }
+                }
+                else{}//if it already exists in the trail
+            }
+            else{}// if it is old
+            p_Ctrl.weave_node = i_node;
+
+            //p_Ctrl.toggleList = false;
+            if(i_node.w_node.isBranch()){
+                if(i_node.label == 'WeaveDataSource')
+                    p_Ctrl.showList = false;
+                else{
+                    p_Ctrl.display_Children(i_node);
+                    p_Ctrl.showList = true;
+                }
+            }
+            else
+                p_Ctrl.showList = false;
+        }
+
+
+        //this function adds the data source initial pill, done only once as soon as weave loads
+        function add_init_Crumb (){
+            if(p_Ctrl.WeaveService.request_WeaveTree()){
+                var ds = p_Ctrl.WeaveService.weave_Tree.getChildren();
+
+                var init_node = {};
+                init_node.label = ds[0].getLabel();
+                init_node.w_node= ds[0];//starting with the WeaveDataSource Pill
+                p_Ctrl.manage_Crumbs(init_node);
+                //scope.$apply();//because digest completes by the time the tree root is fetched
+            }
+            else
+                setTimeout(p_Ctrl.add_init_Crumb, 300);
+        }
+
+        function display_Children(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node, true);//using the actual node
+        }
+
+        function display_Siblings(i_node){
+            p_Ctrl.showList = true;
+            p_Ctrl.WeaveService.display_Options(i_node);
+        }
+    }
+})();
+/**
+ * this service deals with login credentials
+ */
+(function (){
+	angular.module('weaveAnalyst.configure.auth', []);
+	
+	//experimenting with another kind of angular provider factory vs service (works!!)
+	angular.module('weaveAnalyst.configure.auth').factory('authenticationService', authenticationService);
+
+	authenticationService.$inject = ['$rootScope', 'runQueryService', 'adminServiceURL'];
+
+	function authenticationService (rootScope, runQueryService, adminServiceURL){
+		var authenticationService = {};
+		authenticationService.user;
+		authenticationService.password;
+		authenticationService.authenticated = false;
+		
+		//make call to server to authenticate
+		 authenticationService.authenticate = function(user, password){
+
+			 runQueryService.queryRequest(adminServiceURL, 'authenticate', [user, password], function(result){
+	    		authenticationService.authenticated = result;
+	          //if accepted
+	            if(authenticationService.authenticated){
+	            	
+	            	authenticationService.user = user;
+	            	authenticationService.password = password;
+	            }
+	            rootScope.$apply();
+	        }.bind(authenticationService));
+	   };
+	   
+	    authenticationService.logout = function(){
+	    	console.log("loggin out");
+	    	//resetting variables
+	    	authenticationService.authenticated = false;
+	    	authenticationService.user = "";
+	    	authenticationService.password = "";
+	    };
+	   
+	   
+	   return authenticationService;
+	};
+})();//end of IIFE
+
+(function(){
+	angular.module('weaveAnalyst.configure.metadata', []);
+	
+	
+	// SOURCE: from stack overflow : http://stackoverflow.com/questions/25531961/angularjs-bootstrap-progressbar-max-changing
+	//adding a decorator that encapsulates the progressbar and bar directives provided by ui-bootstrap
+	angular.module('weaveAnalyst.configure.metadata').config(function($provide){
+		var progressDecorator = function($delegate){//$delegate is the original service instance which is decorated
+			var directive = $delegate[0];
+			var compile = directive.compile;
+			var link = directive.link;
+			
+			directive.compile = function(){
+				compile.apply(this,arguments);
+				
+				return function(scope, elem, attr, ctrl){
+					link.apply(this,arguments);
+					
+					if(angular.isDefined(attr.dynamicMax)){
+						attr.$observe('dynamicMax', function(max) {
+				              scope.max = max;
+			              scope.percent = +(100 * scope.value / max).toFixed(2);
+				        }); 
+				}
+				};
+			};//end of compile function
+			
+			return $delegate;
+		};//end of progressIndicator;
+		
+		//the decorator function decorates the given service while instantiating it and returns the decorated service instance
+		$provide.decorator('progressbarDirective', progressDecorator);
+	    $provide.decorator('barDirective', progressDecorator);
+		
+	});
+	
+
+	angular.module('weaveAnalyst.configure.metadata').controller("MetadataManagerController", MetadataManagerController );	
+	MetadataManagerController.$inject = ['$scope','$rootScope', 'dataServiceURL','queryService', 'authenticationService', 'runQueryService','errorLogService', 'metadataService'];
+	
+	function MetadataManagerController ($scope,$rootScope, dataServiceURL,queryService, authenticationService, runQueryService,errorLogService, metadataService){
+		
+		var mDataCtrl = this;
+		
+		mDataCtrl.queryService = queryService;
+		mDataCtrl.authenticationService = authenticationService;
+		mDataCtrl.metadataService = metadataService;
+		mDataCtrl.selectedDataTableId;//datatable selected by the user
+		
+		mDataCtrl.addNewRow = addNewRow;
+		mDataCtrl.removeRow = removeRow;
+		mDataCtrl.refresh = refresh;
+		
+		$scope.selectedItems = [];
+		var treeData = [];
+
+		//TODO try moving this to the directive controller or to the service
+
+		//generated when the dynatree directive loads
+		$scope.generateTree = function(element) {
+
+				queryService.getDataTableList(true).then(function(dataTableList) {
+					for (var i = 0; i < dataTableList.length; i++) {
+							dataTable = dataTableList[i];
+							treeNode = { title: dataTable.title, key : dataTable.id,
+							children : [], isFolder : true, isLazy : true
+					};
+					treeData.push(treeNode);
+					if( treeData.length == dataTableList.length) {
+						$(element).dynatree({
+							minExpandLevel: 1,
+							children :treeData,
+						keyBoard : true,
+						onPostInit: function(isReloading, isError) {
+									this.reactivate();
+									},
+						onActivate: function(node) {
+							//handling nodes when tables TODO check if handling is done correctly
+							if(!node.data.metadata)
+							{
+						
+								mDataCtrl.selectedDataTableId = parseInt(node.data.key);
+								//clears the grid when nodes are selected
+								mDataCtrl.metadataService.setGridData([]);
+							}
+					
+							//handle when node is a column
+							if(node.data.metadata){
+								mDataCtrl.selectedDataTableId = node.data.id;
+								mDataCtrl.metadataService.getColumnMetadata(node.data);
+							}
+						},
+						//******************************************lazy loading*****************************************************
+						onLazyRead : function(node){
+							var request = {
+							jsonrpc: "2.0",
+							id: "no_id",
+							method : "getEntityChildIds",
+							params : [node.data.key]
+							};
+					
+							node.appendAjax({
+								url : dataServiceURL,
+								data : JSON.stringify(request),
+								type: "POST",
+								dataType : "json",
+								error : function(node, XMLHttpRequest, textStatus, errorThrown)//refer to dynatree documentation
+								{
+									errorLogService.openErrorLog(errorThrown);
+								},
+								success : function(node, status, jqxhr)//this success function is different from the regular ajax success (modified by dynatree)
+								{
+									if(status.error)
+										errorLogService.openErrorLog(status.error.message);
+										
+									if(status.result)
+										{
+											node.removeChildren();
+											var list = status.result;// the actual result from ajax
+											
+											var columnChildren= [];
+											//as soon as ids are returned retrieve their metadata
+											runQueryService.queryRequest(dataServiceURL, 'getEntitiesById', [list], function(columnsWithMetadata){
+												for(var i=0, l=columnsWithMetadata.length; i<l; i++){
+													var singleColumn = columnsWithMetadata[i];
+								                    columnChildren.push({title: singleColumn.publicMetadata.title,
+								                        	id: singleColumn.id,
+								                        	metadata: singleColumn.publicMetadata,
+								                        	addClass : "custom1",// for a particular kind of document representation
+								                        	focus: true});
+								                }
+								                node.setLazyNodeStatus(DTNodeStatus_Ok);//look at dynatree documentation
+								                node.addChild(columnChildren);
+											});
+										}
+									
+								}
+							});
+						},
+						debugLevel: 0
+						});
+					}
+					}
+				});
+		};//controller;
+		
+
+		//$scope.gridOptions = { 
+		//data: 'myData',
+		//enableRowSelection: true,
+		//enableCellEdit: true,
+		//columnDefs: [{field: 'property', displayName: 'Property', enableCellEdit: true}, 
+		//{field:'value', displayName:'Value', enableCellEdit: true}],
+		//multiSelect : false,
+		//selectedItems : $scope.selectedItems
+		//
+		//};
+
+		$scope.$on('ngGridEventEndCellEdit', function(){
+		this.metadataService.updateMetadata(this.metadataService.gridData);
+		});
+
+
+		/**
+		* Editing
+		* function calls for editing a column metadata property
+		*/
+		//adding
+		function addNewRow () {
+			mDataCtrl.metadataService.gridData.push({property: 'Property Name', value: 'Value'});
+			mDataCtrl.metadataService.updateMetadata(mDataCtrl.metadataService.gridData);
+		};
+
+		//deleting
+		function removeRow () {
+			var index = mDataCtrl.metadataService.gridData.indexOf($scope.gridOptions.selectedItems[0]);
+			mDataCtrl.metadataService.gridData.splice(index, 1);
+			mDataCtrl.metadataService.updateMetadata(mDataCtrl.metadataService.gridData);
+		};
+
+
+		//refreshing the hierarchy
+		function refresh () {
+			$("#tree").dynatree("getTree").reload();
+			var node = $("#tree").dynatree("getRoot");
+			node.sortChildren(this.metadataService.cmp, true);
+		};
+
+	};//end of MetadataManagerController
+	
+	
+	
+	/*
+	 *applies metadata standards defined by user in a csv to the selected datatable 
+	 *updates the aws-metadata property of columns in a datatable 
+	 */
+	angular.module('weaveAnalyst.configure.metadata').controller("MetadataFileController",MetadataFileController );	
+	MetadataFileController.$inject = ['$scope', 'queryService', 'authenticationService', 'errorLogService'];
+	
+	function MetadataFileController ($scope, queryService, authenticationService, errorLogService){
+		var mFCtrl = this;
+		
+		mFCtrl.maxTasks= 0;
+		mFCtrl.progressValue = 0;
+		
+		//object representation of the metadata csv uploaded 
+		mFCtrl.metadataUploaded = {
+				file : {
+					filename : "",
+					content :""
+				}
+		};
+		
+		$scope.$watch(function(){
+			return mFCtrl.metadataUploaded.file;
+			}, function(n, o) {
+			if(mFCtrl.metadataUploaded.file.content){
+				
+				/****///this is how you access parent controller instance properties
+				mFCtrl.selectedDataTableId = $scope.mDataCtrl.selectedDataTableId;
+				
+		        	  //metadata file(.csv) uploaded by the user is converted to update the columns
+		           var metadataArray = queryService.CSVToArray(mFCtrl.metadataUploaded.file.content);
+		            
+		    	  if(mFCtrl.selectedDataTableId) {//works only if a selection is made
+		    		  queryService.getDataColumnsEntitiesFromId(mFCtrl.selectedDataTableId, true).then(function(columns) {
+		    			 // console.log("columns", columns);
+		    			  if(columns.length) {//works only if a datatable that contains column children is selected, will not work if a column is selected
+			    				  var end = columns.length;
+			    				  mFCtrl.maxTasks = end;
+			    				  
+		        				  for (var i = 1; i < metadataArray.length; i++) {//starting the loop from index 1 to avoid headers
+		        						var title = metadataArray[i][0];//gets the title of a single column
+		        						
+		        						var metadata = metadataArray[i][1];//gets the metadata to be updated per column
+		        						
+		        						var id;
+		        						for(var j = 0; j < columns.length; j++) {
+		        							if(columns[j].title == title) {
+		        								id = columns[j].id;
+		        								break; // we assume there is only one match
+		        							}
+		        						}
+			        					if(id) {
+			        								//TODO handle columns with missing metadata
+			        								if(!(angular.isUndefined(metadata)))//if a particular column does not have metadata
+			        									metadata = metadata;
+			        								
+			        								
+			        								//updating the column metadata(adding the aws_metadata property to the public metadata) on the server 
+			        								queryService.updateEntity(authenticationService.user, authenticationService.password, id, {publicMetadata :{ 
+			        																												aws_metadata : metadata
+			        																											 }
+			        																							}
+				        							 ).then(function() {
+				        								 mFCtrl.progressValue++;
+				        							 });								
+			        							}
+									 }
+		        			  } else {
+		        				  //if a column is selected
+		        				  errorLogService.openErrorLog("Selected entity is not a table or table does not contain any columns.");
+		        				  console.log("selected entity is not a table or table does not contain any columns.");
+		        			  }
+					  });
+		    	  } else {
+		    		  		errorLogService.openErrorLog("no selected tables");
+							console.log("no selected tables");
+		    	  		};
+	        }
+
+	      }, true);
+		
+		//watch expression to reset the progress bar after the task has been completed
+		 $scope.$watch(function(){
+			return mFCtrl.progressValue;
+		 }, function(){
+			 //console.log("progress", $scope.progressValue);
+			if(mFCtrl.progressValue == mFCtrl.maxTasks) {
+				//console.log("equal");
+				setTimeout(function() {
+					//resetting variables
+					mFCtrl.inProgress = false;
+					mFCtrl.progressValue = 0;
+					mFCtrl.maxTasks = 0;
+					//resetting the uploaded file (because if we repeated upload same file)
+					mFCtrl.metadataUploaded.file.filename = "";
+					mFCtrl.metadataUploaded.file.content = "";
+					
+					$scope.$apply();
+				}, 5000);
+			} else {
+				//console.log("not equal");
+				mFCtrl.inProgress = true;
+			}
+		 });
+	};//end of MetadataFileController
+
+		
+})();//end of IIFE
+
+
+//TODO include diretives in IIFE
+angular.module('weaveAnalyst.configure.metadata').directive('dynatree', function() {
+	return {
+        link: function(scope, element, attrs) {
+        	scope.generateTree(element);
+        }
+   };	
+});
+(function (){
+	
+	angular.module('weaveAnalyst.configure.metadata').service('metadataService', metadataService);
+	
+	metadataService.$inject = ['$q', '$rootScope','queryService', 'authenticationService'];
+	
+	function metadataService($q, rootScope, queryService, authenticationService){
+		
+		var that = this;
+		that.gridData = [];
+		
+		/**
+		  * this function is called whenever the user adds or deletes a column metadata property
+		  * function converts an object into a json string to send to server
+		  */
+		 that.updateMetadata = function(metadata) {
+			 var jsonaws_metadata = angular.toJson(that.convertToMetadataFormat(metadata));
+			 if(angular.isDefined($scope.selectedDataTableId))
+				 {
+							 queryService.updateEntity($scope.authenticationService.user, 
+					 				   $scope.authenticationService.password, 
+					 				   $scope.selectedDataTableId, 
+					 				   { 
+											publicMetadata : { aws_metadata : jsonaws_metadata }
+					 				   }).then(function() {
+					 				   });
+				 }
+			 
+			 alert("Metadata Updated for id : " + $scope.selectedDataTableId);
+		 };
+	 
+		 that.setGridData = function(data) {
+			  that.gridData = data;
+			 // rootScope.$safeApply();
+		 };
+		 
+		 
+		/**
+		 * function that converts a aws-metadata json object into an array of objects that look like this { property:
+		 * 																	 								value : }
+		 * for using in the grid
+		 * */
+		that.convertToTableFormat = function(aws_metadata) {
+			var data = [];
+			for (var key in aws_metadata) {
+				data.push({property : key, value : angular.toJson(aws_metadata[key]) });
+			}
+			return data;
+		};
+		
+
+
+		/**
+		* function that converts a object { property: , value : } into an aws_metadata json object
+		* for updating to the server
+		* */
+		that.convertToMetadataFormat = function (tableData) {
+			var aws_metadata = {};
+			for (var i in tableData) {
+			aws_metadata[tableData[i].property] = angular.fromJson(tableData[i].value);
+			}
+			return aws_metadata;
+		};
+
+
+			
+		/**
+		 * retrieves the metadata for a single column
+		 * */
+		that.getColumnMetadata = function (columnObject) {
+			if(columnObject && columnObject.id) {
+				queryService.getEntitiesById([columnObject.id], true).then(function(entity) {
+						entity = entity[0];
+						if(entity.publicMetadata.hasOwnProperty('aws_metadata')) {
+							var data = [];
+							var aws_metadata = angular.fromJson(entity.publicMetadata.aws_metadata);//converts the json string into an object
+							data = that.convertToTableFormat(aws_metadata);//to use in the grid
+							that.setGridData(data);
+						}
+				});
+			} else {
+					that.setGridData([]);
+			}
+		};
+
+		that.cmp = function(a, b) {
+			key1 = a.data.key;
+			key2 = b.data.key;
+			return key1 > key2 ? 1 : key1 < key2 ? -1 : 0;
+		};		
+	};
+	
+})();//end of IIFE
+angular.module('weaveAnalyst.configure.script', []);
+
+var tryParseJSON = function(jsonString){
+    try {
+        var o = JSON.parse(jsonString);
+
+        // Handle non-exception-throwing cases:
+        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+        // but... JSON.parse(null) returns 'null', and typeof null === "object", 
+        // so we must check for that, too.
+        if (o && typeof o === "object" && o !== null) {
+            return o;
+        }
+    }
+    catch (e) { }
+
+    return false;
+};
+
+angular.module('weaveAnalyst.configure.script').controller("ScriptManagerCtrl", function() {
+
+
+    
+});
+
+//this controller deals with the script wizard
+angular.module('weaveAnalyst.configure.script').controller('AddScriptDialogInstanceCtrl', function () {
+
+
+});
+angular.module('weaveAnalyst.configure.script').service("scriptManagerService", [ function() {
+
+}]);
+/**
  * controls the attribute menu visualization tool  widget
  */
 (function(){
@@ -6649,6 +6664,70 @@ if(!this.weaveApp)//the this refers to the weaveApp window object here
 		};
 	}
 })();
+/**
+ * directive that creates the AdvancedTable tool widget
+ * controls the Advanced Table in Weave
+ * @spurushe
+ */
+
+(function(){
+	angular.module('weaveApp').directive('dataTable', dataTable );
+	
+	function dataTable(){
+		return {
+			restrict : 'E',
+			templateUrl : 'tools/dataTable/data_table.tpl.html',
+			controller : dataTableController,
+			controllerAs : 'dtCtrl',
+			bindToController : true,
+			link : function(){
+				
+			}
+		};
+	}//end of directive definition
+	
+	function dataTableController (){
+		var dtCtrl = this;
+		var weave_wrapper;
+		
+		dtCtrl.request_dataTable = request_dataTable;
+		dtCtrl.initWeaveWrapper = initWeaveWerapper;
+		dtCtrl.items = ['a','d'];
+		
+		dtCtrl.config = {
+			checked: false,
+			toolName: null,
+			columns : null
+		};
+		
+		function initWeaveWrapper(){
+			//TODO put this retrieval in manager class later
+			if(!wa.wWrapper)
+				weave_wrapper = new wa.WeaveWrapper();
+			else
+				weave_wrapper = WeaveWrapper.instance;
+		};
+		
+		function request_dataTable (){
+			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
+				
+				dtCtrl.initWeaveWrapper();
+				
+				if(dtCtrl.config.checked)//if checked
+					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
+				else{//if unchecked
+					if(dtCtrl.config.toolName)//if the tool exists
+						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
+					else
+						return;
+				}
+			}
+			else
+				setTimeout(request_dataTable, 100);
+		};
+	};
+})();
+
 /**
  * directive that creates the bar chart visualization tool widget
  * controls the bar chart in Weave
@@ -6724,70 +6803,6 @@ angular.module('weaveApp').controller("keyColumnCtrl", function(){
 
 });
 /**
- * directive that creates the AdvancedTable tool widget
- * controls the Advanced Table in Weave
- * @spurushe
- */
-
-(function(){
-	angular.module('weaveApp').directive('dataTable', dataTable );
-	
-	function dataTable(){
-		return {
-			restrict : 'E',
-			templateUrl : 'tools/dataTable/data_table.tpl.html',
-			controller : dataTableController,
-			controllerAs : 'dtCtrl',
-			bindToController : true,
-			link : function(){
-				
-			}
-		};
-	}//end of directive definition
-	
-	function dataTableController (){
-		var dtCtrl = this;
-		var weave_wrapper;
-		
-		dtCtrl.request_dataTable = request_dataTable;
-		dtCtrl.initWeaveWrapper = initWeaveWerapper;
-		dtCtrl.items = ['a','d'];
-		
-		dtCtrl.config = {
-			checked: false,
-			toolName: null,
-			columns : null
-		};
-		
-		function initWeaveWrapper(){
-			//TODO put this retrieval in manager class later
-			if(!wa.wWrapper)
-				weave_wrapper = new wa.WeaveWrapper();
-			else
-				weave_wrapper = WeaveWrapper.instance;
-		};
-		
-		function request_dataTable (){
-			if(wa.WeaveWrapper.check_WeaveReady()){//TODO figure out where to call checkWeaveReady
-				
-				dtCtrl.initWeaveWrapper();
-				
-				if(dtCtrl.config.checked)//if checked
-					dtCtrl.config.toolName = weave_wrapper.request_AdvancedDataTable(dtCtrl.config);//request it with config
-				else{//if unchecked
-					if(dtCtrl.config.toolName)//if the tool exists
-						weave_wrapper.remove_Object(dtCtrl.config.toolName);//remove it
-					else
-						return;
-				}
-			}
-			else
-				setTimeout(request_dataTable, 100);
-		};
-	};
-})();
-
-/**
  * controls the map visualization tool widget
  */
 
@@ -6855,7 +6870,7 @@ angular.module('weaveApp').controller("MapCtrl", function(){
 					else
 						return;
 				}
-				
+				//**********for the entry made earlier populate object here (in scatterplot directive)**********/
 				$scope.appCtrl.scatterplots[spCtrl.config.toolName] = spCtrl.config;
 				console.log("scatterplots", $scope.appCtrl.scatterplots);
 			}

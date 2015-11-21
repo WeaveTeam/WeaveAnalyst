@@ -27,7 +27,8 @@
 				
 				<accordion close-others="oneAtATime">
    					 <accordion-group ng-repeat="sp in appCtrl.scatterplots">
-   					  <accordion-heading>Scatterplot <span style = "padding-left: 50px" class="fa fa-times-circle"></span></accordion-heading>
+   					  <accordion-heading>{{sp.toolName||'ScatterPlotTool'}} 
+   					  	<span style = "padding-left: 50px" class="fa fa-times-circle" ng-click = "appCtrl.removeToolFromMenu(sp)"></span></accordion-heading>
      					 <scatter-Plot></scatter-Plot>
     				 </accordion-group>
     				 
