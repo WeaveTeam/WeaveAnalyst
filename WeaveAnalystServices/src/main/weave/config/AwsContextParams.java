@@ -12,6 +12,7 @@ public class AwsContextParams
 	private static String awsConfigPath = "";
 	private static String stataPath = "";
 	private static String rScriptsPath = "";
+	private static String pythonScriptPath = "";
 	private static String stataScriptsPath = "";
 	
 	public static AwsContextParams getInstance(ServletContext context)throws ServletException{
@@ -35,6 +36,7 @@ public class AwsContextParams
 				
 		rScriptsPath= FilenameUtils.concat(awsConfigPath, "RScripts");
 		stataScriptsPath = FilenameUtils.concat(awsConfigPath, "StataScripts");
+		pythonScriptPath = FilenameUtils.concat(awsConfigPath, "PythonScripts");
 	}
 	
 	
@@ -59,6 +61,10 @@ public class AwsContextParams
 	public String getStataScriptsPath() {
 		return stataScriptsPath;
 	}
+	
+	 public String getPythonScriptsPath(){
+		 return pythonScriptPath;
+	 }
 	
 	/**
 	 * @return The path where to stata.exe on windows or env variable on Unix

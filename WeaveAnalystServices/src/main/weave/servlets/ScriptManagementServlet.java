@@ -22,10 +22,12 @@ public class ScriptManagementServlet extends WeaveServlet
 
 	private File rDirectory;
 	private File stataDirectory;
+	private File pythonDirectory;
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 		rDirectory = new File(AwsContextParams.getInstance(config.getServletContext()).getRScriptsPath());
 		stataDirectory = new File(AwsContextParams.getInstance(config.getServletContext()).getStataScriptsPath());
+		pythonDirectory = new File(AwsContextParams.getInstance(config.getServletContext()).getPythonScriptsPath());
 		
 	}
 	
@@ -37,7 +39,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.getScript(stataDirectory, scriptName);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.getScript(pythonDirectory, scriptName);
+ 		} 
+ 		else {
  			throw new RemoteException("Unknown Script Type");
   		}
 	}
@@ -49,14 +56,19 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.scriptExists(stataDirectory, scriptName);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.scriptExists(pythonDirectory, scriptName);
+ 		}
+ 		else {
  			return false;
   		}
 	}
 	
 	public String[] getListOfScripts() throws Exception{
 		
- 		File[] directories = {rDirectory, stataDirectory};
+ 		File[] directories = {rDirectory, stataDirectory, pythonDirectory};
  		return ScriptManagerService.getListOfScripts(directories);
 	}
 		 
@@ -68,6 +80,10 @@ public class ScriptManagementServlet extends WeaveServlet
 		return ScriptManagerService.getListOfScripts(new File[] {stataDirectory});
 	}
 	
+	public String[] getListOfPythonScripts() throws Exception{
+		return ScriptManagerService.getListOfScripts(new File[] {pythonDirectory});
+	}
+	
 	public StringMap<Object> getScriptMetadata(String scriptName) throws Exception{
 		
 		if(AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.R)
@@ -76,7 +92,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.getScriptMetadata(stataDirectory, scriptName);
- 		} else {
+ 		} 
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.getScriptMetadata(pythonDirectory, scriptName);
+ 		}
+ 		else {
  			throw new RemoteException("Unknown Script Type");
   		}
 		
@@ -91,7 +112,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.saveScriptMetadata(stataDirectory, scriptName, metadata);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.saveScriptMetadata(pythonDirectory, scriptName, metadata);
+ 		}
+ 		else {
  			throw new RemoteException("Error saving script metadata.");
   		}
 	 }
@@ -104,7 +130,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.saveScriptContent(stataDirectory, scriptName, content);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.saveScriptContent(pythonDirectory, scriptName, content);
+ 		}
+ 		else {
  			throw new RemoteException("Error saving script content.");
   		}
 	 }
@@ -120,7 +151,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(newScriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.renameScript(stataDirectory, oldScriptName, newScriptName, content, metadata);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(newScriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.renameScript(pythonDirectory, oldScriptName, newScriptName, content, metadata);
+ 		}
+ 		else {
  			throw new RemoteException("Unknown Script Type");
   		}
  	}
@@ -139,7 +175,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.uploadNewScript(stataDirectory, scriptName, content, metadata);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.uploadNewScript(pythonDirectory, scriptName, content, metadata);
+ 		} 
+ 		else {
  			throw new RemoteException("Unknown Script Type");
   		}
  	}
@@ -152,7 +193,12 @@ public class ScriptManagementServlet extends WeaveServlet
  		} else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.STATA)
  		{
  			return ScriptManagerService.deleteScript(stataDirectory, scriptName);
- 		} else {
+ 		}
+ 		else if( AWSUtils.getScriptType(scriptName) == AWSUtils.SCRIPT_TYPE.PYTHON)
+ 		{
+ 			return ScriptManagerService.deleteScript(pythonDirectory, scriptName);
+ 		} 
+ 		else {
  			throw new RemoteException("Unknown Script Type");
  		}
  	}

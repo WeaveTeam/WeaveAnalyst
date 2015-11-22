@@ -33,6 +33,12 @@
 	    	    			that.cache.scriptList = result;
 	    	    		});	
 	    			break;
+	    			case("PYTHON"):
+	    				runQueryService.queryRequest(scriptManagementURL, 'getListOfPythonScripts', null, function(result){
+	    					that.cache.scriptList = [];
+	    	    			that.cache.scriptList = result;
+	    	    		});	
+	    			break;
 	    			default:
 	    				that.cache.scriptList = [];
 	    		}
