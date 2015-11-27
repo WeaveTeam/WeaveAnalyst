@@ -629,11 +629,11 @@ QueryObject.service("queryService", ['$q', '$rootScope', 'runQueryService',
             return deferred.promise;
         };
         
-        this.updateEntity = function(user, password, entityId, diff) {
+        this.updateEntity = function(entityId, diff) {
 
         	var deferred = $q.defer();
             
-        	runQueryService.queryRequest(adminServiceURL, 'updateEntity', [user, password, entityId, diff], function(){
+        	runQueryService.queryRequest(adminServiceURL, 'updateEntity', [entityId, diff], function(){
                 
             	scope.$safeApply(function(){
                     deferred.resolve();

@@ -37,7 +37,7 @@ errorLogModule.service('errorLogService',['$modal',function($modal){
 	//function to pop open the error log when required
 	this.openErrorLog = function(error){
 		this.logInErrorLog(error);
-		$modal.open($scope.errorLogService.errorLogModalOptions);
+		$modal.open(this.errorLogModalOptions);
 	};
 
 	/**

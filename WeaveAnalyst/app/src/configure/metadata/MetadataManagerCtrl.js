@@ -265,8 +265,7 @@ metadataModule.config(function($provide){
 		 var jsonaws_metadata = angular.toJson(convertToMetadataFormat(metadata));
 		 if(angular.isDefined($scope.selectedDataTableId))
 			 {
-						 queryService.updateEntity($scope.authenticationService.user, 
-				 				   $scope.authenticationService.password, 
+						 queryService.updateEntity(
 				 				   $scope.selectedDataTableId, 
 				 				   { 
 										publicMetadata : { aws_metadata : jsonaws_metadata }
@@ -357,10 +356,7 @@ metadataModule.config(function($provide){
 		        								
 		        								
 		        								//updating the column metadata(adding the aws_metadata property to the public metadata) on the server 
-		        								queryService.updateEntity(authenticationService.user, authenticationService.password, id, {publicMetadata :{ 
-		        																												aws_metadata : metadata
-		        																											 }
-		        																							}
+		        								queryService.updateEntity(id, {publicMetadata :{ aws_metadata : metadata}}
 			        							 ).then(function() {
 			        								 $scope.progressValue++;
 			        							 });								
